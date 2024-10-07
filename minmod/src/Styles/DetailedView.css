@@ -1,0 +1,115 @@
+.detailed-view-container {
+  padding: 20px;
+  border: 1px solid #dddddd;
+  margin: 15px;
+  background-color: #ffffff;
+  border-radius: 4px;
+}
+
+.detailed-view-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  font-weight: bold;
+}
+
+.detailed-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 2px solid black;
+  margin-bottom: 20px;
+  table-layout: fixed; 
+}
+
+.detailed-table th,
+.detailed-table td {
+  
+  padding: 10px 5px; 
+  border: 1px solid black;
+  text-align: left;
+  white-space: nowrap; 
+  overflow: hidden; 
+  position: relative;
+}
+
+.detailed-table th {
+  background-color: #005b84; 
+  color: #ffffff;
+  cursor: pointer;
+  user-select: none; 
+}
+
+.detailed-table th:focus,
+.detailed-table th:active {
+  background-color: #005b84 !important; 
+  color: #ffffff !important; 
+  outline: none; 
+}
+
+
+.detailed-table thead tr {
+  background-color: #005b84;
+  color: #ffffff;
+  font-weight: bold;
+}
+
+.detailed-table tbody tr:nth-of-type(even) {
+  background-color: #f3f3f3;
+}
+
+.close-button {
+  background-color: #005b84;
+  color: #ffffff;
+  padding: 10px 15px;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  border-radius: 4px;
+}
+
+.close-button:hover {
+  background-color: #003b5b;
+}
+
+.view-source-button {
+  background-color: #005b84;
+  color: #ffffff;
+  padding: 5px 10px;
+  border-radius: 4px;
+  text-decoration: none;
+}
+
+.view-source-button:hover {
+  background-color: #003b5b;
+  text-decoration: underline;
+}
+
+.header-with-icon {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.edit-icon-header {
+  padding-right:30px ;
+  color: white;
+  font-size: 16px;
+  display: inline-block;
+}
+
+.resize-handle {
+  cursor: col-resize;
+  padding: 0 5px;
+  user-select: none;
+  width: 15px;
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: transparent;
+}
+ 
