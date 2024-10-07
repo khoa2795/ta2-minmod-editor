@@ -3,7 +3,7 @@ version: '3.8'
 services:
   frontend:
     build:
-      context: ./MinMod
+      context: ./minmod
       dockerfile: Dockerfile
     ports:
       - "3000:80"
