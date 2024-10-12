@@ -4,6 +4,8 @@
   margin: 15px;
   background-color: #ffffff;
   border-radius: 4px;
+  max-width: 100%;
+  overflow-x: auto;
 }
 
 .detailed-view-header {
@@ -19,43 +21,28 @@
   border-collapse: collapse;
   border: 2px solid black;
   margin-bottom: 20px;
-  table-layout: fixed; 
+  table-layout: fixed;
 }
 
 .detailed-table th,
 .detailed-table td {
-  
-  padding: 10px 5px; 
+  padding: 5px; /* Reduced padding for compactness */
   border: 1px solid black;
   text-align: left;
-  white-space: nowrap; 
-  overflow: hidden; 
+  white-space: nowrap;
+  overflow: hidden;
   position: relative;
 }
 
 .detailed-table th {
-  background-color: #005b84; 
-  color: #ffffff;
-  cursor: pointer;
-  user-select: none; 
-}
-
-.detailed-table th:focus,
-.detailed-table th:active {
-  background-color: #005b84 !important; 
-  color: #ffffff !important; 
-  outline: none; 
-}
-
-
-.detailed-table thead tr {
   background-color: #005b84;
   color: #ffffff;
-  font-weight: bold;
+  cursor: pointer;
+  user-select: none;
 }
 
 .detailed-table tbody tr:nth-of-type(even) {
-  background-color: #f3f3f3;
+  background-color: #f3f3f3; /* Ensure alternating row colors */
 }
 
 .close-button {
@@ -72,19 +59,6 @@
   background-color: #003b5b;
 }
 
-.view-source-button {
-  background-color: #005b84;
-  color: #ffffff;
-  padding: 5px 10px;
-  border-radius: 4px;
-  text-decoration: none;
-}
-
-.view-source-button:hover {
-  background-color: #003b5b;
-  text-decoration: underline;
-}
-
 .header-with-icon {
   display: flex;
   align-items: center;
@@ -92,7 +66,7 @@
 }
 
 .edit-icon-header {
-  padding-right:30px ;
+  padding-left: 10px; /* Add some spacing for the icon */
   color: white;
   font-size: 16px;
   display: inline-block;
@@ -112,4 +86,3 @@
   justify-content: center;
   background-color: transparent;
 }
- 

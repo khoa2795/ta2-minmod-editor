@@ -115,7 +115,7 @@ def get_sites(commodity: str):
 
 @app.get("/get_commodities")
 def get_commodities():
-    url = "https://minmod.isi.edu/api/v1/commodities"
+    url = "https://minmod.isi.edu/api/v1/commodities?is_critical=true"
     
     try:
         response = requests.get(url, verify=False)
@@ -200,6 +200,25 @@ def get_resource_details(resource_id: str):
             return {"data": resource_details}
         else:
             return {"error": "Response content is not JSON", "content": response.text[:500]}
+    
+    except requests.exceptions.RequestException as e:
+        return {"error": str(e)}
+    
+@app.get("/get_deposit_types")
+def get_deposit_types():
+    url = "https://minmod.isi.edu/api/v1/deposit_types"
+    
+    try:
+        response = requests.get(url, verify=False)  # Set verify=True in production
+        response.raise_for_status()
+
+        # Assuming the response is a list of deposit types
+        deposit_types = response.json()
+        
+        # If the response is indeed a list, extract names directly
+        deposit_types_list = [deposit_type.get("name") for deposit_type in deposit_types]
+
+        return {"deposit_types": deposit_types_list}
     
     except requests.exceptions.RequestException as e:
         return {"error": str(e)}

@@ -1,62 +1,72 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Input, Select, Button } from 'antd';
+import { Modal, Input, Select, Button, message } from 'antd';
 
-interface TableRow {
+interface ResourceDetails {
   id: number;
   siteName: string;
   location: string;
   depositType: string;
   reference?: string;
-  // ... other fields
+  crs: string;
+  country: string;
+  state_or_province: string;
+  commodity: string;
+  depositConfidence: string;
+  grade: string;
+  tonnage: string;
 }
 
 interface EditModalProps {
   visible: boolean;
   onClose: () => void;
-  options: TableRow[];
+  options: ResourceDetails[];
   title: string;
-  onSave: (rowId: number, newValue: string, newReference: string) => void;
+  depositTypes: string[];
+  onSave: (newRow: ResourceDetails) => void;
 }
 
-const EditModal: React.FC<EditModalProps> = ({ visible, onClose, options, title, onSave }) => {
-  const initialOption = options.length > 0 ? options[0] : null;
-  const [selectedRowId, setSelectedRowId] = useState<number>(initialOption?.id || 0);
+const EditModal: React.FC<EditModalProps> = ({ visible, onClose, options, title, depositTypes, onSave }) => {
+  const [selectedRowId, setSelectedRowId] = useState<number>(options.length > 0 ? options[0].id : 0);
   const [newValue, setNewValue] = useState<string>('');
   const [newReference, setNewReference] = useState<string>('');
 
-  // Set initial values based on the column being edited
   useEffect(() => {
     const selectedOption = options.find((opt) => opt.id === selectedRowId);
     if (selectedOption) {
-      // Separate conditions for siteName, location, and depositType
-      if (title.toLowerCase() === 'site name') {
-        setNewValue(selectedOption.siteName);
-      } else if (title.toLowerCase() === 'location') {
-        setNewValue(selectedOption.location);
-      } else if (title.toLowerCase() === 'deposit type') {
-        setNewValue(selectedOption.depositType);
-      }
-      setNewReference(selectedOption.reference || '');
+      setNewValue(title.toLowerCase() === 'site name' ? selectedOption.siteName : selectedOption.location);
+      setNewReference('');
     }
-  }, [selectedRowId, title, options]);
+  }, [selectedRowId, options, title]);
 
   const handleSave = () => {
-    if (selectedRowId !== -1) {
-      onSave(selectedRowId, newValue, newReference);
-      onClose();
+    if (!newReference.trim()) {
+      message.error('Reference is required before saving.');
+      return;
     }
-  };
 
-  const handleDropdownChange = (value: number) => {
-    setSelectedRowId(value);
+    const newRow: ResourceDetails = {
+      id: Math.random(),
+      siteName: title.toLowerCase() === 'site name' ? newValue : '',
+      location: title.toLowerCase() === 'location' ? newValue : '',
+      depositType: title.toLowerCase() === 'deposit type' ? newValue : '',
+      reference: newReference,
+      crs: '',
+      country: '',
+      state_or_province: '',
+      commodity: '',
+      depositConfidence: '',
+      grade: '',
+      tonnage: ''
+    };
+
+    onSave(newRow);
+    onClose();
   };
 
   const openMapView = () => {
-    // Parse the coordinates from `newValue`
-    const location = newValue.replace(/^POINT\(|\)$/g, '').trim();
+    // Replace with the actual coordinates if you have them or parse the input
+    const location = newValue.replace(/^POINT\(|\)$/g, '').trim(); // Assuming input format "POINT(lon lat)"
     const [longitude, latitude] = location.split(' ');
-
-    // Open the coordinates in Google Maps
     window.open(`https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`, '_blank');
   };
 
@@ -67,20 +77,16 @@ const EditModal: React.FC<EditModalProps> = ({ visible, onClose, options, title,
       onOk={handleSave}
       onCancel={onClose}
       footer={[
-        <Button key="cancel" onClick={onClose}>
-          Cancel
-        </Button>,
-        <Button key="save" type="primary" onClick={handleSave}>
-          Save
-        </Button>,
+        <Button key="cancel" onClick={onClose}>Cancel</Button>,
+        <Button key="save" type="primary" onClick={handleSave}>Save</Button>,
       ]}
     >
       <div style={{ marginBottom: '20px' }}>
-        <span>{title}:</span>
+        <span>Select {title}:</span>
         <Select<number>
           showSearch
           value={selectedRowId}
-          onChange={handleDropdownChange}
+          onChange={setSelectedRowId}
           style={{ width: '100%', marginTop: '8px' }}
         >
           {options.map((option) => (
@@ -96,16 +102,29 @@ const EditModal: React.FC<EditModalProps> = ({ visible, onClose, options, title,
       </div>
 
       <div style={{ marginBottom: '20px' }}>
-        <span>Edit {title}:</span>
-        <Input
-          placeholder={`Edit ${title.toLowerCase()}`}
-          value={newValue}
-          onChange={(e) => setNewValue(e.target.value)}
-          style={{ marginTop: '8px' }}
-        />
-        {/* Add "View Map" button for location */}
+        <span>{title === 'Deposit Type' ? 'Select Deposit Type:' : `Enter ${title}:`}</span>
+        {title === 'Deposit Type' ? (
+          <Select
+            placeholder="Select deposit type"
+            style={{ width: '100%', marginTop: '8px' }}
+            onChange={setNewValue}
+          >
+            {depositTypes.map((type) => (
+              <Select.Option key={type} value={type}>
+                {type}
+              </Select.Option>
+            ))}
+          </Select>
+        ) : (
+          <Input
+            placeholder={title === 'Site Name' ? 'Enter site name' : 'Enter location'}
+            value={newValue}
+            onChange={(e) => setNewValue(e.target.value)}
+            style={{ marginTop: '8px' }}
+          />
+        )}
         {title.toLowerCase() === 'location' && (
-          <Button type="primary" onClick={openMapView} style={{ marginTop: '10px', marginLeft: '10px' }}>
+          <Button type="primary" onClick={openMapView} style={{ marginTop: '10px' }}>
             View Map
           </Button>
         )}
@@ -114,7 +133,7 @@ const EditModal: React.FC<EditModalProps> = ({ visible, onClose, options, title,
       <div style={{ marginBottom: '20px' }}>
         <span>Edit Reference:</span>
         <Input
-          placeholder="Edit reference"
+          placeholder="Enter reference"
           value={newReference}
           onChange={(e) => setNewReference(e.target.value)}
           style={{ marginTop: '8px' }}

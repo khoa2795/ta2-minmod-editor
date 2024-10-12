@@ -31,23 +31,27 @@ const TableData: React.FC = () => {
   const pageSize = 50;
 
   const [columns, setColumns] = useState([
-    { title: 'Select', dataIndex: 'select', width: 100, render: () => <Checkbox /> },
-    { title: 'Site Name', dataIndex: 'siteName', width: 200 },
-    { title: 'Site Type', dataIndex: 'siteType', width: 150 },
-    { title: 'Site Rank', dataIndex: 'siteRank', width: 100 },
-    { title: 'Location', dataIndex: 'location', width: 150 },
-    { title: 'CRS', dataIndex: 'crs', width: 100 },
-    { title: 'Country', dataIndex: 'country', width: 150 },
-    { title: 'State/Province', dataIndex: 'state', width: 150 },
-    { title: 'Deposit Type', dataIndex: 'depositType', width: 200 },
-    { title: 'Deposit Confidence', dataIndex: 'depositConfidence', width: 150 },
-    { title: 'Commodity', dataIndex: 'commodity', width: 100 },
-    { title: 'Grade', dataIndex: 'grade', width: 100 },
-    { title: 'Tonnage', dataIndex: 'tonnage', width: 100 },
+    { title: 'Select', dataIndex: 'select', width: 50, render: () => <Checkbox /> },
+    { title: 'Site Name', dataIndex: 'siteName', width: 120, className: 'resizable' },
+    { title: 'Site Type', dataIndex: 'siteType', width: 80, className: 'resizable' },
+    { title: 'Site Rank', dataIndex: 'siteRank', width: 75, className: 'resizable' },
+    { title: 'Location', dataIndex: 'location', width: 100, className: 'resizable' },
+    { title: 'CRS', dataIndex: 'crs', width: 80, className: 'resizable' },
+    { title: 'Country', dataIndex: 'country', width: 80, className: 'resizable' },
+    { title: 'State/Province', dataIndex: 'state', width: 120, className: 'resizable' },
+    { title: 'Deposit Type', dataIndex: 'depositType', width: 140, className: 'resizable' },
+    { title: 'Deposit Confidence', dataIndex: 'depositConfidence', width: 120, className: 'resizable' },
+    { title: 'Commodity', dataIndex: 'commodity', width: 80, className: 'resizable' },
+    { title: 'Grade', dataIndex: 'grade', width: 60, render: (value: any) => {
+        const numericValue = parseFloat(value);
+        return !isNaN(numericValue) ? numericValue.toFixed(5) : 'N/A';
+      }
+    },
+    { title: 'Tonnage', dataIndex: 'tonnage', width: 80, className: 'resizable' },
     {
       title: 'Edit',
       dataIndex: 'edit',
-      width: 80,
+      width: 60,
       render: (_: any, row: TableRow, rowIndex: number) => (
         <Button
           type="primary"
@@ -114,7 +118,10 @@ const TableData: React.FC = () => {
   const onResize = (index: number, newWidth: number) => {
     setColumns((prevColumns) => {
       const newColumns = [...prevColumns];
-      newColumns[index].width = Math.max(newWidth, 50);
+      newColumns[index] = {
+        ...newColumns[index],
+        width: newWidth,
+      };
       return newColumns;
     });
   };
@@ -141,45 +148,37 @@ const TableData: React.FC = () => {
             <table className="mineral-table">
               <thead>
                 <tr>
-                  {columns.map((col, index) => (
-                    <th key={index} style={{ width: col.width, position: 'relative' }}>
-                      <div
-                        style={{
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                          width: '100%',
-                        }}
-                      >
-                        <span style={{ flexGrow: 1, whiteSpace: 'nowrap' }}>{col.title}</span>
-                        {index < columns.length - 1 && (
-                          <div
-                            className="resize-handle"
-                            onMouseDown={(e) => {
-                              e.preventDefault();
-                              const startX = e.clientX;
-                              const startWidth = col.width;
+                {columns.map((col, index) => (
+  <th key={index} style={{ width: col.width }} className={col.className}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+      <span style={{ flexGrow: 1, whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
+        {col.title}
+      </span>
+      <div
+        className="resize-handle"
+        onMouseDown={(e) => {
+          e.preventDefault();
+          const startX = e.clientX;
+          const startWidth = col.width;
 
-                              const onMouseMove = (moveEvent: MouseEvent) => {
-                                const newWidth = startWidth + (moveEvent.clientX - startX);
-                                onResize(index, newWidth);
-                              };
+          const onMouseMove = (moveEvent: MouseEvent) => {
+            const newWidth = Math.max(startWidth + (moveEvent.clientX - startX), 50); // Prevent collapsing
+            onResize(index, newWidth);
+          };
 
-                              const onMouseUp = () => {
-                                document.removeEventListener('mousemove', onMouseMove);
-                                document.removeEventListener('mouseup', onMouseUp);
-                              };
+          const onMouseUp = () => {
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+          };
 
-                              document.addEventListener('mousemove', onMouseMove);
-                              document.addEventListener('mouseup', onMouseUp);
-                            }}
-                          >
-                            ⟷
-                          </div>
-                        )}
-                      </div>
-                    </th>
-                  ))}
+          document.addEventListener('mousemove', onMouseMove);
+          document.addEventListener('mouseup', onMouseUp);
+        }}
+      />
+    </div>
+  </th>
+))}
+
                 </tr>
               </thead>
               <tbody>
@@ -193,17 +192,17 @@ const TableData: React.FC = () => {
                       ))}
                     </tr>
                     {expandedRows.includes(rowIndex) && (
-  <tr>
-    <td colSpan={columns.length}>
-      {/* Pass only `allMsFields` and `onClose` */}
-      <DetailedView allMsFields={row.all_ms_fields} onClose={() => toggleRow(rowIndex)} />
-    </td>
-  </tr>
-)}
+                      <tr>
+                        <td colSpan={columns.length}>
+                          <DetailedView allMsFields={row.all_ms_fields} onClose={() => toggleRow(rowIndex)} />
+                        </td>
+                      </tr>
+                    )}
                   </React.Fragment>
                 ))}
               </tbody>
             </table>
+
             <Pagination
               current={currentPage}
               pageSize={pageSize}

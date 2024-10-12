@@ -28,29 +28,38 @@ interface DetailedViewProps {
 
 const DetailedView: React.FC<DetailedViewProps> = ({ allMsFields, onClose }) => {
   const [columns, setColumns] = useState([
-    { title: 'Site Name', width: 200 },
-    { title: 'Location', width: 150 },
-    { title: 'CRS', width: 100 },
-    { title: 'Country', width: 150 },
-    { title: 'State/Province', width: 150 },
+    { title: 'Site Name', width: 150 },
+    { title: 'Location', width: 120 },
+    { title: 'CRS', width: 80 },
+    { title: 'Country', width: 100 },
+    { title: 'State/Province', width: 100 },
     { title: 'Commodity', width: 100 },
-    { title: 'Deposit Type', width: 200 },
-    { title: 'Deposit Confidence', width: 150 },
-    { title: 'Grade', width: 100 },
-    { title: 'Tonnage', width: 100 },
-    { title: 'Reference', width: 150 },
+    { title: 'Deposit Type', width: 120 },
+    { title: 'Deposit Confidence', width: 120 },
+    { title: 'Grade', width: 80 },
+    { title: 'Tonnage', width: 80 },
+    { title: 'Reference', width: 100 },
     { title: 'Source', width: 100 },
   ]);
 
   const [detailedData, setDetailedData] = useState<ResourceDetails[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
-
-  // Modal states
   const [modalVisible, setModalVisible] = useState(false);
   const [modalTitle, setModalTitle] = useState('');
   const [editingRowId, setEditingRowId] = useState<number | null>(null);
+  const [depositTypes, setDepositTypes] = useState<string[]>([]); // State for deposit types
 
-  // Fetch details from the backend
+  useEffect(() => {
+    // Fetching deposit types from the API
+    const fetchDepositTypes = async () => {
+      const response = await fetch('http://localhost:8000/get_deposit_types');
+      const data = await response.json();
+      setDepositTypes(data.deposit_types || []);
+    };
+
+    fetchDepositTypes(); // Call the function to fetch deposit types
+  }, []);
+
   useEffect(() => {
     const fetchDetails = async () => {
       setLoading(true);
@@ -74,7 +83,6 @@ const DetailedView: React.FC<DetailedViewProps> = ({ allMsFields, onClose }) => 
     fetchDetails();
   }, [allMsFields]);
 
-  // Handle resizing of columns
   const onResize = (index: number, newWidth: number) => {
     setColumns((prevColumns) => {
       const newColumns = [...prevColumns];
@@ -102,32 +110,24 @@ const DetailedView: React.FC<DetailedViewProps> = ({ allMsFields, onClose }) => 
     document.addEventListener('mouseup', onMouseUp);
   };
 
-  // Handle edit modal visibility
   const handleEditClick = (rowId: number, title: string) => {
     setEditingRowId(rowId);
     setModalTitle(title);
     setModalVisible(true);
   };
 
-  // Handle saving changes from modal
-  const handleSaveChanges = (rowId: number, newValue: string, newReference: string) => {
-    setDetailedData((prevData) =>
-      prevData.map((row) =>
-        row.id === rowId
-          ? {
-              ...row,
-              siteName: modalTitle.toLowerCase() === 'site name' ? newValue : row.siteName,
-              location: modalTitle.toLowerCase() === 'location' ? newValue : row.location,
-              depositType: modalTitle.toLowerCase() === 'deposit type' ? newValue : row.depositType,
-              reference: newReference || row.reference,
-            }
-          : row
-      )
-    );
+  const handleSaveChanges = (newRow: ResourceDetails) => {
+    const newId = detailedData.length > 0 ? Math.max(...detailedData.map(row => row.id)) + 1 : 1;
+
+    const rowToAdd: ResourceDetails = {
+      ...newRow,
+      id: newId,
+    };
+
+    setDetailedData((prevData) => [...prevData, rowToAdd]);
     setModalVisible(false);
 
-    // Show success toast
-    toast.success('Edit was successful!', {
+    toast.success('New entry added successfully!', {
       position: "top-right",
       autoClose: 3000,
       hideProgressBar: false,
@@ -166,30 +166,24 @@ const DetailedView: React.FC<DetailedViewProps> = ({ allMsFields, onClose }) => 
                   </div>
                   {index < columns.length - 1 && (
                     <div
+                      onMouseDown={(e) => handleMouseDown(index, e)}
                       style={{
                         cursor: 'col-resize',
-                        padding: '0 5px',
-                        userSelect: 'none',
-                        width: '15px',
                         position: 'absolute',
-                        right: 0,
-                        top: 0,
-                        bottom: 0,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
+                        right: '0',
+                        top: '0',
+                        height: '100%',
+                        width: '10px',
+                        backgroundColor: 'transparent',
                       }}
-                      onMouseDown={(e) => handleMouseDown(index, e)}
-                    >
-                      ⟷
-                    </div>
+                    />
                   )}
                 </th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {detailedData.map((resource, index) => (
+            {detailedData.map((resource) => (
               <tr key={resource.id}>
                 <td>{resource.siteName}</td>
                 <td>{resource.location}</td>
@@ -217,14 +211,15 @@ const DetailedView: React.FC<DetailedViewProps> = ({ allMsFields, onClose }) => 
         </table>
       )}
 
-      {/* Edit Modal */}
-      <EditModal
-        visible={modalVisible}
-        onClose={() => setModalVisible(false)}
-        options={detailedData}
-        title={modalTitle}
-        onSave={handleSaveChanges}
-      />
+<EditModal
+  visible={modalVisible}
+  onClose={() => setModalVisible(false)}
+  options={detailedData}
+  title={modalTitle}
+  depositTypes={depositTypes} // Pass the deposit types
+  onSave={handleSaveChanges}
+/>
+
     </div>
   );
 };
