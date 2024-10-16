@@ -18,10 +18,15 @@
   padding: 5px 3px;
   border: 1px solid black;
   text-align: left;
-  white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
   position: relative;
+  white-space: nowrap; /* Default behavior for all columns */
+  text-overflow: ellipsis;
+}
+
+.mineral-table td.site-name {
+  white-space: normal; /* Allow Site Name to wrap onto multiple lines */
+  word-wrap: break-word; /* Ensure Site Name text wraps */
 }
 
 .mineral-table th {
@@ -48,7 +53,6 @@
   display: block; /* Show the resize handle when hovering over the th */
 }
 
-/* Ensure the hover state for th indicates resizability */
 .mineral-table th:hover {
   background-color: #0076a8; /* Background changes on hover */
 }

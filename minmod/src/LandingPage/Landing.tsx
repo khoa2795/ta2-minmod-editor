@@ -31,23 +31,57 @@ const TableData: React.FC = () => {
   const pageSize = 50;
 
   const [columns, setColumns] = useState([
-    { title: 'Select', dataIndex: 'select', width: 50, render: () => <Checkbox /> },
-    { title: 'Site Name', dataIndex: 'siteName', width: 120, className: 'resizable' },
-    { title: 'Site Type', dataIndex: 'siteType', width: 80, className: 'resizable' },
-    { title: 'Site Rank', dataIndex: 'siteRank', width: 75, className: 'resizable' },
-    { title: 'Location', dataIndex: 'location', width: 100, className: 'resizable' },
-    { title: 'CRS', dataIndex: 'crs', width: 80, className: 'resizable' },
+    { title: 'Select', dataIndex: 'select', width: 45, render: () => <Checkbox /> },
+    {
+      title: 'Site Name',
+      dataIndex: 'siteName',
+      width: 150,
+      className: 'site-name',
+      render: (value: any) => (
+        <div style={{ whiteSpace: 'normal', wordWrap: 'break-word' }}>
+          {value}
+        </div>
+      )
+    },
+    { title: 'Site Type', dataIndex: 'siteType', width: 70, className: 'resizable', render: (value: any) => {
+      return value !== "NotSpecified" ? (
+        <span style={{ fontSize: '12px' }}>{value}</span> 
+      ) : '';
+    } },
+    { title: 'Site Rank', dataIndex: 'siteRank', width: 70, className: 'resizable' },
+    { title: 'Location', dataIndex: 'location', width: 80, className: 'resizable' , render: (value: any) => {
+        return value !== "POINT(0 0)" ? (
+          <span>{value}</span> 
+        ) : '';
+    }},
+    { title: 'CRS', dataIndex: 'crs', width: 80, className: 'resizable',render: (value: any) => {
+      return value ? value.replace('EPSG:', '') : value;
+    }
+   },
     { title: 'Country', dataIndex: 'country', width: 80, className: 'resizable' },
     { title: 'State/Province', dataIndex: 'state', width: 120, className: 'resizable' },
     { title: 'Deposit Type', dataIndex: 'depositType', width: 140, className: 'resizable' },
     { title: 'Deposit Confidence', dataIndex: 'depositConfidence', width: 120, className: 'resizable' },
     { title: 'Commodity', dataIndex: 'commodity', width: 80, className: 'resizable' },
-    { title: 'Grade', dataIndex: 'grade', width: 60, render: (value: any) => {
+    {
+      title: 'Grade',
+      dataIndex: 'grade',
+      width: 60,
+      render: (value: any) => {
         const numericValue = parseFloat(value);
-        return !isNaN(numericValue) ? numericValue.toFixed(5) : 'N/A';
+        return !isNaN(numericValue) && numericValue !== 0 ? numericValue.toFixed(5) : '';
       }
     },
-    { title: 'Tonnage', dataIndex: 'tonnage', width: 80, className: 'resizable' },
+    {
+      title: 'Tonnage',
+      dataIndex: 'tonnage',
+      width: 80,
+      className: 'resizable',
+      render: (value: any) => {
+        const numericValue = parseFloat(value);
+        return !isNaN(numericValue) && numericValue !== 0 ? numericValue.toFixed(5) : '';
+      }
+    },
     {
       title: 'Edit',
       dataIndex: 'edit',
@@ -60,19 +94,6 @@ const TableData: React.FC = () => {
           onClick={() => toggleRow(rowIndex)}
           style={{ background: '#005b84', borderColor: '#005b84' }}
         />
-      ),
-    },
-    {
-      title: 'Ungroup',
-      dataIndex: 'ungroup',
-      width: 100,
-      render: () => (
-        <Button
-          type="primary"
-          style={{ background: '#005b84', borderColor: '#005b84' }}
-        >
-          Ungroup
-        </Button>
       ),
     },
   ]);
@@ -148,37 +169,36 @@ const TableData: React.FC = () => {
             <table className="mineral-table">
               <thead>
                 <tr>
-                {columns.map((col, index) => (
-  <th key={index} style={{ width: col.width }} className={col.className}>
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-      <span style={{ flexGrow: 1, whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
-        {col.title}
-      </span>
-      <div
-        className="resize-handle"
-        onMouseDown={(e) => {
-          e.preventDefault();
-          const startX = e.clientX;
-          const startWidth = col.width;
+                  {columns.map((col, index) => (
+                    <th key={index} style={{ width: col.width }} className={col.className}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                        <span style={{ flexGrow: 1, whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
+                          {col.title}
+                        </span>
+                        <div
+                          className="resize-handle"
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            const startX = e.clientX;
+                            const startWidth = col.width;
 
-          const onMouseMove = (moveEvent: MouseEvent) => {
-            const newWidth = Math.max(startWidth + (moveEvent.clientX - startX), 50); // Prevent collapsing
-            onResize(index, newWidth);
-          };
+                            const onMouseMove = (moveEvent: MouseEvent) => {
+                              const newWidth = Math.max(startWidth + (moveEvent.clientX - startX), 50); // Prevent collapsing
+                              onResize(index, newWidth);
+                            };
 
-          const onMouseUp = () => {
-            document.removeEventListener('mousemove', onMouseMove);
-            document.removeEventListener('mouseup', onMouseUp);
-          };
+                            const onMouseUp = () => {
+                              document.removeEventListener('mousemove', onMouseMove);
+                              document.removeEventListener('mouseup', onMouseUp);
+                            };
 
-          document.addEventListener('mousemove', onMouseMove);
-          document.addEventListener('mouseup', onMouseUp);
-        }}
-      />
-    </div>
-  </th>
-))}
-
+                            document.addEventListener('mousemove', onMouseMove);
+                            document.addEventListener('mouseup', onMouseUp);
+                          }}
+                        />
+                      </div>
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
