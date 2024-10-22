@@ -53,6 +53,9 @@ def get_site_data():
     except requests.exceptions.RequestException as e:
         return {"error": str(e)}
 
+
+
+
 @app.get("/get_sites/{commodity}")
 def get_sites(commodity: str):
     url = f"https://minmod.isi.edu/api/v1/dedup_mineral_sites/{commodity}"
@@ -68,11 +71,17 @@ def get_sites(commodity: str):
             first_site = group.get("sites", [{}])[0]
             location = group.get("best_loc_wkt")
             
-            if location:
+            # Handle cases where location is MULTIPOINT or GEOMETRYCOLLECTION
+            if location and (location.startswith("POINT")):
                 # Keep the POINT keyword intact and clean up extra spaces
                 coordinates = location.strip()
+            elif location and (location.startswith("MULTIPOINT") or location.startswith("GEOMETRYCOLLECTION")):
+                # Fallback to best_loc_centroid_epsg_4326 if available
+                coordinates = group.get("best_loc_centroid_epsg_4326", "").strip()
+                if not coordinates:
+                    coordinates = " "  # Default to empty if both are unavailable
             else:
-                coordinates = "POINT(0 0)"  # Default to "POINT(0 0)" if location is missing
+                coordinates = " "  # Default if location is missing or in an unhandled format
 
             deposit_type = ""
             deposit_confidence = "0.0000"
@@ -92,7 +101,7 @@ def get_sites(commodity: str):
                 "siteName": first_site.get("ms_name", ""),
                 "siteType": first_site.get("ms_type", ""),
                 "siteRank": first_site.get("ms_rank", ""),
-                "location": coordinates,  # Now includes the full "POINT" string
+                "location": coordinates,  # Now includes the full "POINT" string or fallback value
                 "crs": group.get("best_loc_crs", ""),
                 "country": first_site.get("country", ""),
                 "state": first_site.get("state_or_province", ""),
@@ -109,6 +118,7 @@ def get_sites(commodity: str):
     
     except requests.exceptions.RequestException as e:
         return {"error": str(e)}
+
 
 
 
@@ -134,6 +144,78 @@ def get_commodities():
 
 
 
+# @app.get("/get_resource/{resource_id}")
+# def get_resource_details(resource_id: str):
+#     url = f"https://minmod.isi.edu/resource/{resource_id}?format=json"
+    
+#     try:
+#         response = requests.get(url, verify=False)
+#         response.raise_for_status()
+        
+#         content_type = response.headers.get('Content-Type', '')
+#         if 'application/json' in content_type:
+#             data = response.json()
+            
+#             site_name = data.get("@label", "")
+            
+#             location = data.get("location info", {}).get("location", "")
+            
+#             crs = data.get("location info", {}).get("crs", {}).get("normalized uri", {}).get("@label", "Unknown")
+            
+#             location_info = data.get("location info", {})
+#             country = location_info.get("country", {}).get("normalized uri", {}).get("@label", "Unknown")
+#             state_or_province = location_info.get("state or province", {}).get("normalized uri", {}).get("@label", "Unknown")
+            
+#             deposit_type_candidates = data.get("deposit type candidate", [])
+#             deposit_type = "Unknown"
+#             deposit_confidence = "0"
+
+#             if isinstance(deposit_type_candidates, list) and len(deposit_type_candidates) > 0:
+#                 first_candidate = deposit_type_candidates[0]
+#                 deposit_type = first_candidate.get("observed name", "Unknown")
+#                 deposit_confidence = first_candidate.get("confidence", "0")
+
+#             mineral_inventory_list = data.get("mineral inventory", [])
+#             commodity = "Unknown"
+#             grade = "0.00000000"
+#             tonnage = "0"
+#             reference = "Unknown"
+#             source = "Unknown"
+
+#             if mineral_inventory_list and isinstance(mineral_inventory_list, list):
+#                 first_inventory = mineral_inventory_list[0]
+#                 if isinstance(first_inventory, dict):
+#                     commodity_info = first_inventory.get("commodity", {})
+#                     commodity = commodity_info.get("normalized uri", {}).get("@label", "Unknown")
+#                     grade = first_inventory.get("grade", {}).get("value", "0.00000000")
+#                     tonnage = first_inventory.get("ore", {}).get("value", "0")
+#                     reference_info = first_inventory.get("reference", {}).get("document", {})
+#                     reference = reference_info.get("title", "Unknown")
+#                     source = reference_info.get("doi", "Unknown")
+
+#             resource_details = {
+#                 "siteName": site_name,
+#                 "location": location,  
+#                 "crs": crs,
+#                 "country": country,
+#                 "state_or_province": state_or_province,
+#                 "commodity": commodity,
+#                 "depositType": deposit_type,
+#                 "depositConfidence": deposit_confidence,
+#                 "grade": grade,
+#                 "tonnage": tonnage,
+#                 "reference": reference,
+#                 "source": source
+#             }
+#             return {"data": resource_details}
+#         else:
+#             return {"error": "Response content is not JSON", "content": response.text[:500]}
+    
+#     except requests.exceptions.RequestException as e:
+#         return {"error": str(e)}
+    
+
+
 @app.get("/get_resource/{resource_id}")
 def get_resource_details(resource_id: str):
     url = f"https://minmod.isi.edu/resource/{resource_id}?format=json"
@@ -147,15 +229,27 @@ def get_resource_details(resource_id: str):
             data = response.json()
             
             site_name = data.get("@label", "")
-            
-            location = data.get("location info", {}).get("location", "")
-            
-            crs = data.get("location info", {}).get("crs", {}).get("normalized uri", {}).get("@label", "Unknown")
-            
+
+            # Handle the case where "location info" might be a list or a dictionary
             location_info = data.get("location info", {})
-            country = location_info.get("country", {}).get("normalized uri", {}).get("@label", "Unknown")
-            state_or_province = location_info.get("state or province", {}).get("normalized uri", {}).get("@label", "Unknown")
-            
+            location = ""
+            crs = "Unknown"
+            country = "Unknown"
+            state_or_province = "Unknown"
+
+            # Check if location_info is a list or dictionary
+            if isinstance(location_info, list):
+                if len(location_info) > 0:
+                    location = location_info[0].get("location", "")
+                    crs = location_info[0].get("crs", {}).get("normalized uri", {}).get("@label", "Unknown")
+                    country = location_info[0].get("country", {}).get("normalized uri", {}).get("@label", "Unknown")
+                    state_or_province = location_info[0].get("state or province", {}).get("normalized uri", {}).get("@label", "Unknown")
+            elif isinstance(location_info, dict):
+                location = location_info.get("location", "")
+                crs = location_info.get("crs", {}).get("normalized uri", {}).get("@label", "Unknown")
+                country = location_info.get("country", {}).get("normalized uri", {}).get("@label", "Unknown")
+                state_or_province = location_info.get("state or province", {}).get("normalized uri", {}).get("@label", "Unknown")
+
             deposit_type_candidates = data.get("deposit type candidate", [])
             deposit_type = "Unknown"
             deposit_confidence = "0"

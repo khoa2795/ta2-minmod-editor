@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Input, Select, Button, message } from 'antd';
+import { Modal, Input, TreeSelect, Select, Button, message } from 'antd';
+import { CloseOutlined } from '@ant-design/icons';
 
 interface ResourceDetails {
   id: number;
@@ -26,17 +27,31 @@ interface EditModalProps {
 }
 
 const EditModal: React.FC<EditModalProps> = ({ visible, onClose, options, title, depositTypes, onSave }) => {
-  const [selectedRowId, setSelectedRowId] = useState<number>(options.length > 0 ? options[0].id : 0);
-  const [newValue, setNewValue] = useState<string>('');
-  const [newReference, setNewReference] = useState<string>('');
+  const [selectedValue, setSelectedValue] = useState<string | null>(null); // Store selected dropdown value
+  const [isEditing, setIsEditing] = useState<boolean>(false); // Toggle between dropdown and text input
+  const [editValue, setEditValue] = useState<string>(''); // Store edited value
+  const [newReference, setNewReference] = useState<string>(''); // Store reference value
 
+  // When the selected value changes, populate the text field with the selected value or allow custom input
   useEffect(() => {
-    const selectedOption = options.find((opt) => opt.id === selectedRowId);
-    if (selectedOption) {
-      setNewValue(title.toLowerCase() === 'site name' ? selectedOption.siteName : selectedOption.location);
-      setNewReference('');
+    if (selectedValue !== null && !isEditing) {
+      if (selectedValue === 'custom') {
+        setEditValue(''); // Clear the field for custom input
+        setNewReference(''); // Clear the reference field for custom input
+      } else {
+        const selectedOption = options.find((opt) => {
+          if (title.toLowerCase() === 'site name') return opt.siteName === selectedValue;
+          if (title.toLowerCase() === 'location') return opt.location === selectedValue;
+          if (title.toLowerCase() === 'deposit type') return opt.depositType === selectedValue;
+          return false;
+        });
+        if (selectedOption) {
+          setEditValue(selectedValue); // Auto populate the text field with the selected dropdown value
+          setNewReference(selectedOption.reference || ''); // Auto populate the reference field with the selected option's reference
+        }
+      }
     }
-  }, [selectedRowId, options, title]);
+  }, [selectedValue, options, title, isEditing]);
 
   const handleSave = () => {
     if (!newReference.trim()) {
@@ -46,9 +61,9 @@ const EditModal: React.FC<EditModalProps> = ({ visible, onClose, options, title,
 
     const newRow: ResourceDetails = {
       id: Math.random(),
-      siteName: title.toLowerCase() === 'site name' ? newValue : '',
-      location: title.toLowerCase() === 'location' ? newValue : '',
-      depositType: title.toLowerCase() === 'deposit type' ? newValue : '',
+      siteName: title.toLowerCase() === 'site name' ? editValue : '',
+      location: title.toLowerCase() === 'location' ? editValue : '',
+      depositType: title.toLowerCase() === 'deposit type' ? editValue : '',
       reference: newReference,
       crs: '',
       country: '',
@@ -63,12 +78,81 @@ const EditModal: React.FC<EditModalProps> = ({ visible, onClose, options, title,
     onClose();
   };
 
-  const openMapView = () => {
-    // Replace with the actual coordinates if you have them or parse the input
-    const location = newValue.replace(/^POINT\(|\)$/g, '').trim(); // Assuming input format "POINT(lon lat)"
-    const [longitude, latitude] = location.split(' ');
-    window.open(`https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`, '_blank');
+  // Handles the selection of a dropdown item and auto-populates the text field with the selected value
+  const handleDropdownChange = (value: string) => {
+    setSelectedValue(value);
+    if (value === 'custom') {
+      setIsEditing(true); // Switch to editing mode for custom input
+      setEditValue(''); // Clear input for custom entry
+      setNewReference(''); // Clear reference for custom entry
+    } else {
+      setIsEditing(true); // Switch to editing mode with selected value
+      const selectedOption = options.find((opt) => {
+        if (title.toLowerCase() === 'site name') return opt.siteName === value;
+        if (title.toLowerCase() === 'location') return opt.location === value;
+        return false;
+      });
+      if (selectedOption) {
+        setEditValue(value); // Auto populate the input field with the selected value
+        setNewReference(selectedOption.reference || 'Unknown'); // Auto populate reference field, default to 'Unknown' if not available
+      }
+    }
   };
+
+  const handleTreeSelectChange = (value: string) => {
+    setEditValue(value); // Update the deposit type when selected from the TreeSelect dropdown
+
+    // Find the selected deposit type in the options and set its reference
+    const selectedOption = options.find((opt) => opt.depositType === value);
+    if (selectedOption) {
+      setNewReference(selectedOption.reference || 'Unknown'); // Auto populate reference with the selected deposit type's reference
+    }
+
+    setIsEditing(true); // Switch to editing mode after selection
+  };
+
+  const handleEditChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEditValue(e.target.value);
+  };
+
+  const handleRevertToDropdown = () => {
+    setIsEditing(false); // Revert to dropdown mode
+    setSelectedValue(null); // Reset selected value
+  };
+
+  // Function to open Google Maps with the provided location coordinates
+  const openMapView = () => {
+    const location = editValue.replace(/^POINT\(|\)$/g, '').trim(); // Assuming input format "POINT(lon lat)"
+    const [longitude, latitude] = location.split(' ');
+    if (latitude && longitude) {
+      window.open(`https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`, '_blank');
+    } else {
+      message.error('Invalid location format. Please enter coordinates as POINT(lon lat)');
+    }
+  };
+
+  const treeData = [
+    {
+      title: 'Current Deposit Types',
+      value: 'current',
+      key: '0-0',
+      children: options.map((option) => ({
+        title: option.depositType,
+        value: option.depositType,
+        key: option.depositType,
+      })),
+    },
+    {
+      title: 'All Deposit Types',
+      value: 'all',
+      key: '0-1',
+      children: depositTypes.map((type) => ({
+        title: type,
+        value: type,
+        key: type,
+      })),
+    },
+  ];
 
   return (
     <Modal
@@ -82,49 +166,69 @@ const EditModal: React.FC<EditModalProps> = ({ visible, onClose, options, title,
       ]}
     >
       <div style={{ marginBottom: '20px' }}>
-        <span>Select {title}:</span>
-        <Select<number>
-          showSearch
-          value={selectedRowId}
-          onChange={setSelectedRowId}
-          style={{ width: '100%', marginTop: '8px' }}
-        >
-          {options.map((option) => (
-            <Select.Option key={option.id} value={option.id}>
-              {title.toLowerCase() === 'site name'
-                ? `${option.id}: ${option.siteName}`
-                : title.toLowerCase() === 'location'
-                ? `${option.id}: ${option.location}`
-                : `${option.id}: ${option.depositType}`}
-            </Select.Option>
-          ))}
-        </Select>
-      </div>
-
-      <div style={{ marginBottom: '20px' }}>
-        <span>{title === 'Deposit Type' ? 'Select Deposit Type:' : `Enter ${title}:`}</span>
-        {title === 'Deposit Type' ? (
+        <span>{title}:</span>
+        {title.toLowerCase() === 'deposit type' ? (
+          !isEditing ? (
+            <TreeSelect
+              style={{ width: '100%' }}
+              value={editValue}
+              dropdownStyle={{ maxHeight: 400, overflow: 'auto' }}
+              treeData={treeData}
+              placeholder="Please select"
+              treeDefaultExpandAll
+              onChange={handleTreeSelectChange}
+            />
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <Input
+                value={editValue} // Display the selected or custom value in the text field
+                onChange={handleEditChange} // Allow editing of the value
+                placeholder={`Enter ${title}`}
+                style={{ flex: 1, marginTop: '8px' }}
+              />
+              <Button
+                icon={<CloseOutlined />}
+                onClick={handleRevertToDropdown}
+                style={{ marginLeft: '10px', marginTop: '8px' }}
+              />
+            </div>
+          )
+        ) : !isEditing ? (
           <Select
-            placeholder="Select deposit type"
+            showSearch
+            value={selectedValue} // Current selected dropdown value
+            placeholder={`Select ${title}`}
+            onChange={handleDropdownChange} // Handle dropdown change
             style={{ width: '100%', marginTop: '8px' }}
-            onChange={setNewValue}
           >
-            {depositTypes.map((type) => (
-              <Select.Option key={type} value={type}>
-                {type}
+            {options.map((option) => (
+              <Select.Option key={option.id} value={title.toLowerCase() === 'site name' ? option.siteName : option.location}>
+                {title.toLowerCase() === 'site name' ? option.siteName : option.location}
               </Select.Option>
             ))}
+            <Select.Option value="custom">Enter your own data</Select.Option>
           </Select>
         ) : (
-          <Input
-            placeholder={title === 'Site Name' ? 'Enter site name' : 'Enter location'}
-            value={newValue}
-            onChange={(e) => setNewValue(e.target.value)}
-            style={{ marginTop: '8px' }}
-          />
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <Input
+              value={editValue} // Display the selected or custom value in the text field
+              onChange={handleEditChange} // Allow editing of the value
+              placeholder={`Enter ${title}`}
+              style={{ flex: 1, marginTop: '8px' }}
+            />
+            <Button
+              icon={<CloseOutlined />}
+              onClick={handleRevertToDropdown}
+              style={{ marginLeft: '10px', marginTop: '8px' }}
+            />
+          </div>
         )}
         {title.toLowerCase() === 'location' && (
-          <Button type="primary" onClick={openMapView} style={{ marginTop: '10px' }}>
+          <Button
+            type="primary"
+            onClick={openMapView}
+            style={{ marginTop: '10px' }}
+          >
             View Map
           </Button>
         )}
@@ -134,9 +238,9 @@ const EditModal: React.FC<EditModalProps> = ({ visible, onClose, options, title,
         <span>Edit Reference:</span>
         <Input
           placeholder="Enter reference"
-          value={newReference}
+          value={newReference} // Automatically populate reference when option is selected
           onChange={(e) => setNewReference(e.target.value)}
-          style={{ marginTop: '8px' }}
+          style={{ marginTop: '8px', width: '100%' }}
         />
       </div>
     </Modal>
