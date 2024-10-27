@@ -1,6 +1,8 @@
+
+
 import React, { useState } from 'react';
 import { Button, Checkbox, Spin, Pagination } from 'antd';
-import { EditOutlined, ArrowUpOutlined, ArrowDownOutlined } from '@ant-design/icons';
+import { ArrowUpOutlined, ArrowDownOutlined } from '@ant-design/icons';
 import 'react-resizable/css/styles.css';
 import '../Styles/Landing.css';
 import DetailedView from './DetailedView';
@@ -197,30 +199,38 @@ const TableData: React.FC = () => {
       sorter: true
     },
     {
-      title: 'Edit',
-      dataIndex: 'edit',
-      width: 60,
+      title: 'Actions',
+      dataIndex: 'actions',
+      width: 100, // Adjusted width for Edit and Ungroup buttons
       render: (_: any, row: TableRow, rowIndex: number) => (
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <Button
             type="primary"
-            shape="circle"
-            icon={<EditOutlined />}
-            onClick={() => toggleRow(rowIndex)}
-            style={{ background: '#005b84', borderColor: '#005b84', marginBottom: '5px' }}
-          />
+            onClick={() => toggleRow(rowIndex)} // Add your edit functionality here
+            style={{
+              background: '#005b84', // Edit button background
+              borderColor: '#005b84',
+              color: 'white',
+              padding: '6px 12px',
+              borderRadius: '4px',
+              marginBottom: '5px', // Space between Edit and Ungroup buttons
+              width: '100%', // Full width
+              textAlign: 'center'
+            }}
+          >
+            Edit
+          </Button>
           <Button
             type="default"
-            onClick={() => handleUngroup(rowIndex)} // Call handleUngroup on button click
+            onClick={() => handleUngroup(rowIndex)} // Handle ungroup functionality
             style={{
-              background: '#005b84', // Match the background color
-              borderColor: '#005b84', // Match the border color
-              color: 'white', // Text color
-              padding: '6px 12px', // Adjust padding
-              borderRadius: '4px', // Border radius for rounded corners
-              marginTop: '5px', // Space above the button
-              width: '100%', // Full width to align with other button
-              textAlign: 'center' // Center text alignment
+              background: '#005b84', // Ungroup button background
+              borderColor: '#005b84',
+              color: 'white',
+              padding: '6px 12px',
+              borderRadius: '4px',
+              width: '100%',
+              textAlign: 'center'
             }}
           >
             Ungroup
@@ -255,6 +265,11 @@ const TableData: React.FC = () => {
     } else {
       setFilteredData([]);
     }
+  };
+
+  const handleGroup = () => {
+    // Handle group functionality here
+    console.log('Group button clicked');
   };
 
   const toggleRow = (rowIndex: number) => {
@@ -292,12 +307,29 @@ const TableData: React.FC = () => {
 
   return (
     <div className="mineral-table-container">
-      <div>
+      <div className="fixed-header">  {/* Added fixed header */}
         <h1>Minmod Editor</h1>
-        <SearchBar onSearch={handleSearch} />
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+          <SearchBar onSearch={handleSearch} />
+          <Button 
+            type="default"
+            onClick={handleGroup}
+            style={{
+              background: '#005b84',  // Same background color as Ungroup
+              borderColor: '#005b84',
+              color: 'white',
+              borderRadius: '4px',
+              width: '100px',     // Set width similar to Ungroup button
+              textAlign: 'center',
+              marginBottom:'10px'
+            }}
+          >
+            Group
+          </Button>
+        </div>
       </div>
 
-      <div style={{ overflowX: 'auto' }}>
+      <div className="table-container">  {/* Added table container */}
         {loading ? (
           <div style={{ textAlign: 'center', padding: '20px' }}>
             <Spin size="large" />
@@ -399,5 +431,3 @@ const TableData: React.FC = () => {
 };
 
 export default TableData;
-
-

@@ -23,10 +23,10 @@ def get_site_data():
         
         # Extract fields from data
         site_name = data.get('@label', '')
-        location_info = data.get('location info', {})
-        mineral_inventory = data.get('mineral inventory', [])
-        country_info = location_info.get('country', {}).get('observed name', 'Unknown')
-        state_info = location_info.get('state or province', {}).get('observed name', 'Unknown')
+        location_info = data.get('location_info', {})
+        mineral_inventory = data.get('mineral_inventory', [])
+        country_info = location_info.get('country', {}).get('observed_name', 'Unknown')
+        state_info = location_info.get('state_or_province', {}).get('observed_name', 'Unknown')
         
         # Prepare processed data list
         processed_data = []
@@ -38,8 +38,8 @@ def get_site_data():
                 "crs": "N/A",
                 "country": country_info,
                 "state": state_info,
-                "commodity": inventory.get('commodity', {}).get('observed name', ''),
-                "depositType": data.get('deposit type candidate', {}).get('observed name', ''),
+                "commodity": inventory.get('commodity', {}).get('observed_name', ''),
+                "depositType": data.get('deposit type candidate', {}).get('observed_name', ''),
                 "depositConfidence": data.get('deposit type candidate', {}).get('confidence', '0.0000'),
                 "grade": inventory.get('grade', {}).get('value', '0.00000000'),
                 "tonnage": inventory.get('ore', {}).get('value', '0'),
@@ -160,11 +160,11 @@ def get_commodities():
             
 #             location = data.get("location info", {}).get("location", "")
             
-#             crs = data.get("location info", {}).get("crs", {}).get("normalized uri", {}).get("@label", "Unknown")
+#             crs = data.get("location info", {}).get("crs", {}).get("normalized_uri", {}).get("@label", "Unknown")
             
 #             location_info = data.get("location info", {})
-#             country = location_info.get("country", {}).get("normalized uri", {}).get("@label", "Unknown")
-#             state_or_province = location_info.get("state or province", {}).get("normalized uri", {}).get("@label", "Unknown")
+#             country = location_info.get("country", {}).get("normalized_uri", {}).get("@label", "Unknown")
+#             state_or_province = location_info.get("state_or_province", {}).get("normalized_uri", {}).get("@label", "Unknown")
             
 #             deposit_type_candidates = data.get("deposit type candidate", [])
 #             deposit_type = "Unknown"
@@ -172,10 +172,10 @@ def get_commodities():
 
 #             if isinstance(deposit_type_candidates, list) and len(deposit_type_candidates) > 0:
 #                 first_candidate = deposit_type_candidates[0]
-#                 deposit_type = first_candidate.get("observed name", "Unknown")
+#                 deposit_type = first_candidate.get("observed_name", "Unknown")
 #                 deposit_confidence = first_candidate.get("confidence", "0")
 
-#             mineral_inventory_list = data.get("mineral inventory", [])
+#             mineral_inventory_list = data.get("mineral_inventory", [])
 #             commodity = "Unknown"
 #             grade = "0.00000000"
 #             tonnage = "0"
@@ -186,7 +186,7 @@ def get_commodities():
 #                 first_inventory = mineral_inventory_list[0]
 #                 if isinstance(first_inventory, dict):
 #                     commodity_info = first_inventory.get("commodity", {})
-#                     commodity = commodity_info.get("normalized uri", {}).get("@label", "Unknown")
+#                     commodity = commodity_info.get("normalized_uri", {}).get("@label", "Unknown")
 #                     grade = first_inventory.get("grade", {}).get("value", "0.00000000")
 #                     tonnage = first_inventory.get("ore", {}).get("value", "0")
 #                     reference_info = first_inventory.get("reference", {}).get("document", {})
@@ -231,7 +231,7 @@ def get_resource_details(resource_id: str):
             site_name = data.get("@label", "")
 
             # Handle the case where "location info" might be a list or a dictionary
-            location_info = data.get("location info", {})
+            location_info = data.get("location_info", {})
             location = ""
             crs = "Unknown"
             country = "Unknown"
@@ -241,14 +241,14 @@ def get_resource_details(resource_id: str):
             if isinstance(location_info, list):
                 if len(location_info) > 0:
                     location = location_info[0].get("location", "")
-                    crs = location_info[0].get("crs", {}).get("normalized uri", {}).get("@label", "Unknown")
-                    country = location_info[0].get("country", {}).get("normalized uri", {}).get("@label", "Unknown")
-                    state_or_province = location_info[0].get("state or province", {}).get("normalized uri", {}).get("@label", "Unknown")
+                    crs = location_info[0].get("crs", {}).get("normalized_uri", {}).get("@label", "Unknown")
+                    country = location_info[0].get("country", {}).get("normalized_uri", {}).get("@label", "Unknown")
+                    state_or_province = location_info[0].get("state_or_province", {}).get("normalized_uri", {}).get("@label", "Unknown")
             elif isinstance(location_info, dict):
                 location = location_info.get("location", "")
-                crs = location_info.get("crs", {}).get("normalized uri", {}).get("@label", "Unknown")
-                country = location_info.get("country", {}).get("normalized uri", {}).get("@label", "Unknown")
-                state_or_province = location_info.get("state or province", {}).get("normalized uri", {}).get("@label", "Unknown")
+                crs = location_info.get("crs", {}).get("normalized_uri", {}).get("@label", "Unknown")
+                country = location_info.get("country", {}).get("normalized_uri", {}).get("@label", "Unknown")
+                state_or_province = location_info.get("state_or_province", {}).get("normalized_uri", {}).get("@label", "Unknown")
 
             deposit_type_candidates = data.get("deposit type candidate", [])
             deposit_type = "Unknown"
@@ -256,10 +256,10 @@ def get_resource_details(resource_id: str):
 
             if isinstance(deposit_type_candidates, list) and len(deposit_type_candidates) > 0:
                 first_candidate = deposit_type_candidates[0]
-                deposit_type = first_candidate.get("observed name", "Unknown")
+                deposit_type = first_candidate.get("observed_name", "Unknown")
                 deposit_confidence = first_candidate.get("confidence", "0")
 
-            mineral_inventory_list = data.get("mineral inventory", [])
+            mineral_inventory_list = data.get("mineral_inventory", [])
             commodity = "Unknown"
             grade = "0.00000000"
             tonnage = "0"
@@ -270,7 +270,7 @@ def get_resource_details(resource_id: str):
                 first_inventory = mineral_inventory_list[0]
                 if isinstance(first_inventory, dict):
                     commodity_info = first_inventory.get("commodity", {})
-                    commodity = commodity_info.get("normalized uri", {}).get("@label", "Unknown")
+                    commodity = commodity_info.get("normalized_uri", {}).get("@label", "Unknown")
                     grade = first_inventory.get("grade", {}).get("value", "0.00000000")
                     tonnage = first_inventory.get("ore", {}).get("value", "0")
                     reference_info = first_inventory.get("reference", {}).get("document", {})

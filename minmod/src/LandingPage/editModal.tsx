@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Input, TreeSelect, Select, Button, message } from 'antd';
+import { Modal, Input, Select, Button, message, TreeSelect } from 'antd';
 import { CloseOutlined } from '@ant-design/icons';
 
 interface ResourceDetails {
@@ -78,7 +78,6 @@ const EditModal: React.FC<EditModalProps> = ({ visible, onClose, options, title,
     onClose();
   };
 
-  // Handles the selection of a dropdown item and auto-populates the text field with the selected value
   const handleDropdownChange = (value: string) => {
     setSelectedValue(value);
     if (value === 'custom') {
@@ -169,15 +168,20 @@ const EditModal: React.FC<EditModalProps> = ({ visible, onClose, options, title,
         <span>{title}:</span>
         {title.toLowerCase() === 'deposit type' ? (
           !isEditing ? (
-            <TreeSelect
-              style={{ width: '100%' }}
-              value={editValue}
-              dropdownStyle={{ maxHeight: 400, overflow: 'auto' }}
-              treeData={treeData}
-              placeholder="Please select"
-              treeDefaultExpandAll
-              onChange={handleTreeSelectChange}
-            />
+<TreeSelect
+  showSearch
+  style={{ width: '100%' }}
+  value={editValue}
+  dropdownStyle={{ maxHeight: 400, overflow: 'auto' }}
+  treeData={treeData}
+  placeholder="Search and select deposit type"
+  treeDefaultExpandAll
+  filterTreeNode={(inputValue, treeNode) => {
+    const title = treeNode.title as string; // Type assertion for `treeNode.title`
+    return title?.toLowerCase().indexOf(inputValue.toLowerCase()) >= 0;
+  }}
+  onChange={handleTreeSelectChange}
+/>
           ) : (
             <div style={{ display: 'flex', alignItems: 'center' }}>
               <Input
@@ -206,7 +210,7 @@ const EditModal: React.FC<EditModalProps> = ({ visible, onClose, options, title,
                 {title.toLowerCase() === 'site name' ? option.siteName : option.location}
               </Select.Option>
             ))}
-            <Select.Option value="custom">Enter your own data</Select.Option>
+            <Select.Option value="custom">Enter data</Select.Option>
           </Select>
         ) : (
           <div style={{ display: 'flex', alignItems: 'center' }}>

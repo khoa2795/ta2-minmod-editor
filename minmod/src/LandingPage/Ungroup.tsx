@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import '../Styles/DetailedView.css';
-import { ToastContainer, toast } from 'react-toastify';
+import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { Radio } from 'antd'; // Import Radio from Ant Design
+import { Checkbox } from 'antd'; // Use Checkbox instead of Radio
 
 interface ResourceDetails {
   id: number;
@@ -27,7 +27,7 @@ interface DetailedViewProps {
 
 const Ungroup: React.FC<DetailedViewProps> = ({ allMsFields, onClose }) => {
   const [columns, setColumns] = useState([
-    { title: 'Select', width: 45 }, // New column for radio buttons
+    { title: 'Select', width: 45 }, // Column for checkboxes
     { title: 'Site Name', width: 150 },
     { title: 'Location', width: 120 },
     { title: 'CRS', width: 80 },
@@ -45,17 +45,6 @@ const Ungroup: React.FC<DetailedViewProps> = ({ allMsFields, onClose }) => {
   const [detailedData, setDetailedData] = useState<ResourceDetails[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [selectedRows, setSelectedRows] = useState<number[]>([]); // State for selected rows
-
-  useEffect(() => {
-    // Fetching deposit types from the API
-    const fetchDepositTypes = async () => {
-      const response = await fetch('http://localhost:8000/get_deposit_types');
-      const data = await response.json();
-      // Do something with deposit types if needed
-    };
-
-    fetchDepositTypes(); // Call the function to fetch deposit types
-  }, []);
 
   useEffect(() => {
     const fetchDetails = async () => {
@@ -158,7 +147,7 @@ const Ungroup: React.FC<DetailedViewProps> = ({ allMsFields, onClose }) => {
             {detailedData.map((resource) => (
               <tr key={resource.id}>
                 <td>
-                  <Radio
+                  <Checkbox
                     checked={selectedRows.includes(resource.id)}
                     onChange={() => handleRowSelect(resource.id)}
                   />

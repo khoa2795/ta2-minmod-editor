@@ -67,6 +67,24 @@
   max-width: 100%;
 }
 
+/* This will ensure the header remains fixed on top */
+.fixed-header {
+  position: sticky;
+  top: 0;
+  background-color: white;
+  z-index: 1000;
+  padding: 10px;
+  width: 100%; /* Make sure it takes the full width */
+  border-bottom: 1px solid #ddd; /* Optional: to visually separate the header */
+}
+
+/* Ensure the table is scrollable with a set height for the container */
+.table-container {
+  max-height: calc(100vh - 150px); /* Adjust the height to ensure table fits the viewport */
+  overflow-y: auto; /* Enable scrolling for the table */
+  overflow-x: hidden; /* Prevent horizontal scrolling */
+}
+
 /* Responsive design for smaller screens */
 @media screen and (max-width: 768px) {
   .mineral-table {

@@ -52,7 +52,7 @@ const EditableDropdown: React.FC<EditableDropdownProps> = ({ options, onSave }) 
                 {option}
               </option>
             ))}
-            <option value="Enter your own">Enter your own</option>
+            <option value="Enter your own">Enter data</option>
           </select>
         </div>
       )}
