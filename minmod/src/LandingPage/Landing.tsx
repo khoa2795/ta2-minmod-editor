@@ -1,6 +1,6 @@
 
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button, Checkbox, Spin, Pagination } from 'antd';
 import { ArrowUpOutlined, ArrowDownOutlined } from '@ant-design/icons';
 import 'react-resizable/css/styles.css';
@@ -38,6 +38,48 @@ const TableData: React.FC = () => {
   const [currentRowData, setCurrentRowData] = useState<TableRow | null>(null); // To store data for the Ungroup component
   const [ungroupedRowIndex, setUngroupedRowIndex] = useState<number | null>(null); // To track which row is ungrouped
 
+  useEffect(() => {
+    const token = localStorage.getItem('session_id');
+
+    if (!token) {
+      console.error("No session token found. Redirecting to login.");
+      window.location.href = '/';
+      return;
+    }
+
+    // Call whoami endpoint to validate the token
+    const validateSession = async () => {
+      try {
+        const response = await fetch('http://localhost:8000/users/me/', {
+          method: 'GET',
+          headers: {
+            'Cookie': `session=${token}`,  // Set the session token in the Cookie header
+          },
+          credentials: 'include',
+        });
+
+        if (!response.ok) {
+          console.warn("Session validation failed. Redirecting to login.");
+          window.location.href = '/';
+        } else {
+          const userData = await response.json();
+          console.log('User session validated:', userData);
+        }
+      } catch (error) {
+        console.error("Error validating session:", error);
+        window.location.href = '/';
+      }
+    };
+
+    validateSession();
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("session_id"); // Clear session token
+    window.location.href = "/"; // Redirect to login page
+  };
+
+  
   // Sorting logic
   const handleSort = (columnKey: string) => {
     let order: 'ascend' | 'descend' | null = 'ascend';
@@ -309,6 +351,13 @@ const TableData: React.FC = () => {
     <div className="mineral-table-container">
       <div className="fixed-header">  {/* Added fixed header */}
         <h1>Minmod Editor</h1>
+        <Button 
+          type="primary" 
+          onClick={handleLogout} 
+          className="logout-button"
+        >
+          Logout
+        </Button>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
           <SearchBar onSearch={handleSearch} />
           <Button 
