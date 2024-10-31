@@ -38,6 +38,7 @@ const TableData: React.FC = () => {
   const [currentRowData, setCurrentRowData] = useState<TableRow | null>(null); // To store data for the Ungroup component
   const [ungroupedRowIndex, setUngroupedRowIndex] = useState<number | null>(null); // To track which row is ungrouped
   const [username, setUserName] = useState<string | null>(null);
+  const [toggle, setToggle] = useState(false);
 
 
 
@@ -319,13 +320,15 @@ const TableData: React.FC = () => {
   };
 
   const toggleRow = (rowIndex: number) => {
-    setExpandedRows(prevExpandedRows => {
+    console.log("Toggling row:", rowIndex);
+    setExpandedRows((prevExpandedRows) => {
       if (prevExpandedRows.includes(rowIndex)) {
-        return prevExpandedRows.filter(index => index !== rowIndex);
+        return prevExpandedRows.filter((index) => index !== rowIndex);
       }
       return [...prevExpandedRows, rowIndex];
     });
   };
+  
 
   const onResize = (index: number, newWidth: number) => {
     const newColumns = [...columns];
@@ -484,3 +487,4 @@ const TableData: React.FC = () => {
 };
 
 export default TableData;
+

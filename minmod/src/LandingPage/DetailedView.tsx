@@ -69,6 +69,8 @@ const DetailedView: React.FC<DetailedViewProps> = ({ allMsFields, username, onCl
           const response = await fetch(`http://127.0.0.1:8000/get_resource/${resourceId}`);
           if (response.ok) {
             const result = await response.json();
+            console.log("result", result)
+
             return { ...result.data, id: index + 1 };
           }
           return null;
@@ -196,20 +198,22 @@ const DetailedView: React.FC<DetailedViewProps> = ({ allMsFields, username, onCl
             setDetailedData((prevData) => [
                 ...prevData,
                 {
-                    ...newRow,
-                    id: prevData.length + 1,
-                    location: firstSiteData.location_info.location || "",
-                    crs: firstSiteData.location_info.crs?.normalized_uri || "",
-                    country: firstSiteData.location_info.country?.observed_name || "",
-                    state_or_province: firstSiteData.location_info.state_or_province?.observed_name || "",
-                    commodity: firstSiteData.mineral_inventory?.commodity || "",
-                    depositType: newRow.depositType || "",
-                    depositConfidence: newRow.depositConfidence || "",
-                    grade: firstSiteData.mineral_inventory?.grade || "",
-                    tonnage: firstSiteData.mineral_inventory?.tonnage || "",
-                    reference: newRow.reference || "",
-                    source: firstSiteData.source_id || ""
+                  id: prevData.length + 1,  // Assigns a unique ID
+                  siteName: newRow.siteName || firstSiteData?.name || "",  // Use user input or fallback to firstSiteData
+                  location: newRow.location || firstSiteData?.location_info?.location || "",
+                  crs: newRow.crs || firstSiteData?.location_info?.crs?.normalized_uri || "",
+                  country: newRow.country || firstSiteData?.location_info?.country?.observed_name || "",
+                  state_or_province: newRow.state_or_province || firstSiteData?.location_info?.state_or_province?.observed_name || "",
+                  commodity: newRow.commodity || firstSiteData?.mineral_inventory?.commodity || "Unknown",
+                  depositType: newRow.depositType || firstSiteData?.deposit_type_candidate?.depositType || "Unknown",
+                  depositConfidence: newRow.depositConfidence || firstSiteData?.deposit_type_candidate?.depositConfidence || "0",
+                  grade: newRow.grade || firstSiteData?.mineral_inventory?.grade || "0.00000000",
+                  tonnage: newRow.tonnage || firstSiteData?.mineral_inventory?.tonnage || "0",
+                  reference: newRow.reference || firstSiteData?.mineral_inventory?.reference || "Unknown",
+                  source: newRow.source || firstSiteData?.mineral_inventory?.source || "Unknown"
                 }
+                
+                
             ]);
         } else if (response.status === 403) {
             toast.error("Site already exists");
