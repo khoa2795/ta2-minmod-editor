@@ -23,10 +23,11 @@ interface ResourceDetails {
 
 interface DetailedViewProps {
   allMsFields: string[];
+  username: string;
   onClose: () => void;
 }
 
-const DetailedView: React.FC<DetailedViewProps> = ({ allMsFields, onClose }) => {
+const DetailedView: React.FC<DetailedViewProps> = ({ allMsFields, username, onClose }) => {
   const [columns, setColumns] = useState([
     { title: 'Site Name', width: 150 },
     { title: 'Location', width: 120 },
@@ -47,17 +48,16 @@ const DetailedView: React.FC<DetailedViewProps> = ({ allMsFields, onClose }) => 
   const [modalVisible, setModalVisible] = useState(false);
   const [modalTitle, setModalTitle] = useState('');
   const [editingRowId, setEditingRowId] = useState<number | null>(null);
-  const [depositTypes, setDepositTypes] = useState<string[]>([]); // State for deposit types
+  const [depositTypes, setDepositTypes] = useState<string[]>([]);
+  const [firstSiteData, setFirstSiteData] = useState<any>(null);
 
   useEffect(() => {
-    // Fetching deposit types from the API
     const fetchDepositTypes = async () => {
       const response = await fetch('http://localhost:8000/get_deposit_types');
       const data = await response.json();
       setDepositTypes(data.deposit_types || []);
     };
-
-    fetchDepositTypes(); // Call the function to fetch deposit types
+    fetchDepositTypes();
   }, []);
 
   useEffect(() => {
@@ -79,64 +79,152 @@ const DetailedView: React.FC<DetailedViewProps> = ({ allMsFields, onClose }) => 
       setDetailedData(validDetails);
       setLoading(false);
     };
-
     fetchDetails();
   }, [allMsFields]);
 
-  const onResize = (index: number, newWidth: number) => {
-    setColumns((prevColumns) => {
-      const newColumns = [...prevColumns];
-      newColumns[index].width = Math.max(newWidth, 50);
-      return newColumns;
-    });
-  };
-
-  const handleMouseDown = (index: number, e: React.MouseEvent) => {
-    e.preventDefault();
-    const startX = e.clientX;
-    const startWidth = columns[index].width;
-
-    const onMouseMove = (moveEvent: MouseEvent) => {
-      const newWidth = startWidth + (moveEvent.clientX - startX);
-      onResize(index, newWidth);
-    };
-
-    const onMouseUp = () => {
-      document.removeEventListener('mousemove', onMouseMove);
-      document.removeEventListener('mouseup', onMouseUp);
-    };
-
-    document.addEventListener('mousemove', onMouseMove);
-    document.addEventListener('mouseup', onMouseUp);
-  };
-
-  const handleEditClick = (rowId: number, title: string) => {
+  const handleEditClick = async (rowId: number, title: string) => {
     setEditingRowId(rowId);
     setModalTitle(title);
     setModalVisible(true);
+  
+    if (allMsFields.length > 0) {
+      const firstResourceId = allMsFields[0].split("resource/")[1];
+      console.log("firstResourceId",firstResourceId)
+
+      try {
+        const response = await fetch(`http://127.0.0.1:8000/get_site_info/${firstResourceId}`);
+        if (response.ok) {
+          const result = await response.json();
+          if (result.data) {
+            setFirstSiteData(result.data);
+          } else {
+            toast.error("No data received from site information API.");
+          }
+        } else {
+          toast.error("Failed to fetch site information. Server responded with an error.");
+        }
+      } catch (error) {
+        console.error("Error fetching site information:", error);
+        toast.error("Failed to fetch site information due to network error.");
+      }
+    }
   };
 
-  const handleSaveChanges = (newRow: ResourceDetails) => {
-    const newId = detailedData.length > 0 ? Math.max(...detailedData.map(row => row.id)) + 1 : 1;
+  const handleSaveChanges = async (newRow: ResourceDetails) => {
 
-    const rowToAdd: ResourceDetails = {
-      ...newRow,
-      id: newId,
+    const sessionId = localStorage.getItem('session_id');
+    if (!sessionId) {
+        toast.error("Session ID not found. Please log in again.");
+        return;
+    }
+
+    if (!firstSiteData || !firstSiteData.location_info) {
+        toast.error("Site data is incomplete or not loaded.");
+        return;
+    }
+
+    const source_id = `${firstSiteData.source_id || ""}?username=${username}`;
+    const modifiedAt = new Date().toISOString();
+
+    const payload = {
+        source_id: source_id,
+        record_id: firstSiteData.record_id || "",
+        name: newRow.siteName || firstSiteData.name || "",
+        location_info: {
+            location: firstSiteData.location_info.location || "",
+            crs: {
+                normalized_uri: firstSiteData.location_info.crs?.normalized_uri || "",
+                confidence: firstSiteData.location_info.crs?.confidence || 0,
+                source: firstSiteData.location_info.crs?.source || ""
+            },
+            country: firstSiteData.location_info.country
+                ? [{
+                    normalized_uri: firstSiteData.location_info.country.normalized_uri || "",
+                    observed_name: firstSiteData.location_info.country.observed_name || "",
+                    confidence: firstSiteData.location_info.country.confidence || 0,
+                    source: firstSiteData.location_info.country.source || ""
+                }]
+                : [],
+            state_or_province: firstSiteData.location_info.state_or_province
+                ? [{
+                    normalized_uri: firstSiteData.location_info.state_or_province.normalized_uri || "",
+                    observed_name: firstSiteData.location_info.state_or_province.observed_name || "",
+                    confidence: firstSiteData.location_info.state_or_province.confidence || 0,
+                    source: firstSiteData.location_info.state_or_province.source || ""
+                }]
+                : []
+        },
+        mineral_inventory: firstSiteData.mineral_inventory
+            ? [{
+                commodity: firstSiteData.mineral_inventory.commodity || "Unknown",
+                grade: firstSiteData.mineral_inventory.grade || "0.00000000",
+                tonnage: firstSiteData.mineral_inventory.tonnage || "0",
+                reference: firstSiteData.mineral_inventory.reference || "Unknown",
+                source: firstSiteData.mineral_inventory.source || "Unknown"
+            }]
+            : [], // Ensure mineral_inventory is an array
+        deposit_type_candidate: Array.isArray(firstSiteData.deposit_type_candidate)
+            ? firstSiteData.deposit_type_candidate.map((item: any) => ({
+                observed_name: item?.observed_name || "",
+                normalized_uri: item?.normalized_uri || "",
+                source: item?.source || "",
+                confidence: item?.confidence || 0
+            }))
+            : [],
+        modified_at: modifiedAt,
+        reference: Array.isArray(firstSiteData.reference) ? firstSiteData.reference : [],
+        created_by: "https://minmod.isi.edu/users/inferlink",
+        same_as: Array.isArray(firstSiteData.same_as) ? firstSiteData.same_as : []
     };
 
-    setDetailedData((prevData) => [...prevData, rowToAdd]);
-    setModalVisible(false);
+    console.log("Constructed Payload:", JSON.stringify(payload, null, 2));
 
-    toast.success('New entry added successfully!', {
-      position: "top-right",
-      autoClose: 3000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-      progress: undefined,
-    });
-  };
+    try {
+        const response = await fetch("http://localhost:8000/submit_mineral_site", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Cookie": `session=${sessionId}`,
+            },
+            body: JSON.stringify(payload),
+            credentials: "include",
+        });
+
+        if (response.ok) {
+            toast.success("Data submitted successfully");
+
+            setDetailedData((prevData) => [
+                ...prevData,
+                {
+                    ...newRow,
+                    id: prevData.length + 1,
+                    location: firstSiteData.location_info.location || "",
+                    crs: firstSiteData.location_info.crs?.normalized_uri || "",
+                    country: firstSiteData.location_info.country?.observed_name || "",
+                    state_or_province: firstSiteData.location_info.state_or_province?.observed_name || "",
+                    commodity: firstSiteData.mineral_inventory?.commodity || "",
+                    depositType: newRow.depositType || "",
+                    depositConfidence: newRow.depositConfidence || "",
+                    grade: firstSiteData.mineral_inventory?.grade || "",
+                    tonnage: firstSiteData.mineral_inventory?.tonnage || "",
+                    reference: newRow.reference || "",
+                    source: firstSiteData.source_id || ""
+                }
+            ]);
+        } else if (response.status === 403) {
+            toast.error("Site already exists");
+        } else {
+            const errorData = await response.json();
+            toast.error(`Error: ${errorData.detail}`);
+        }
+    } catch (error) {
+        console.error("API call error:", error);
+        toast.error("Failed to submit data.");
+    }
+
+    setModalVisible(false);
+};
+
 
   return (
     <div className="detailed-view-container">
@@ -164,20 +252,6 @@ const DetailedView: React.FC<DetailedViewProps> = ({ allMsFields, onClose }) => 
                       />
                     )}
                   </div>
-                  {index < columns.length - 1 && (
-                    <div
-                      onMouseDown={(e) => handleMouseDown(index, e)}
-                      style={{
-                        cursor: 'col-resize',
-                        position: 'absolute',
-                        right: '0',
-                        top: '0',
-                        height: '100%',
-                        width: '10px',
-                        backgroundColor: 'transparent',
-                      }}
-                    />
-                  )}
                 </th>
               ))}
             </tr>
@@ -211,15 +285,14 @@ const DetailedView: React.FC<DetailedViewProps> = ({ allMsFields, onClose }) => 
         </table>
       )}
 
-<EditModal
-  visible={modalVisible}
-  onClose={() => setModalVisible(false)}
-  options={detailedData}
-  title={modalTitle}
-  depositTypes={depositTypes} // Pass the deposit types
-  onSave={handleSaveChanges}
-/>
-
+      <EditModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        options={detailedData}
+        title={modalTitle}
+        depositTypes={depositTypes}
+        onSave={handleSaveChanges}
+      />
     </div>
   );
 };

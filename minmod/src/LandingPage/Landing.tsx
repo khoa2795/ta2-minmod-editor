@@ -37,6 +37,9 @@ const TableData: React.FC = () => {
   const [isUngroupVisible, setIsUngroupVisible] = useState<boolean>(false); // State for Ungroup visibility
   const [currentRowData, setCurrentRowData] = useState<TableRow | null>(null); // To store data for the Ungroup component
   const [ungroupedRowIndex, setUngroupedRowIndex] = useState<number | null>(null); // To track which row is ungrouped
+  const [username, setUserName] = useState<string | null>(null);
+
+
 
   useEffect(() => {
     const token = localStorage.getItem('session_id');
@@ -63,6 +66,7 @@ const TableData: React.FC = () => {
           window.location.href = '/';
         } else {
           const userData = await response.json();
+          setUserName(userData.username);
           console.log('User session validated:', userData);
         }
       } catch (error) {
@@ -439,7 +443,7 @@ const TableData: React.FC = () => {
                     {expandedRows.includes(rowIndex) && (
                       <tr>
                         <td colSpan={columns.length}>
-                          <DetailedView allMsFields={row.all_ms_fields} onClose={() => toggleRow(rowIndex)} />
+                          <DetailedView allMsFields={row.all_ms_fields} username={username ?? ""} onClose={() => toggleRow(rowIndex)} />
                         </td>
                       </tr>
                     )}
