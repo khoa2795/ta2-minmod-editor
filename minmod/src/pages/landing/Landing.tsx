@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Button, Checkbox, Spin, Pagination } from 'antd';
 import { ArrowUpOutlined, ArrowDownOutlined } from '@ant-design/icons';
 import 'react-resizable/css/styles.css';
-import '../Styles/Landing.css';
+import './Landing.css';
 import DetailedView from './DetailedView';
 import SearchBar from './SearchBar';
 import Ungroup from './Ungroup'; // Import Ungroup component

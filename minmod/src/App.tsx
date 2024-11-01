@@ -2,8 +2,8 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import './App.css';
-import Landing from './LandingPage/Landing';
-import Login from './Login/login';
+import Landing from './pages/landing/Landing';
+import Login from './pages/login/login';
 import ProtectedRoute from './Protect';
 
 const App: React.FC = () => {

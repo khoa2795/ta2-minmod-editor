@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import '../Styles/DetailedView.css';
+import './DetailedView.css';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Checkbox } from 'antd'; // Use Checkbox instead of Radio

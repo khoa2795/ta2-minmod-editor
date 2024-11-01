@@ -38,6 +38,23 @@ class Token(BaseModel):
     access_token: str
     token_type: str
 
+async def get_minmod_headers(request: Request):
+    session_id = request.cookies.get("session") or request.cookies.get("session_id")
+    if not session_id:
+        raise HTTPException(status_code=401, detail="Session token not provided in cookies.")
+    
+    # Decode session token
+    payload = jwt.decode(session_id, SECRET_KEY, algorithms=[ALGORITHM])
+    session_id_A = payload.get('session_id')
+
+    # Set up headers and cookie for the outgoing request to the external API
+    headers = {
+        "accept": "application/json",
+        "Content-Type": "application/json",
+        "Cookie": f"session={session_id_A}"
+    }
+    return headers
+
 # Function to create JWT token
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode = data.copy()
@@ -160,42 +177,18 @@ async def read_users_me(current_user: dict = Depends(get_current_user)):
         "email": current_user.get("email"),
     }
 
-
-class MineralSiteRequest(BaseModel):
-    source_id: str
-    record_id: str
-    name: str
-    location_info: dict
-    mineral_inventory: list
-    deposit_type_candidate: list
-    modified_at: str
-    reference: list
-    created_by: str
-    same_as: list
+########################## - replace the modal with dictionary
 
 @app.post("/submit_mineral_site")
-async def submit_mineral_site(request: Request, mineral_site: MineralSiteRequest):
+async def submit_mineral_site(mineral_site: dict, minmod_headers: dict = Depends(get_minmod_headers)):
     # Retrieve the session cookie from the incoming request
-    session_id = request.cookies.get("session") or request.cookies.get("session_id")
-    if not session_id:
-        raise HTTPException(status_code=401, detail="Session token not provided in cookies.")
-    
-    # Decode session token
-    payload = jwt.decode(session_id, SECRET_KEY, algorithms=[ALGORITHM])
-    session_id_A = payload.get('session_id')
 
-    # Set up headers and cookie for the outgoing request to the external API
-    headers = {
-        "accept": "application/json",
-        "Content-Type": "application/json",
-        "Cookie": f"session={session_id_A}"
-    }
 
     # Make the request to the external API
     response = requests.post(
         "https://minmod.isi.edu/test/api/v1/mineral-sites",
-        headers=headers,
-        json=mineral_site.dict(),
+        headers=minmod_headers,
+        json=mineral_site,
         verify=False
     )
 
@@ -214,89 +207,23 @@ async def submit_mineral_site(request: Request, mineral_site: MineralSiteRequest
 
 
 # Models for request body
-class CrsInfo(BaseModel):
-    normalized_uri: str
-    confidence: str
-    source: str
 
-    @validator('confidence', pre=True, always=True)
-    def cast_confidence_to_string(cls, v):
-        return str(v)
-
-class CountryInfo(BaseModel):
-    normalized_uri: str
-    observed_name: str
-    confidence: str
-    source: str
-
-    @validator('confidence', pre=True, always=True)
-    def cast_confidence_to_string(cls, v):
-        return str(v)
-
-class StateOrProvinceInfo(BaseModel):
-    normalized_uri: str
-    observed_name: str
-    confidence: str
-    source: str
-
-    @validator('confidence', pre=True, always=True)
-    def cast_confidence_to_string(cls, v):
-        return str(v)
-
-class LocationInfo(BaseModel):
-    location: str
-    crs: CrsInfo
-    country: List[CountryInfo]
-    state_or_province: List[StateOrProvinceInfo]
-
-class MineralInventory(BaseModel):
-    commodity: str
-    grade: str
-    tonnage: str
-    reference: str
-    source: str
-
-class UpdateMineralSiteRequest(BaseModel):
-    source_id: str
-    record_id: str
-    name: str
-    location_info: LocationInfo
-    mineral_inventory: List[MineralInventory]
-    deposit_type_candidate: List[dict]
-    modified_at: str
-    reference: List[dict]
-    created_by: str
-    same_as: List[dict]
 
 # Endpoint for updating mineral site
 @app.post("/test/api/v1/mineral-sites/{site_id}")
 async def update_mineral_site(
-    request: Request,
+    minmod_header:dict= Depends(get_minmod_headers),
     site_id: str = Path(..., description="The ID of the mineral site to update"),
-    update_data: UpdateMineralSiteRequest = Body(..., description="Data for updating the mineral site")
+    update_data: dict = Body(..., description="Data for updating the mineral site")
 ):
     # Retrieve session ID from cookies
-    session_id = request.cookies.get("session") or request.cookies.get("session_id")
-    if not session_id:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Session token not provided in cookies.")
-    
-    # Decode JWT to get session ID for request header
-    payload = jwt.decode(session_id, SECRET_KEY, algorithms=[ALGORITHM])
-    session_id_A = payload.get("session_id")
-
-    # Set up headers including the session cookie for the outgoing request
-    headers = {
-        "accept": "application/json",
-        "Content-Type": "application/json",
-        "Cookie": f"session={session_id_A}"
-    }
 
     # Send PUT request to external API
     url = f"https://minmod.isi.edu/test/api/v1/mineral-sites/{site_id}"
     response = requests.post(
         url,
-        headers=headers,
-        json=update_data.dict(),
+        headers=minmod_header,
+        json=update_data,
         verify=False
     )
 

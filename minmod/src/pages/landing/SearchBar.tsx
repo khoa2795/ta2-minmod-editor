@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { Input, AutoComplete } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
-import '../Styles/Search.css';
+import './Search.css';
 
 interface SearchBarProps {
   onSearch: (value: string) => void;
