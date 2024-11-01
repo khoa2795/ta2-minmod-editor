@@ -1,14 +1,24 @@
-from fastapi import FastAPI, HTTPException, Response, Depends, Request, status,Cookie, Path, Body
+import logging
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional, Union
+
+import requests
+from fastapi import (
+    Body,
+    Cookie,
+    Depends,
+    FastAPI,
+    HTTPException,
+    Path,
+    Request,
+    Response,
+    status,
+)
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
 from jose import jwt
-from datetime import datetime, timedelta
 from pydantic import BaseModel, validator
-from typing import Optional
 
-import requests
-import logging
-from typing import List, Optional, Dict, Any, Union
 # Logging setup
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -18,9 +28,7 @@ SECRET_KEY = "your_secret_key_here"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
-origins = [
-    "http://localhost:3000"  # Replace this with your actual frontend URL
-]
+origins = ["http://localhost:3000"]  # Replace this with your actual frontend URL
 
 app = FastAPI()
 
@@ -33,27 +41,32 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 # JWT Token Response Model
 class Token(BaseModel):
     access_token: str
     token_type: str
 
+
 async def get_minmod_headers(request: Request):
     session_id = request.cookies.get("session") or request.cookies.get("session_id")
     if not session_id:
-        raise HTTPException(status_code=401, detail="Session token not provided in cookies.")
-    
+        raise HTTPException(
+            status_code=401, detail="Session token not provided in cookies."
+        )
+
     # Decode session token
     payload = jwt.decode(session_id, SECRET_KEY, algorithms=[ALGORITHM])
-    session_id_A = payload.get('session_id')
+    session_id_A = payload.get("session_id")
 
     # Set up headers and cookie for the outgoing request to the external API
     headers = {
         "accept": "application/json",
         "Content-Type": "application/json",
-        "Cookie": f"session={session_id_A}"
+        "Cookie": f"session={session_id_A}",
     }
     return headers
+
 
 # Function to create JWT token
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
@@ -66,19 +79,21 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
+
 # Login endpoint to get JWT token
 @app.post("/test/api/v1/login", response_model=Token)
-async def login(form_data: OAuth2PasswordRequestForm = Depends(), response: Response = Response()):
+async def login(
+    form_data: OAuth2PasswordRequestForm = Depends(), response: Response = Response()
+):
     # Authenticate user using an external API
     url = "https://minmod.isi.edu/test/api/v1/login"
-    payload = {
-        "username": form_data.username,
-        "password": form_data.password
-    }
+    payload = {"username": form_data.username, "password": form_data.password}
 
     try:
         # Send a request to authenticate the user
-        logger.info(f"Sending authentication request to {url} for user: {form_data.username}")
+        logger.info(
+            f"Sending authentication request to {url} for user: {form_data.username}"
+        )
         login_response = requests.post(url, params=payload, verify=False)
 
         if login_response.status_code == 200 and login_response.json() == "Logged in":
@@ -88,11 +103,17 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), response: Resp
             session_id = login_response.cookies.get("session")
             logger.info(f"PLEASE {session_id}")
             access_token = create_access_token(
-                data={"sub": form_data.username, "session_id" :session_id}, expires_delta=access_token_expires
+                data={"sub": form_data.username, "session_id": session_id},
+                expires_delta=access_token_expires,
             )
 
             # Store JWT token in cookie
-            response.set_cookie(key="session_id", value=access_token, httponly=True, max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60)
+            response.set_cookie(
+                key="session_id",
+                value=access_token,
+                httponly=True,
+                max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+            )
 
             logger.error(f"Access Token: {access_token}")
             return {"access_token": access_token, "token_type": "bearer"}
@@ -106,11 +127,13 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), response: Resp
         logger.error(f"Error during login request: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Authentication service unavailable"
+            detail="Authentication service unavailable",
         )
+
 
 # Function to get the current logged-in user using session cookie
 # async def get_current_user(request: Request):
+
 
 async def get_current_user(request: Request):
     try:
@@ -119,13 +142,12 @@ async def get_current_user(request: Request):
         session_id = request.cookies.get("session_id")
         logger.info(f"session_id token B: {session_id}")
 
-        #decoding 
+        # decoding
         payload = jwt.decode(session_id, SECRET_KEY, algorithms=[ALGORITHM])
         logger.info(f"Payload: {payload}")
 
-
-        #get the dictionary
-        session_id_A = payload['session_id']
+        # get the dictionary
+        session_id_A = payload["session_id"]
         logger.info(f"session_id_A: {session_id_A}")
         #
 
@@ -137,15 +159,14 @@ async def get_current_user(request: Request):
             )
 
         # Set the Authorization header for the request
-        cookies = {
-            'session': session_id_A
-        }
-
+        cookies = {"session": session_id_A}
 
         # Send the request to the /whoami endpoint
         response = requests.get(url, cookies=cookies, verify=False)
 
-        logger.info(f"Response from /whoami: Status Code {response.status_code}, Content: {response.text}")
+        logger.info(
+            f"Response from /whoami: Status Code {response.status_code}, Content: {response.text}"
+        )
 
         if response.status_code == 200:
             user_info = response.json()
@@ -153,9 +174,13 @@ async def get_current_user(request: Request):
             return user_info
         else:
             if response.status_code == 404:
-                logger.error("Endpoint not found - please verify the URL and check the server configuration.")
+                logger.error(
+                    "Endpoint not found - please verify the URL and check the server configuration."
+                )
             else:
-                logger.error(f"Failed to retrieve user info from /whoami: Status Code {response.status_code}")
+                logger.error(
+                    f"Failed to retrieve user info from /whoami: Status Code {response.status_code}"
+                )
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Could not validate credentials",
@@ -164,7 +189,7 @@ async def get_current_user(request: Request):
         logger.error(f"Error during user info retrieval: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Service unavailable"
+            detail="Service unavailable",
         )
 
 
@@ -177,19 +202,22 @@ async def read_users_me(current_user: dict = Depends(get_current_user)):
         "email": current_user.get("email"),
     }
 
+
 ########################## - replace the modal with dictionary
 
-@app.post("/submit_mineral_site")
-async def submit_mineral_site(mineral_site: dict, minmod_headers: dict = Depends(get_minmod_headers)):
-    # Retrieve the session cookie from the incoming request
 
+@app.post("/submit_mineral_site")
+async def submit_mineral_site(
+    mineral_site: dict, minmod_headers: dict = Depends(get_minmod_headers)
+):
+    # Retrieve the session cookie from the incoming request
 
     # Make the request to the external API
     response = requests.post(
         "https://minmod.isi.edu/test/api/v1/mineral-sites",
         headers=minmod_headers,
         json=mineral_site,
-        verify=False
+        verify=False,
     )
 
     # Check if the response was successful
@@ -203,6 +231,8 @@ async def submit_mineral_site(mineral_site: dict, minmod_headers: dict = Depends
 
     # Return the status and uri as the response
     return {"status": status, "uri": uri}
+
+
 ################################################################################################
 
 
@@ -212,20 +242,15 @@ async def submit_mineral_site(mineral_site: dict, minmod_headers: dict = Depends
 # Endpoint for updating mineral site
 @app.post("/test/api/v1/mineral-sites/{site_id}")
 async def update_mineral_site(
-    minmod_header:dict= Depends(get_minmod_headers),
+    minmod_header: dict = Depends(get_minmod_headers),
     site_id: str = Path(..., description="The ID of the mineral site to update"),
-    update_data: dict = Body(..., description="Data for updating the mineral site")
+    update_data: dict = Body(..., description="Data for updating the mineral site"),
 ):
     # Retrieve session ID from cookies
 
     # Send PUT request to external API
     url = f"https://minmod.isi.edu/test/api/v1/mineral-sites/{site_id}"
-    response = requests.post(
-        url,
-        headers=minmod_header,
-        json=update_data,
-        verify=False
-    )
+    response = requests.post(url, headers=minmod_header, json=update_data, verify=False)
 
     # Check response and handle errors if any
     if response.status_code != 200:
@@ -240,22 +265,24 @@ async def update_mineral_site(
 @app.get("/get_site_data")
 def get_site_data():
     url = "https://minmod.isi.edu/resource/site__api-cdr-land-v1-docs-documents__0249cf080edc4c536abfde9e13867b5ee755b880a247857956ddf23b72a44211d4?format=json"
-    
+
     try:
         response = requests.get(url, verify=False)
         response.raise_for_status()
         data = response.json()
-        
+
         # Extract fields from data
-        site_name = data.get('@label', '')
-        location_info = data.get('location_info', {})
-        mineral_inventory = data.get('mineral_inventory', [])
-        country_info = location_info.get('country', {}).get('observed_name', 'Unknown')
-        state_info = location_info.get('state_or_province', {}).get('observed_name', 'Unknown')
-        
+        site_name = data.get("@label", "")
+        location_info = data.get("location_info", {})
+        mineral_inventory = data.get("mineral_inventory", [])
+        country_info = location_info.get("country", {}).get("observed_name", "Unknown")
+        state_info = location_info.get("state_or_province", {}).get(
+            "observed_name", "Unknown"
+        )
+
         # Prepare processed data list
         processed_data = []
-        
+
         for inventory in mineral_inventory:
             inventory_data = {
                 "siteName": site_name,
@@ -263,60 +290,75 @@ def get_site_data():
                 "crs": "N/A",
                 "country": country_info,
                 "state": state_info,
-                "commodity": inventory.get('commodity', {}).get('observed_name', ''),
-                "depositType": data.get('deposit_type_candidate', {}).get('observed_name', ''),
-                "depositConfidence": data.get('deposit_type_candidate', {}).get('confidence', '0.0000'),
-                "grade": inventory.get('grade', {}).get('value', '0.00000000'),
-                "tonnage": inventory.get('ore', {}).get('value', '0'),
-                "reference": inventory.get('reference', {}).get('document', {}).get('title', ''),
-                "source": inventory.get('reference', {}).get('document', {}).get('uri', ''),
+                "commodity": inventory.get("commodity", {}).get("observed_name", ""),
+                "depositType": data.get("deposit_type_candidate", {}).get(
+                    "observed_name", ""
+                ),
+                "depositConfidence": data.get("deposit_type_candidate", {}).get(
+                    "confidence", "0.0000"
+                ),
+                "grade": inventory.get("grade", {}).get("value", "0.00000000"),
+                "tonnage": inventory.get("ore", {}).get("value", "0"),
+                "reference": inventory.get("reference", {})
+                .get("document", {})
+                .get("title", ""),
+                "source": inventory.get("reference", {})
+                .get("document", {})
+                .get("uri", ""),
             }
             processed_data.append(inventory_data)
-        
+
         return {"data": processed_data}
-    
+
     except requests.exceptions.RequestException as e:
         return {"error": str(e)}
-
-
 
 
 @app.get("/get_sites/{commodity}")
 def get_sites(commodity: str):
     url = f"https://minmod.isi.edu/api/v1/dedup_mineral_sites/{commodity}"
-    
+
     try:
         response = requests.get(url, verify=False)
         response.raise_for_status()
         data = response.json()
-        
+
         processed_data = []
-        
+
         for group in data:
             first_site = group.get("sites", [{}])[0]
             location = group.get("best_loc_wkt")
-            
+
             # Handle cases where location is MULTIPOINT or GEOMETRYCOLLECTION
             if location and (location.startswith("POINT")):
                 # Keep the POINT keyword intact and clean up extra spaces
                 coordinates = location.strip()
-            elif location and (location.startswith("MULTIPOINT") or location.startswith("GEOMETRYCOLLECTION")):
+            elif location and (
+                location.startswith("MULTIPOINT")
+                or location.startswith("GEOMETRYCOLLECTION")
+            ):
                 # Fallback to best_loc_centroid_epsg_4326 if available
                 coordinates = group.get("best_loc_centroid_epsg_4326", "").strip()
                 if not coordinates:
                     coordinates = " "  # Default to empty if both are unavailable
             else:
-                coordinates = " "  # Default if location is missing or in an unhandled format
+                coordinates = (
+                    " "  # Default if location is missing or in an unhandled format
+                )
 
             deposit_type = ""
             deposit_confidence = "0.0000"
             if group.get("deposit_types"):
                 deposit_type = group["deposit_types"][0].get("name", "")
-                deposit_confidence = f"{group['deposit_types'][0].get('confidence', 0):.4f}"
-            
+                deposit_confidence = (
+                    f"{group['deposit_types'][0].get('confidence', 0):.4f}"
+                )
+
             total_grade = group.get("total_grade")
-            total_grade_str = f"{total_grade:.8f}" if total_grade is not None else "0.00000000"
-            
+            total_grade_str = (
+                f"{total_grade:.8f}" if total_grade is not None else "0.00000000"
+            )
+
             total_tonnage = group.get("total_tonnage")
             total_tonnage_str = f"{total_tonnage}" if total_tonnage is not None else "0"
 
@@ -332,39 +374,35 @@ def get_sites(commodity: str):
                 "state": first_site.get("state_or_province", ""),
                 "depositType": deposit_type,
                 "depositConfidence": deposit_confidence,
-                "commodity": commodity,  
+                "commodity": commodity,
                 "grade": total_grade_str,
                 "tonnage": total_tonnage_str,
-                "all_ms_fields": all_ms_fields 
+                "all_ms_fields": all_ms_fields,
             }
             processed_data.append(site_info)
-        
+
         return {"data": processed_data}
-    
+
     except requests.exceptions.RequestException as e:
         return {"error": str(e)}
-
-
-
 
 
 @app.get("/get_commodities")
 def get_commodities():
     url = "https://minmod.isi.edu/api/v1/commodities?is_critical=true"
-    
+
     try:
         response = requests.get(url, verify=False)
         response.raise_for_status()
         commodities = response.json()
-        
+
         # Extract commodity names or IDs if needed
         commodities_list = [commodity.get("name") for commodity in commodities]
 
         return {"commodities": commodities_list}
-    
+
     except requests.exceptions.RequestException as e:
         return {"error": str(e)}
-
 
 
 @app.get("/get_resource/{resource_id}")
@@ -375,8 +413,8 @@ def get_resource_details(resource_id: str):
         response = requests.get(url, verify=False)
         response.raise_for_status()
 
-        content_type = response.headers.get('Content-Type', '')
-        if 'application/json' in content_type:
+        content_type = response.headers.get("Content-Type", "")
+        if "application/json" in content_type:
             data = response.json()
 
             site_name = data.get("@label", "")
@@ -387,18 +425,33 @@ def get_resource_details(resource_id: str):
                 location_info = location_info[0] if location_info else {}
 
             location = location_info.get("location", "")
-            crs = location_info.get("crs", {}).get("normalized_uri", {}).get("@label", "Unknown")
+            crs = (
+                location_info.get("crs", {})
+                .get("normalized_uri", {})
+                .get("@label", "Unknown")
+            )
 
             # Handle country and state_or_province similarly
-            country = location_info.get("country", {}).get("normalized_uri", {}).get("@label", "Unknown")
-            state_or_province = location_info.get("state_or_province", {}).get("normalized_uri", {}).get("@label", "Unknown")
+            country = (
+                location_info.get("country", {})
+                .get("normalized_uri", {})
+                .get("@label", "Unknown")
+            )
+            state_or_province = (
+                location_info.get("state_or_province", {})
+                .get("normalized_uri", {})
+                .get("@label", "Unknown")
+            )
 
             # Handle deposit_type_candidate
             deposit_type_candidates = data.get("deposit_type_candidate", [])
             deposit_type = "Unknown"
             deposit_confidence = "0"
 
-            if isinstance(deposit_type_candidates, list) and len(deposit_type_candidates) > 0:
+            if (
+                isinstance(deposit_type_candidates, list)
+                and len(deposit_type_candidates) > 0
+            ):
                 first_candidate = deposit_type_candidates[0]
                 deposit_type = first_candidate.get("observed name", "Unknown")
                 deposit_confidence = first_candidate.get("confidence", "0")
@@ -415,14 +468,19 @@ def get_resource_details(resource_id: str):
                 first_inventory = mineral_inventory_list[0]
                 if isinstance(first_inventory, dict):
                     commodity_info = first_inventory.get("commodity", {})
-                    commodity = commodity_info.get("normalized_uri", {}).get("@label", "Unknown")
+                    commodity = commodity_info.get("normalized_uri", {}).get(
+                        "@label", "Unknown"
+                    )
                     grade = first_inventory.get("grade", {}).get("value", "0.00000000")
                     tonnage = first_inventory.get("ore", {}).get("value", "0")
-                    reference_info = first_inventory.get("reference", {}).get("document", {})
+                    reference_info = first_inventory.get("reference", {}).get(
+                        "document", {}
+                    )
                     reference = reference_info.get("title", "Unknown")
                     source = reference_info.get("doi", "Unknown")
 
             resource_details = {
+                "id": resource_id,
                 "siteName": site_name,
                 "location": location,
                 "crs": crs,
@@ -434,49 +492,49 @@ def get_resource_details(resource_id: str):
                 "grade": grade,
                 "tonnage": tonnage,
                 "reference": reference,
-                "source": source
+                "source": source,
             }
             return {"data": resource_details}
         else:
-            return {"error": "Response content is not JSON", "content": response.text[:500]}
+            return {
+                "error": "Response content is not JSON",
+                "content": response.text[:500],
+            }
 
     except requests.exceptions.RequestException as e:
         return {"error": str(e)}
 
 
-    
-    
 @app.get("/get_deposit_types")
 def get_deposit_types():
     url = "https://minmod.isi.edu/api/v1/deposit_types"
-    
+
     try:
         response = requests.get(url, verify=False)  # Set verify=True in production
         response.raise_for_status()
 
         # Assuming the response is a list of deposit types
         deposit_types = response.json()
-        
+
         # If the response is indeed a list, extract names directly
-        deposit_types_list = [deposit_type.get("name") for deposit_type in deposit_types]
+        deposit_types_list = [
+            deposit_type.get("name") for deposit_type in deposit_types
+        ]
 
         return {"deposit_types": deposit_types_list}
-    
+
     except requests.exceptions.RequestException as e:
         return {"error": str(e)}
-    
-
-
 
 
 # @app.get("/get_site_info/{resource_id}")
 # def get_site_info(resource_id: str):
 #     url = f"https://minmod.isi.edu/test/resource/{resource_id}?format=json"
-    
+
 #     try:
 #         response = requests.get(url, verify=False)
 #         response.raise_for_status()
-        
+
 #         data = response.json()  # Assuming the response is JSON
 
 #         # Parse basic information
@@ -488,12 +546,12 @@ def get_deposit_types():
 
 #         # Parse location_info with country, state_or_province, and CRS details
 #         location_info = data.get("location_info", {})
-        
+
 #         # Handle country details
 #         country_info = location_info.get("country", {})
 #         if isinstance(country_info, list):
 #             country_info = country_info[0] if country_info else {}
-        
+
 #         country = {
 #             "normalized_uri": country_info.get("normalized_uri", {}).get("@id", ""),
 #             "observed_name": country_info.get("observed_name", ""),
@@ -505,7 +563,7 @@ def get_deposit_types():
 #         state_info = location_info.get("state_or_province", {})
 #         if isinstance(state_info, list):
 #             state_info = state_info[0] if state_info else {}
-        
+
 #         state_or_province = {
 #             "normalized_uri": state_info.get("normalized_uri", {}).get("@id", ""),
 #             "observed_name": state_info.get("observed_name", ""),
@@ -578,24 +636,21 @@ def get_deposit_types():
 #         raise HTTPException(status_code=500, detail="Invalid JSON response from external API.")
 
 
-
-
-
 @app.get("/get_site_info/{resource_id}")
 def get_site_info(resource_id: str):
     url = f"https://minmod.isi.edu/resource/{resource_id}?format=json"
-    
+
     try:
         response = requests.get(url, verify=False)
         response.raise_for_status()
-        
+
         data = response.json()  # Assuming the response is JSON
 
         # Parse basic information
         site_info = {
             "source_id": data.get("source_id", ""),
             "record_id": data.get("record_id", ""),
-            "name": data.get("@label", "")
+            "name": data.get("@label", ""),
         }
 
         # Parse location_info with country, state_or_province, and CRS details
@@ -609,24 +664,24 @@ def get_site_info(resource_id: str):
         country_info = location_info.get("country", {})
         if isinstance(country_info, list):
             country_info = country_info[0] if country_info else {}
-        
+
         country = {
             "normalized_uri": country_info.get("normalized_uri", {}).get("@id", ""),
             "observed_name": country_info.get("normalized_uri", {}).get("@label", ""),
             "confidence": float(country_info.get("confidence", 0)),
-            "source": country_info.get("source", "")
+            "source": country_info.get("source", ""),
         }
 
         # Handle state_or_province details
         state_info = location_info.get("state_or_province", {})
         if isinstance(state_info, list):
             state_info = state_info[0] if state_info else {}
-        
+
         state_or_province = {
             "normalized_uri": state_info.get("normalized_uri", {}).get("@id", ""),
             "observed_name": state_info.get("normalized_uri", {}).get("@label", ""),
             "confidence": float(state_info.get("confidence", 0)),
-            "source": state_info.get("source", "")
+            "source": state_info.get("source", ""),
         }
 
         # Handle CRS details
@@ -634,7 +689,7 @@ def get_site_info(resource_id: str):
         crs = {
             "normalized_uri": crs_info.get("normalized_uri", {}).get("@id", ""),
             "confidence": float(crs_info.get("confidence", 0)),
-            "source": crs_info.get("source", "")
+            "source": crs_info.get("source", ""),
         }
 
         # Handle mineral inventory details for commodity, grade, and tonnage
@@ -649,10 +704,14 @@ def get_site_info(resource_id: str):
             first_inventory = mineral_inventory_list[0]
             if isinstance(first_inventory, dict):
                 commodity_info = first_inventory.get("commodity", {})
-                commodity = commodity_info.get("normalized_uri", {}).get("@label", "Unknown")
+                commodity = commodity_info.get("normalized_uri", {}).get(
+                    "@label", "Unknown"
+                )
                 grade = first_inventory.get("grade", {}).get("value", "0.00000000")
                 tonnage = first_inventory.get("ore", {}).get("value", "0")
-                reference_info = first_inventory.get("reference", {}).get("document", {})
+                reference_info = first_inventory.get("reference", {}).get(
+                    "document", {}
+                )
                 reference = reference_info.get("title", "Unknown")
                 source = reference_info.get("doi", "Unknown")
 
@@ -661,7 +720,10 @@ def get_site_info(resource_id: str):
         deposit_type = "Unknown"
         deposit_confidence = "0"
 
-        if isinstance(deposit_type_candidates, list) and len(deposit_type_candidates) > 0:
+        if (
+            isinstance(deposit_type_candidates, list)
+            and len(deposit_type_candidates) > 0
+        ):
             first_candidate = deposit_type_candidates[0]
             deposit_type = first_candidate.get("observed_name", "Unknown")
             deposit_confidence = first_candidate.get("confidence", "0")
@@ -671,18 +733,18 @@ def get_site_info(resource_id: str):
             "location": location_info.get("location", ""),
             "crs": crs,
             "country": country,
-            "state_or_province": state_or_province
+            "state_or_province": state_or_province,
         }
         site_info["mineral_inventory"] = {
             "commodity": commodity,
             "grade": grade,
             "tonnage": tonnage,
             "reference": reference,
-            "source": source
+            "source": source,
         }
         site_info["deposit_type_candidate"] = {
             "depositType": deposit_type,
-            "depositConfidence": deposit_confidence
+            "depositConfidence": deposit_confidence,
         }
 
         return {"data": site_info}
@@ -691,4 +753,6 @@ def get_site_info(resource_id: str):
         raise HTTPException(status_code=500, detail=f"Failed to fetch data: {str(e)}")
 
     except ValueError:
-        raise HTTPException(status_code=500, detail="Invalid JSON response from external API.")
+        raise HTTPException(
+            status_code=500, detail="Invalid JSON response from external API."
+        )
