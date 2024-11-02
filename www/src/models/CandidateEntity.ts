@@ -4,12 +4,17 @@ export class CandidateEntity {
   observed_name?: string;
   normalized_uri?: string;
 
-  public constructor(
-    source: string,
-    confidence: number,
-    observed_name?: string,
-    normalized_uri?: string
-  ) {
+  public constructor({
+    source,
+    confidence,
+    observed_name,
+    normalized_uri,
+  }: {
+    source: string;
+    confidence: number;
+    observed_name?: string;
+    normalized_uri?: string;
+  }) {
     this.source = source;
     this.confidence = confidence;
     this.observed_name = observed_name;
@@ -17,20 +22,15 @@ export class CandidateEntity {
   }
 
   public static deserialize(obj: any): CandidateEntity {
-    return new CandidateEntity(
-      obj.source,
-      obj.confidence,
-      obj.observed_name,
-      obj.normalized_uri
-    );
+    return new CandidateEntity({ ...obj });
   }
 
   public clone(): CandidateEntity {
-    return new CandidateEntity(
-      this.source,
-      this.confidence,
-      this.observed_name,
-      this.normalized_uri
-    );
+    return new CandidateEntity({
+      source: this.source,
+      confidence: this.confidence,
+      observed_name: this.observed_name,
+      normalized_uri: this.normalized_uri,
+    });
   }
 }
