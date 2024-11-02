@@ -8,7 +8,6 @@ import './Landing.css';
 import DetailedView from './DetailedView';
 import SearchBar from './SearchBar';
 import Ungroup from './Ungroup'; // Import Ungroup component
-
 interface TableRow {
   id: number;
   siteName: string;
@@ -355,135 +354,140 @@ const TableData: React.FC = () => {
   const paginatedData = filteredData.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   return (
-    <div className="mineral-table-container">
-      <div className="fixed-header">  {/* Added fixed header */}
-        <h1>Minmod Editor</h1>
-        <Button 
-          type="primary" 
-          onClick={handleLogout} 
-          className="logout-button"
-        >
-          Logout
-        </Button>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+      <div className="mineral-table-container">
+        {/* Header Section */}
+        <div className="header">
+          <h1 className="header-title">Minmod Editor</h1>
+          <Button 
+            type="primary" 
+            onClick={handleLogout} 
+            className="logout-button"
+          >
+            Logout
+          </Button>
+        </div>
+    
+        {/* Search Bar and Group Button */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', paddingTop:"20px" }}>
           <SearchBar onSearch={handleSearch} />
           <Button 
             type="default"
             onClick={handleGroup}
             style={{
-              background: '#005b84',  // Same background color as Ungroup
+              background: '#005b84',
               borderColor: '#005b84',
               color: 'white',
               borderRadius: '4px',
-              width: '100px',     // Set width similar to Ungroup button
+              width: '100px',
               textAlign: 'center',
-              marginBottom:'10px'
+              marginBottom: '10px'
             }}
           >
             Group
           </Button>
         </div>
-      </div>
-
-      <div className="table-container">  {/* Added table container */}
-        {loading ? (
-          <div style={{ textAlign: 'center', padding: '20px' }}>
-            <Spin size="large" />
-          </div>
-        ) : (
-          <>
-            <table className="mineral-table">
-              <thead>
-                <tr>
-                  {columns.map((col, index) => (
-                    <th key={index} style={{ width: col.width }} className={col.className}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-                        <span
-                          style={{ flexGrow: 1, whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}
-                          onClick={() => handleSort(col.dataIndex)}
-                        >
-                          {col.title}
-                          {sortColumn === col.dataIndex && (
-                            sortOrder === 'ascend' ? <ArrowUpOutlined /> : <ArrowDownOutlined />
-                          )}
-                        </span>
-                        <div
-                          className="resize-handle"
-                          onMouseDown={e => {
-                            e.preventDefault();
-                            const startX = e.clientX;
-                            const startWidth = col.width;
-
-                            const onMouseMove = (moveEvent: MouseEvent) => {
-                              const newWidth = Math.max(startWidth + (moveEvent.clientX - startX), 50); // Prevent collapsing
-                              onResize(index, newWidth);
-                            };
-
-                            const onMouseUp = () => {
-                              document.removeEventListener('mousemove', onMouseMove);
-                              document.removeEventListener('mouseup', onMouseUp);
-                            };
-
-                            document.addEventListener('mousemove', onMouseMove);
-                            document.addEventListener('mouseup', onMouseUp);
-                          }}
-                        />
-                      </div>
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedData.map((row, rowIndex) => (
-                  <React.Fragment key={row.id}>
-                    <tr>
-                      {columns.map((col, colIndex) => (
-                        <td key={colIndex} style={{ width: col.width }}>
-                          {col.render ? col.render(row[col.dataIndex as keyof TableRow], row, rowIndex) : row[col.dataIndex as keyof TableRow]}
-                        </td>
-                      ))}
-                    </tr>
-                    {expandedRows.includes(rowIndex) && (
-                      <tr>
-                        <td colSpan={columns.length}>
-                          <DetailedView allMsFields={row.all_ms_fields} username={username ?? ""} onClose={() => toggleRow(rowIndex)} />
-                        </td>
-                      </tr>
-                    )}
-                    {ungroupedRowIndex === rowIndex && isUngroupVisible && currentRowData && ( // Render Ungroup component here
-                      <tr>
-                        <td colSpan={columns.length}>
-                          <Ungroup 
-                            allMsFields={currentRowData.all_ms_fields}
-                            onClose={() => {
-                              setIsUngroupVisible(false);
-                              setUngroupedRowIndex(null); // Reset the ungrouped row index
-                              setCurrentRowData(null);
+    
+        {/* Table and Pagination */}
+        <div className="table-container">
+          {loading ? (
+            <div style={{ textAlign: 'center', padding: '20px' }}>
+              <Spin size="large" />
+            </div>
+          ) : (
+            <>
+              <table className="mineral-table">
+                <thead>
+                  <tr>
+                    {columns.map((col, index) => (
+                      <th key={index} style={{ width: col.width }} className={col.className}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                          <span
+                            style={{ flexGrow: 1, whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}
+                            onClick={() => handleSort(col.dataIndex)}
+                          >
+                            {col.title}
+                            {sortColumn === col.dataIndex && (
+                              sortOrder === 'ascend' ? <ArrowUpOutlined /> : <ArrowDownOutlined />
+                            )}
+                          </span>
+                          <div
+                            className="resize-handle"
+                            onMouseDown={e => {
+                              e.preventDefault();
+                              const startX = e.clientX;
+                              const startWidth = col.width;
+    
+                              const onMouseMove = (moveEvent: MouseEvent) => {
+                                const newWidth = Math.max(startWidth + (moveEvent.clientX - startX), 50);
+                                onResize(index, newWidth);
+                              };
+    
+                              const onMouseUp = () => {
+                                document.removeEventListener('mousemove', onMouseMove);
+                                document.removeEventListener('mouseup', onMouseUp);
+                              };
+    
+                              document.addEventListener('mousemove', onMouseMove);
+                              document.addEventListener('mouseup', onMouseUp);
                             }}
                           />
-                        </td>
+                        </div>
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedData.map((row, rowIndex) => (
+                    <React.Fragment key={row.id}>
+                      <tr>
+                        {columns.map((col, colIndex) => (
+                          <td key={colIndex} style={{ width: col.width }}>
+                            {col.render ? col.render(row[col.dataIndex as keyof TableRow], row, rowIndex) : row[col.dataIndex as keyof TableRow]}
+                          </td>
+                        ))}
                       </tr>
-                    )}
-                  </React.Fragment>
-                ))}
-              </tbody>
-            </table>
-
-            <Pagination
-              current={currentPage}
-              pageSize={pageSize}
-              total={filteredData.length}
-              onChange={handlePageChange}
-              style={{ textAlign: 'center', marginTop: '20px' }}
-              showSizeChanger
-              pageSizeOptions={['10', '20', '50', '100', `${filteredData.length}`]} // Add 'All' option as the total count
-              onShowSizeChange={(_, size) => handlePageSizeChange(size === filteredData.length ? filteredData.length : size)} // Compare size as a number
-            />
-          </>
-        )}
+                      {expandedRows.includes(rowIndex) && (
+                        <tr>
+                          <td colSpan={columns.length}>
+                            <DetailedView allMsFields={row.all_ms_fields} username={username ?? ""} onClose={() => toggleRow(rowIndex)} />
+                          </td>
+                        </tr>
+                      )}
+                      {ungroupedRowIndex === rowIndex && isUngroupVisible && currentRowData && (
+                        <tr>
+                          <td colSpan={columns.length}>
+                            <Ungroup 
+                              allMsFields={currentRowData.all_ms_fields}
+                              onClose={() => {
+                                setIsUngroupVisible(false);
+                                setUngroupedRowIndex(null);
+                                setCurrentRowData(null);
+                              }}
+                            />
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  ))}
+                </tbody>
+              </table>
+    
+              <Pagination
+                current={currentPage}
+                pageSize={pageSize}
+                total={filteredData.length}
+                onChange={handlePageChange}
+                style={{ textAlign: 'center', marginTop: '20px' }}
+                showSizeChanger
+                pageSizeOptions={['10', '20', '50', '100', `${filteredData.length}`]}
+                onShowSizeChange={(_, size) => handlePageSizeChange(size === filteredData.length ? filteredData.length : size)}
+              />
+            </>
+          )}
+        </div>
       </div>
-    </div>
-  );
+    );
+    
 };
 
 export default TableData;
