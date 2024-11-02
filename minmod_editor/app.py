@@ -19,6 +19,8 @@ from fastapi.security import OAuth2PasswordRequestForm
 from jose import jwt
 from pydantic import BaseModel, validator
 
+from minmod_editor.routers import mineral_site
+
 # Logging setup
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -28,18 +30,9 @@ SECRET_KEY = "your_secret_key_here"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
-origins = ["http://localhost:3000"]  # Replace this with your actual frontend URL
-
 app = FastAPI()
 
-# Adding CORS Middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+app.include_router(mineral_site.router)
 
 
 # JWT Token Response Model
@@ -405,106 +398,6 @@ def get_commodities():
         return {"error": str(e)}
 
 
-@app.get("/get_resource/{resource_id}")
-def get_resource_details(resource_id: str):
-    url = f"https://minmod.isi.edu/resource/{resource_id}?format=json"
-
-    try:
-        response = requests.get(url, verify=False)
-        response.raise_for_status()
-
-        content_type = response.headers.get("Content-Type", "")
-        if "application/json" in content_type:
-            data = response.json()
-
-            site_name = data.get("@label", "")
-
-            # Handle location_info if it's either a dictionary or a list
-            location_info = data.get("location_info", {})
-            if isinstance(location_info, list):
-                location_info = location_info[0] if location_info else {}
-
-            location = location_info.get("location", "")
-            crs = (
-                location_info.get("crs", {})
-                .get("normalized_uri", {})
-                .get("@label", "Unknown")
-            )
-
-            # Handle country and state_or_province similarly
-            country = (
-                location_info.get("country", {})
-                .get("normalized_uri", {})
-                .get("@label", "Unknown")
-            )
-            state_or_province = (
-                location_info.get("state_or_province", {})
-                .get("normalized_uri", {})
-                .get("@label", "Unknown")
-            )
-
-            # Handle deposit_type_candidate
-            deposit_type_candidates = data.get("deposit_type_candidate", [])
-            deposit_type = "Unknown"
-            deposit_confidence = "0"
-
-            if (
-                isinstance(deposit_type_candidates, list)
-                and len(deposit_type_candidates) > 0
-            ):
-                first_candidate = deposit_type_candidates[0]
-                deposit_type = first_candidate.get("observed name", "Unknown")
-                deposit_confidence = first_candidate.get("confidence", "0")
-
-            # Handle mineral_inventory if it's a list
-            mineral_inventory_list = data.get("mineral inventory", [])
-            commodity = "Unknown"
-            grade = "0.00000000"
-            tonnage = "0"
-            reference = "Unknown"
-            source = "Unknown"
-
-            if mineral_inventory_list and isinstance(mineral_inventory_list, list):
-                first_inventory = mineral_inventory_list[0]
-                if isinstance(first_inventory, dict):
-                    commodity_info = first_inventory.get("commodity", {})
-                    commodity = commodity_info.get("normalized_uri", {}).get(
-                        "@label", "Unknown"
-                    )
-                    grade = first_inventory.get("grade", {}).get("value", "0.00000000")
-                    tonnage = first_inventory.get("ore", {}).get("value", "0")
-                    reference_info = first_inventory.get("reference", {}).get(
-                        "document", {}
-                    )
-                    reference = reference_info.get("title", "Unknown")
-                    source = reference_info.get("doi", "Unknown")
-
-            resource_details = {
-                "id": resource_id,
-                "siteName": site_name,
-                "location": location,
-                "crs": crs,
-                "country": country,
-                "state_or_province": state_or_province,
-                "commodity": commodity,
-                "depositType": deposit_type,
-                "depositConfidence": deposit_confidence,
-                "grade": grade,
-                "tonnage": tonnage,
-                "reference": reference,
-                "source": source,
-            }
-            return {"data": resource_details}
-        else:
-            return {
-                "error": "Response content is not JSON",
-                "content": response.text[:500],
-            }
-
-    except requests.exceptions.RequestException as e:
-        return {"error": str(e)}
-
-
 @app.get("/get_deposit_types")
 def get_deposit_types():
     url = "https://minmod.isi.edu/api/v1/deposit_types"
@@ -525,115 +418,6 @@ def get_deposit_types():
 
     except requests.exceptions.RequestException as e:
         return {"error": str(e)}
-
-
-# @app.get("/get_site_info/{resource_id}")
-# def get_site_info(resource_id: str):
-#     url = f"https://minmod.isi.edu/test/resource/{resource_id}?format=json"
-
-#     try:
-#         response = requests.get(url, verify=False)
-#         response.raise_for_status()
-
-#         data = response.json()  # Assuming the response is JSON
-
-#         # Parse basic information
-#         site_info = {
-#             "source_id": data.get("source_id", ""),
-#             "record_id": data.get("record_id", ""),
-#             "name": data.get("@label", "")
-#         }
-
-#         # Parse location_info with country, state_or_province, and CRS details
-#         location_info = data.get("location_info", {})
-
-#         # Handle country details
-#         country_info = location_info.get("country", {})
-#         if isinstance(country_info, list):
-#             country_info = country_info[0] if country_info else {}
-
-#         country = {
-#             "normalized_uri": country_info.get("normalized_uri", {}).get("@id", ""),
-#             "observed_name": country_info.get("observed_name", ""),
-#             "confidence": float(country_info.get("confidence", 0)),
-#             "source": country_info.get("source", "")
-#         }
-
-#         # Handle state_or_province details
-#         state_info = location_info.get("state_or_province", {})
-#         if isinstance(state_info, list):
-#             state_info = state_info[0] if state_info else {}
-
-#         state_or_province = {
-#             "normalized_uri": state_info.get("normalized_uri", {}).get("@id", ""),
-#             "observed_name": state_info.get("observed_name", ""),
-#             "confidence": float(state_info.get("confidence", 0)),
-#             "source": state_info.get("source", "")
-#         }
-
-#         # Handle CRS details
-#         crs_info = location_info.get("crs", {})
-#         crs = {
-#             "normalized_uri": crs_info.get("normalized_uri", {}).get("@id", ""),
-#             "confidence": float(crs_info.get("confidence", 0)),
-#             "source": crs_info.get("source", "")
-#         }
-
-#         # Handle mineral inventory details for commodity, grade, and tonnage
-#         mineral_inventory_list = data.get("mineral_inventory", [])
-#         commodity = "Unknown"
-#         grade = "0.00000000"
-#         tonnage = "0"
-#         reference = "Unknown"
-#         source = "Unknown"
-
-#         if mineral_inventory_list and isinstance(mineral_inventory_list, list):
-#             first_inventory = mineral_inventory_list[0]
-#             if isinstance(first_inventory, dict):
-#                 commodity_info = first_inventory.get("commodity", {})
-#                 commodity = commodity_info.get("normalized_uri", {}).get("@label", "Unknown")
-#                 grade = first_inventory.get("grade", {}).get("value", "0.00000000")
-#                 tonnage = first_inventory.get("ore", {}).get("value", "0")
-#                 reference_info = first_inventory.get("reference", {}).get("document", {})
-#                 reference = reference_info.get("title", "Unknown")
-#                 source = reference_info.get("doi", "Unknown")
-
-#         # Handle deposit_type_candidates
-#         deposit_type_candidates = data.get("deposit_type_candidate", [])
-#         deposit_type = "Unknown"
-#         deposit_confidence = "0"
-
-#         if isinstance(deposit_type_candidates, list) and len(deposit_type_candidates) > 0:
-#             first_candidate = deposit_type_candidates[0]
-#             deposit_type = first_candidate.get("observed_name", "Unknown")
-#             deposit_confidence = first_candidate.get("confidence", "0")
-
-#         # Construct the final site information payload
-#         site_info["location_info"] = {
-#             "location": location_info.get("location", ""),
-#             "crs": crs,
-#             "country": country,
-#             "state_or_province": state_or_province
-#         }
-#         site_info["mineral_inventory"] = {
-#             "commodity": commodity,
-#             "grade": grade,
-#             "tonnage": tonnage,
-#             "reference": reference,
-#             "source": source
-#         }
-#         site_info["deposit_type_candidate"] = {
-#             "depositType": deposit_type,
-#             "depositConfidence": deposit_confidence
-#         }
-
-#         return {"data": site_info}
-
-#     except requests.exceptions.RequestException as e:
-#         raise HTTPException(status_code=500, detail=f"Failed to fetch data: {str(e)}")
-
-#     except ValueError:
-#         raise HTTPException(status_code=500, detail="Invalid JSON response from external API.")
 
 
 @app.get("/get_site_info/{resource_id}")

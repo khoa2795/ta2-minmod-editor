@@ -13,7 +13,11 @@ interface DetailedViewProps {
   onClose: () => void;
 }
 
-const DetailedView: React.FC<DetailedViewProps> = ({ allMsFields, username, onClose }) => {
+const DetailedView: React.FC<DetailedViewProps> = ({
+  allMsFields,
+  username,
+  onClose,
+}) => {
   const [columns, setColumns] = useState([
     { title: "Site Name", width: 150 },
     { title: "Location", width: 120 },
@@ -42,7 +46,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({ allMsFields, username, onCl
 
   useEffect(() => {
     const fetchDepositTypes = async () => {
-      const response = await fetch("http://localhost:8000/get_deposit_types");
+      const response = await fetch("/get_deposit_types");
       const data = await response.json();
       setDepositTypes(data.deposit_types || []);
     };
@@ -58,8 +62,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({ allMsFields, username, onCl
           const response = await fetch(`/get_resource/${resourceId}`);
           if (response.ok) {
             const result = await response.json();
-            console.log("result", result);
-            return { ...result.data, id: index + 1 };
+            return MineralSite.deserialize(result);
           }
           return null;
         })
@@ -69,7 +72,12 @@ const DetailedView: React.FC<DetailedViewProps> = ({ allMsFields, username, onCl
       setDetailedData(validDetails as MineralSite[]);
       setLoading(false);
 
-      const allReferences = validDetails.map((item) => item.reference || "Unknown");
+      // TODO: fix me!
+      const allReferences = validDetails.flatMap((item) =>
+        item === null
+          ? "Unknown"
+          : item.reference[0].document.title || "Unknown"
+      );
       setReferenceOptions(allReferences);
     };
     fetchDetails();
@@ -85,7 +93,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({ allMsFields, username, onCl
       console.log("firstResourceId", firstResourceId);
 
       try {
-        const response = await fetch(`http://127.0.0.1:8000/get_site_info/${firstResourceId}`);
+        const response = await fetch(`/get_site_info/${firstResourceId}`);
         if (response.ok) {
           const result = await response.json();
           if (result.data) {
@@ -94,7 +102,9 @@ const DetailedView: React.FC<DetailedViewProps> = ({ allMsFields, username, onCl
             toast.error("No data received from site information API.");
           }
         } else {
-          toast.error("Failed to fetch site information. Server responded with an error.");
+          toast.error(
+            "Failed to fetch site information. Server responded with an error."
+          );
         }
       } catch (error) {
         console.error("Error fetching site information:", error);
@@ -103,7 +113,11 @@ const DetailedView: React.FC<DetailedViewProps> = ({ allMsFields, username, onCl
     }
   };
 
-  const handleSaveChanges = async (property: MineralSiteProperty, property_value: string, reference: Reference) => {
+  const handleSaveChanges = async (
+    property: MineralSiteProperty,
+    property_value: string,
+    reference: Reference
+  ) => {
     const sessionId = localStorage.getItem("session_id");
     if (!sessionId) {
       toast.error("Session ID not found. Please log in again.");
@@ -115,11 +129,17 @@ const DetailedView: React.FC<DetailedViewProps> = ({ allMsFields, username, onCl
       return;
     }
 
-    let curatedMineralSite = MineralSite.findMineralSiteByUsername(detailedData, username) || MineralSite.createDefaultCuratedMineralSite(detailedData, username);
-    curatedMineralSite = curatedMineralSite.update(property, property_value, reference);
+    let curatedMineralSite =
+      MineralSite.findMineralSiteByUsername(detailedData, username) ||
+      MineralSite.createDefaultCuratedMineralSite(detailedData, username);
+    curatedMineralSite = curatedMineralSite.update(
+      property,
+      property_value,
+      reference
+    );
 
     try {
-      const createResponse = await fetch("http://localhost:8000/submit_mineral_site", {
+      const createResponse = await fetch("/submit_mineral_site", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -142,20 +162,29 @@ const DetailedView: React.FC<DetailedViewProps> = ({ allMsFields, username, onCl
         console.log("Site already exists. Proceeding to update.");
         const existingResourceId = createdRecordUri;
 
-        const updateResponse = await fetch(`http://localhost:8000/test/api/v1/mineral-sites/${existingResourceId}`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Cookie: `session=${sessionId}`,
-          },
-          body: JSON.stringify(curatedMineralSite.serialize()),
-          credentials: "include",
-        });
+        const updateResponse = await fetch(
+          `/test/api/v1/mineral-sites/${existingResourceId}`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Cookie: `session=${sessionId}`,
+            },
+            body: JSON.stringify(curatedMineralSite.serialize()),
+            credentials: "include",
+          }
+        );
 
         if (updateResponse.ok) {
           toast.success("Data updated successfully");
 
-          setDetailedData((prevData) => prevData.map((item) => (item.record_id === curatedMineralSite.record_id ? curatedMineralSite : item)));
+          setDetailedData((prevData) =>
+            prevData.map((item) =>
+              item.recordId === curatedMineralSite.recordId
+                ? curatedMineralSite
+                : item
+            )
+          );
         } else {
           const errorData = await updateResponse.json();
           toast.error(`Update failed: ${errorData.detail}`);
@@ -187,10 +216,22 @@ const DetailedView: React.FC<DetailedViewProps> = ({ allMsFields, username, onCl
           <thead>
             <tr>
               {columns.map((col, index) => (
-                <th key={index} style={{ width: col.width, position: "relative" }}>
+                <th
+                  key={index}
+                  style={{ width: col.width, position: "relative" }}
+                >
                   <div className="header-with-icon">
                     {col.title}
-                    {["Site Name", "Location", "Deposit Type"].includes(col.title) && <EditOutlined className="edit-icon-header" onClick={() => handleEditClick(editingRowId as number, col.title)} />}
+                    {["Site Name", "Location", "Deposit Type"].includes(
+                      col.title
+                    ) && (
+                      <EditOutlined
+                        className="edit-icon-header"
+                        onClick={() =>
+                          handleEditClick(editingRowId as number, col.title)
+                        }
+                      />
+                    )}
                   </div>
                 </th>
               ))}
@@ -199,21 +240,28 @@ const DetailedView: React.FC<DetailedViewProps> = ({ allMsFields, username, onCl
           <tbody>
             {detailedData.map((resource) => (
               <tr key={resource.id}>
-                <td>{resource.siteName}</td>
-                <td>{resource.location}</td>
-                <td>{resource.crs}</td>
-                <td>{resource.country}</td>
-                <td>{resource.state_or_province}</td>
-                <td>{resource.commodity}</td>
-                <td>{resource.depositType}</td>
-                <td>{resource.depositConfidence}</td>
-                <td>{resource.grade}</td>
-                <td>{resource.tonnage}</td>
-                <td>{resource.reference[0].document.title || resource.reference[0].document.uri}</td>
-                <td>{resource.comments}</td> {/* New comments column */}
+                <td>{resource.name}</td>
+                <td>{resource.locationInfo.location}</td>
+                <td>{resource.locationInfo.crs?.observed_name}</td>
+                <td>{resource.locationInfo.country[0]?.observed_name}</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
                 <td>
-                  {resource.source_id ? (
-                    <a href={resource.source_id} target="_blank" rel="noopener noreferrer">
+                  {resource.reference[0].document.title ||
+                    resource.reference[0].document.uri}
+                </td>
+                <td></td> {/* New comments column */}
+                <td>
+                  {resource.sourceId ? (
+                    <a
+                      href={resource.sourceId}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
                       View Source
                     </a>
                   ) : (
@@ -230,7 +278,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({ allMsFields, username, onCl
         onClose={() => setModalVisible(false)}
         mineralSites={detailedData}
         propertyReadableName={modalTitle}
-        property={modalTitle as any}
+        property={"name"} // TODO: fix me!
         depositTypes={depositTypes}
         onSave={handleSaveChanges}
         referenceOptions={referenceOptions} // Pass reference options

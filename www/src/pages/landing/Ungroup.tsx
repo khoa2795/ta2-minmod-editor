@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import './DetailedView.css';
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import { Checkbox } from 'antd'; // Use Checkbox instead of Radio
+import React, { useState, useEffect } from "react";
+import "./DetailedView.css";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { Checkbox } from "antd"; // Use Checkbox instead of Radio
 
 interface ResourceDetails {
   id: number;
@@ -27,19 +27,19 @@ interface DetailedViewProps {
 
 const Ungroup: React.FC<DetailedViewProps> = ({ allMsFields, onClose }) => {
   const [columns, setColumns] = useState([
-    { title: 'Select', width: 45 }, // Column for checkboxes
-    { title: 'Site Name', width: 150 },
-    { title: 'Location', width: 120 },
-    { title: 'CRS', width: 80 },
-    { title: 'Country', width: 100 },
-    { title: 'State/Province', width: 100 },
-    { title: 'Commodity', width: 100 },
-    { title: 'Deposit Type', width: 120 },
-    { title: 'Deposit Confidence', width: 120 },
-    { title: 'Grade', width: 80 },
-    { title: 'Tonnage', width: 80 },
-    { title: 'Reference', width: 100 },
-    { title: 'Source', width: 100 },
+    { title: "Select", width: 45 }, // Column for checkboxes
+    { title: "Site Name", width: 150 },
+    { title: "Location", width: 120 },
+    { title: "CRS", width: 80 },
+    { title: "Country", width: 100 },
+    { title: "State/Province", width: 100 },
+    { title: "Commodity", width: 100 },
+    { title: "Deposit Type", width: 120 },
+    { title: "Deposit Confidence", width: 120 },
+    { title: "Grade", width: 80 },
+    { title: "Tonnage", width: 80 },
+    { title: "Reference", width: 100 },
+    { title: "Source", width: 100 },
   ]);
 
   const [detailedData, setDetailedData] = useState<ResourceDetails[]>([]);
@@ -52,7 +52,7 @@ const Ungroup: React.FC<DetailedViewProps> = ({ allMsFields, onClose }) => {
       const details = await Promise.all(
         allMsFields.map(async (msField, index) => {
           const resourceId = msField.split("resource/")[1];
-          const response = await fetch(`http://127.0.0.1:8000/get_resource/${resourceId}`);
+          const response = await fetch(`/get_resource/${resourceId}`);
           if (response.ok) {
             const result = await response.json();
             return { ...result.data, id: index + 1 };
@@ -88,18 +88,18 @@ const Ungroup: React.FC<DetailedViewProps> = ({ allMsFields, onClose }) => {
     };
 
     const onMouseUp = () => {
-      document.removeEventListener('mousemove', onMouseMove);
-      document.removeEventListener('mouseup', onMouseUp);
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
     };
 
-    document.addEventListener('mousemove', onMouseMove);
-    document.addEventListener('mouseup', onMouseUp);
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseup", onMouseUp);
   };
 
   const handleRowSelect = (rowId: number) => {
-    setSelectedRows(prevSelected => {
+    setSelectedRows((prevSelected) => {
       if (prevSelected.includes(rowId)) {
-        return prevSelected.filter(id => id !== rowId); // Deselect if already selected
+        return prevSelected.filter((id) => id !== rowId); // Deselect if already selected
       }
       return [...prevSelected, rowId]; // Add to selection
     });
@@ -121,21 +121,22 @@ const Ungroup: React.FC<DetailedViewProps> = ({ allMsFields, onClose }) => {
           <thead>
             <tr>
               {columns.map((col, index) => (
-                <th key={index} style={{ width: col.width, position: 'relative' }}>
-                  <div>
-                    {col.title}
-                  </div>
+                <th
+                  key={index}
+                  style={{ width: col.width, position: "relative" }}
+                >
+                  <div>{col.title}</div>
                   {index < columns.length - 1 && (
                     <div
                       onMouseDown={(e) => handleMouseDown(index, e)}
                       style={{
-                        cursor: 'col-resize',
-                        position: 'absolute',
-                        right: '0',
-                        top: '0',
-                        height: '100%',
-                        width: '10px',
-                        backgroundColor: 'transparent',
+                        cursor: "col-resize",
+                        position: "absolute",
+                        right: "0",
+                        top: "0",
+                        height: "100%",
+                        width: "10px",
+                        backgroundColor: "transparent",
                       }}
                     />
                   )}
@@ -165,7 +166,11 @@ const Ungroup: React.FC<DetailedViewProps> = ({ allMsFields, onClose }) => {
                 <td>{resource.reference}</td>
                 <td>
                   {resource.source ? (
-                    <a href={resource.source} target="_blank" rel="noopener noreferrer">
+                    <a
+                      href={resource.source}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
                       View Source
                     </a>
                   ) : (

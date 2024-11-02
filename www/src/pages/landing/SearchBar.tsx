@@ -1,9 +1,7 @@
-
-
-import React, { useEffect, useState } from 'react';
-import { Input, AutoComplete } from 'antd';
-import { SearchOutlined } from '@ant-design/icons';
-import './Search.css';
+import React, { useEffect, useState } from "react";
+import { Input, AutoComplete } from "antd";
+import { SearchOutlined } from "@ant-design/icons";
+import "./Search.css";
 
 interface SearchBarProps {
   onSearch: (value: string) => void;
@@ -16,16 +14,16 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
   useEffect(() => {
     const fetchCommodities = async () => {
       try {
-        const response = await fetch('http://127.0.0.1:8000/get_commodities');
+        const response = await fetch("/get_commodities");
         if (response.ok) {
           const data = await response.json();
           setCommodities(data.commodities.sort()); // Sort alphabetically
           setFilteredCommodities(data.commodities.sort()); // Initialize filtered list
         } else {
-          console.error('Error fetching commodities:', response.statusText);
+          console.error("Error fetching commodities:", response.statusText);
         }
       } catch (error) {
-        console.error('Error fetching commodities:', error);
+        console.error("Error fetching commodities:", error);
       }
     };
 
@@ -34,7 +32,11 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
 
   const handleSearchChange = (value: string) => {
     // Filter commodities based on user input
-    setFilteredCommodities(commodities.filter(commodity => commodity.toLowerCase().includes(value.toLowerCase())));
+    setFilteredCommodities(
+      commodities.filter((commodity) =>
+        commodity.toLowerCase().includes(value.toLowerCase())
+      )
+    );
     // Call parent onSearch handler
     onSearch(value);
   };
@@ -42,10 +44,10 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
   return (
     <div className="search-bar-container">
       <AutoComplete
-        options={filteredCommodities.map(commodity => ({ value: commodity }))}
+        options={filteredCommodities.map((commodity) => ({ value: commodity }))}
         onSelect={onSearch} // Call onSearch when an item is selected
         onSearch={handleSearchChange} // Filter suggestions as user types
-        style={{ width: '100%' }}
+        style={{ width: "100%" }}
       >
         <Input
           placeholder="Search by Commodity"
