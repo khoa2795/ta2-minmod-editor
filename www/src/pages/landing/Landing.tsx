@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { Button, Checkbox, Spin, Pagination } from "antd";
+import { Button, Checkbox, Spin, Pagination, Space } from "antd";
 import { ArrowUpOutlined, ArrowDownOutlined } from "@ant-design/icons";
 import "react-resizable/css/styles.css";
 import "./Landing.css";
 import DetailedView from "./DetailedView";
 import SearchBar from "./SearchBar";
 import Ungroup from "./Ungroup"; // Import Ungroup component
+import { MyButton } from "../../components/MyButton";
 interface TableRow {
   id: number;
   siteName: string;
@@ -264,42 +265,13 @@ const TableData: React.FC = () => {
       render: (_: any, row: TableRow, rowIndex: number) => (
         <div
           style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
+            textAlign: "center",
           }}
         >
-          <Button
-            type="primary"
-            onClick={() => toggleRow(rowIndex)} // Add your edit functionality here
-            style={{
-              background: "#005b84", // Edit button background
-              borderColor: "#005b84",
-              color: "white",
-              padding: "6px 12px",
-              borderRadius: "4px",
-              marginBottom: "5px", // Space between Edit and Ungroup buttons
-              width: "100%", // Full width
-              textAlign: "center",
-            }}
-          >
-            Edit
-          </Button>
-          <Button
-            type="default"
-            onClick={() => handleUngroup(rowIndex)} // Handle ungroup functionality
-            style={{
-              background: "#005b84", // Ungroup button background
-              borderColor: "#005b84",
-              color: "white",
-              padding: "6px 12px",
-              borderRadius: "4px",
-              width: "100%",
-              textAlign: "center",
-            }}
-          >
-            Ungroup
-          </Button>
+          <Space direction="vertical">
+            <MyButton title="Edit" onClick={() => toggleRow(rowIndex)} />
+            <MyButton title="Ungroup" onClick={() => handleUngroup(rowIndex)} />
+          </Space>
         </div>
       ),
     },
