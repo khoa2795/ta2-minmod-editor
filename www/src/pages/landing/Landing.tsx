@@ -135,7 +135,7 @@ const TableData: React.FC = () => {
     },
     {
       title: "Site Name",
-      dataIndex: "name",
+      dataIndex: "siteName",
       width: 150,
       className: "site-name",
       render: (value: any) => (

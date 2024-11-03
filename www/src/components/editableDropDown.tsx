@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { CloseOutlined } from '@ant-design/icons';
 
 interface EditableDropdownProps {
   options: string[];
@@ -18,7 +19,8 @@ const EditableDropdown: React.FC<EditableDropdownProps> = ({ options, onSave }) 
     } else {
       setSelectedOption(selectedValue);
       setEditValue(selectedValue);
-      setIsEditing(true); // Enable editing when an option is selected
+      setIsEditing(false); // Disable editing mode if predefined option is selected
+      onSave(selectedValue); // Immediately save selected predefined option
     }
   };
 
@@ -26,35 +28,55 @@ const EditableDropdown: React.FC<EditableDropdownProps> = ({ options, onSave }) 
     setEditValue(e.target.value);
   };
 
-  const handleSave = () => {
-    setSelectedOption(editValue);
-    setIsEditing(false); // Exit edit mode
-    onSave(editValue); // Pass the edited value to parent component
+  const handleCancelEdit = () => {
+    setIsEditing(false); // Exit edit mode without saving
+    setEditValue(selectedOption); // Reset to the previously selected value
   };
 
   return (
-    <div>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
       {isEditing ? (
-        <div>
+        <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
           <input
             type="text"
             value={editValue}
             onChange={handleEditChange}
+            style={{ flexGrow: 1, padding: '6px', borderRadius: '4px', border: '1px solid #d9d9d9' }}
+            placeholder="Enter value"
           />
-          <button onClick={handleSave}>Save</button>
+          <button 
+            onClick={handleCancelEdit}
+            style={{
+              backgroundColor: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              padding: '6px'
+            }}
+          >
+            <CloseOutlined style={{ fontSize: '16px', color: '#1890ff' }} />
+          </button>
         </div>
       ) : (
-        <div>
-          <select value={selectedOption} onChange={handleSelectChange}>
-            <option value="">Select an option</option>
-            {options.map((option, index) => (
-              <option key={index} value={option}>
-                {option}
-              </option>
-            ))}
-            <option value="Enter your own">Enter data</option>
-          </select>
-        </div>
+        <select 
+          value={selectedOption} 
+          onChange={handleSelectChange} 
+          style={{
+            width: '100%', 
+            padding: '6px', 
+            borderRadius: '4px', 
+            border: '1px solid #d9d9d9', 
+            backgroundColor: 'white',
+            cursor: 'pointer'
+          }}
+        >
+          <option value="">Select an option</option>
+          {options.map((option, index) => (
+            <option key={index} value={option}>
+              {option}
+            </option>
+          ))}
+          <option value="Enter your own">Enter data</option>
+        </select>
       )}
     </div>
   );

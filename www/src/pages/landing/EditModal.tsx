@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { Modal, Input, Button, message } from "antd";
-import { CloseOutlined } from "@ant-design/icons";
 import EditableDropdown from "../../components/editableDropDown";
 import { MineralSite, MineralSiteProperty } from "../../models/MineralSite";
 import { Reference } from "../../models/Reference";
@@ -38,9 +37,7 @@ const EditModal: React.FC<EditModalProps> = ({
   const predefinedPropertyValues = mineralSites.map((site) =>
     site.getProperty(property)
   );
-  const referenceOptionsList = referenceOptions;
 
-  // TODO: fix me!
   useEffect(() => {
     if (selectedValue !== null) {
       const selectedSite = mineralSites.find(
@@ -48,10 +45,9 @@ const EditModal: React.FC<EditModalProps> = ({
       );
       if (selectedSite) {
         setEditValue(selectedSite.name || "");
-        // TODO: fix me!! this is incorrect.
         setNewReference(
           selectedSite.reference[0].document.title ||
-            selectedSite.reference[0].document.uri
+          selectedSite.reference[0].document.uri
         );
       }
     }
@@ -80,7 +76,7 @@ const EditModal: React.FC<EditModalProps> = ({
   return (
     <Modal
       visible={visible}
-      title={`Edit ${propertyReadableName}`}
+      title={<span style={{ fontSize: '18px', fontWeight: 'bold' }}>Edit {propertyReadableName}</span>}
       onOk={handleSave}
       onCancel={onClose}
       footer={[
@@ -91,12 +87,12 @@ const EditModal: React.FC<EditModalProps> = ({
           Save
         </Button>,
       ]}
+      bodyStyle={{ padding: '20px' }}
+      centered
     >
       <div style={{ marginBottom: "20px" }}>
-        <span>{propertyReadableName}:</span>
-        <div
-          style={{ display: "flex", alignItems: "center", marginTop: "8px" }}
-        >
+        <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '8px' }}>{propertyReadableName}:</label>
+        <div style={{ width: '100%' }}>
           <EditableDropdown
             options={predefinedPropertyValues}
             onSave={setEditValue}
@@ -105,24 +101,23 @@ const EditModal: React.FC<EditModalProps> = ({
       </div>
 
       <div style={{ marginBottom: "20px" }}>
-        <span>Reference:</span>
-        <div
-          style={{ display: "flex", alignItems: "center", marginTop: "8px" }}
-        >
+        <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '8px' }}>Reference:</label>
+        <div style={{ width: '100%' }}>
           <EditableDropdown
-            options={referenceOptionsList}
+            options={referenceOptions}
             onSave={setNewReference}
           />
         </div>
       </div>
 
       <div style={{ marginBottom: "20px" }}>
-        <span>Comments:</span>
+        <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '8px' }}>Comments:</label>
         <Input.TextArea
           value={comments}
           onChange={(e) => setComments(e.target.value)}
           placeholder="Enter comments"
-          style={{ marginTop: "8px", width: "100%" }}
+          style={{ width: '100%' }}
+          rows={4}
         />
       </div>
     </Modal>
