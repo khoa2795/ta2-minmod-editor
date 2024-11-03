@@ -7,22 +7,7 @@ import DetailedView from "./DetailedView";
 import SearchBar from "./SearchBar";
 import Ungroup from "./Ungroup"; // Import Ungroup component
 import { MyButton } from "../../components/MyButton";
-interface TableRow {
-  id: number;
-  siteName: string;
-  siteType: string;
-  siteRank: string;
-  location: string;
-  crs: string;
-  country: string;
-  state: string;
-  depositType: string;
-  depositConfidence: string;
-  commodity: string;
-  grade: string;
-  tonnage: string;
-  all_ms_fields: string[];
-}
+import { TableRow } from "../../models/DedupMineralSite";
 
 const TableData: React.FC = () => {
   const [filteredData, setFilteredData] = useState<TableRow[]>([]);
