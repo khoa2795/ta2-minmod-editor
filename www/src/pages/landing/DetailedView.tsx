@@ -6,6 +6,7 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { MineralSite, MineralSiteProperty } from "../../models/MineralSite";
 import { Reference } from "../../models/Reference";
+import { mineralSiteStore } from "../../stores/MineralSiteStore";
 
 interface DetailedViewProps {
   allMsFields: string[];
@@ -56,22 +57,13 @@ const DetailedView: React.FC<DetailedViewProps> = ({
   useEffect(() => {
     const fetchDetails = async () => {
       setLoading(true);
-      const details = await Promise.all(
+      const mineralSites = await Promise.all(
         allMsFields.map(async (msField, index) => {
-          const resourceId = msField.split("resource/")[1];
-          console.log("Resource ID", resourceId)
-          const response = await fetch(`/get_resource/${resourceId}`);
-          if (response.ok) {
-            const result = await response.json();
-            console.log(JSON.stringify(result, null, 2));
-
-            return MineralSite.deserialize(result);
-          }
-          return null;
+          return await mineralSiteStore.getByURI(msField);
         })
       );
 
-      const validDetails = details.filter((detail) => detail !== null);
+      const validDetails = mineralSites;
       setDetailedData(validDetails as MineralSite[]);
       setLoading(false);
 
@@ -92,27 +84,11 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     setModalVisible(true);
 
     if (allMsFields.length > 0) {
+      // TODO: fix me!
       const firstResourceId = allMsFields[0].split("resource/")[1];
       console.log("firstResourceId", firstResourceId);
-
-      try {
-        const response = await fetch(`/get_site_info/${firstResourceId}`);
-        if (response.ok) {
-          const result = await response.json();
-          if (result.data) {
-            setFirstSiteData(result.data);
-          } else {
-            toast.error("No data received from site information API.");
-          }
-        } else {
-          toast.error(
-            "Failed to fetch site information. Server responded with an error."
-          );
-        }
-      } catch (error) {
-        console.error("Error fetching site information:", error);
-        toast.error("Failed to fetch site information due to network error.");
-      }
+      const site = await mineralSiteStore.getById(firstResourceId);
+      setFirstSiteData(site);
     }
   };
 
@@ -202,7 +178,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
 
     setModalVisible(false);
   };
-
+  console.log("@@@", detailedData);
   return (
     <div className="detailed-view-container">
       <ToastContainer />
@@ -228,13 +204,13 @@ const DetailedView: React.FC<DetailedViewProps> = ({
                     {["Site Name", "Location", "Deposit Type"].includes(
                       col.title
                     ) && (
-                        <EditOutlined
-                          className="edit-icon-header"
-                          onClick={() =>
-                            handleEditClick(editingRowId as number, col.title)
-                          }
-                        />
-                      )}
+                      <EditOutlined
+                        className="edit-icon-header"
+                        onClick={() =>
+                          handleEditClick(editingRowId as number, col.title)
+                        }
+                      />
+                    )}
                   </div>
                 </th>
               ))}
@@ -247,14 +223,26 @@ const DetailedView: React.FC<DetailedViewProps> = ({
                 <td>{resource.locationInfo.location || ""}</td>
                 <td>{resource.locationInfo.crs?.observed_name || ""}</td>
                 <td>{resource.locationInfo.country[0]?.observed_name || ""}</td>
-                <td>{resource.locationInfo.state_or_province[0]?.observed_name || ""}</td>
-                <td>{resource.locationInfo.state_or_province[0]?.observed_name || ""}</td>
+                <td>
+                  {resource.locationInfo.state_or_province[0]?.observed_name ||
+                    ""}
+                </td>
+                <td>
+                  {resource.locationInfo.state_or_province[0]?.observed_name ||
+                    ""}
+                </td>
                 <td>{resource.depositTypeCandidate[0]?.observed_name || ""}</td>
                 <td>{resource.depositTypeCandidate[0]?.confidence || ""}</td>
-                <td>{resource.max_grade !== undefined ? resource.max_grade : ""}</td>
-                <td>{resource.max_tonnes !== undefined ? resource.max_tonnes : ""}</td>
                 <td>
-                  {resource.reference[0]?.document.title || resource.reference[0]?.document.uri || ""}
+                  {resource.max_grade !== undefined ? resource.max_grade : ""}
+                </td>
+                <td>
+                  {resource.max_tonnes !== undefined ? resource.max_tonnes : ""}
+                </td>
+                <td>
+                  {resource.reference[0]?.document.title ||
+                    resource.reference[0]?.document.uri ||
+                    ""}
                 </td>
                 <td></td> {/* New comments column */}
                 <td>

@@ -4,6 +4,7 @@ import { CloseCircleOutlined } from "@ant-design/icons";
 import EditableDropdown from "../../components/editableDropDown";
 import { MineralSite, MineralSiteProperty } from "../../models/MineralSite";
 import { Reference } from "../../models/Reference";
+import { NewEditableDropdown } from "../../components/NewEditableDropdown";
 
 interface EditModalProps {
   visible: boolean;
@@ -30,39 +31,36 @@ const EditModal: React.FC<EditModalProps> = ({
   onSave,
   referenceOptions,
 }) => {
-  const [selectedValue, setSelectedValue] = useState<string | null>(null);
   const [editValue, setEditValue] = useState<string>("");
   const [newReference, setNewReference] = useState<string>("");
   const [comments, setComments] = useState<string>("");
-  const [isEditing, setIsEditing] = useState<boolean>(false);
-  const [isEditingReference, setIsEditingReference] = useState<boolean>(false);
 
   const predefinedPropertyValues = mineralSites.map((site) =>
     site.getProperty(property)
   );
+  const predefinedReferenceValues = mineralSites.map(
+    (site) => site.reference[0].document.title || site.reference[0].document.uri
+  );
 
-  useEffect(() => {
-    if (selectedValue !== null) {
-      const selectedSite = mineralSites.find(
-        (site) => site.getProperty(property) === selectedValue
-      );
-      if (selectedSite) {
-        setEditValue(selectedSite.name || "");
-        setNewReference(
-          selectedSite.reference[0].document.title ||
+  const updateProvenance = (key: string | null) => {
+    if (key !== null) {
+      // set reference to one of the site
+      const selectedSite = mineralSites[parseInt(key)];
+      setNewReference(
+        selectedSite.reference[0].document.title ||
           selectedSite.reference[0].document.uri
-        );
-        setIsEditing(true);
-      }
+      );
+    } else {
+      // create new value -- enter your own reference
+      setNewReference("");
     }
-  }, [selectedValue, mineralSites]);
+  };
 
   const handleSave = () => {
     if (!newReference.trim()) {
       message.error("Reference is required before saving.");
       return;
     }
-
     onSave(
       property,
       editValue,
@@ -75,25 +73,16 @@ const EditModal: React.FC<EditModalProps> = ({
       })
     );
     onClose();
-    setIsEditing(false);
-    setIsEditingReference(false);
-  };
-
-  const handleCancelEdit = () => {
-    setIsEditing(false);
-    setSelectedValue(null);
-    setEditValue("");
-  };
-
-  const handleCancelReferenceEdit = () => {
-    setIsEditingReference(false);
-    setNewReference("");
   };
 
   return (
     <Modal
       visible={visible}
-      title={<span style={{ fontSize: '18px', fontWeight: 'bold' }}>Edit {propertyReadableName}</span>}
+      title={
+        <span style={{ fontSize: "18px", fontWeight: "bold" }}>
+          Edit {propertyReadableName}
+        </span>
+      }
       onOk={handleSave}
       onCancel={onClose}
       footer={[
@@ -104,86 +93,62 @@ const EditModal: React.FC<EditModalProps> = ({
           Save
         </Button>,
       ]}
-      bodyStyle={{ padding: '20px' }}
+      bodyStyle={{ padding: "20px" }}
       centered
     >
       <div style={{ marginBottom: "20px" }}>
-        <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '8px' }}>{propertyReadableName}:</label>
+        <label
+          style={{ fontWeight: "bold", display: "block", marginBottom: "8px" }}
+        >
+          {propertyReadableName}:
+        </label>
         <div style={{ position: "relative", width: "100%" }}>
-          {isEditing ? (
-            <>
-              <Input
-                value={editValue}
-                onChange={(e) => setEditValue(e.target.value)}
-                placeholder={`Edit ${propertyReadableName}`}
-                style={{ width: '100%' }}
-              />
-              <CloseCircleOutlined
-                style={{
-                  position: "absolute",
-                  right: 10,
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                  fontSize: "16px",
-                  cursor: "pointer",
-                }}
-                onClick={handleCancelEdit}
-              />
-            </>
-          ) : (
-            <EditableDropdown
-              options={predefinedPropertyValues}
-              onSave={(value) => {
-                setSelectedValue(value);
-                setIsEditing(true);
-              }}
-            />
-          )}
+          <NewEditableDropdown
+            value={editValue}
+            onChange={setEditValue}
+            onProvenanceChange={(key: string | null) => {
+              updateProvenance(key);
+            }}
+            options={predefinedPropertyValues.map((value, index) => ({
+              key: index.toString(),
+              label: value,
+            }))}
+          />
         </div>
       </div>
 
       <div style={{ marginBottom: "20px" }}>
-        <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '8px' }}>Reference:</label>
+        <label
+          style={{ fontWeight: "bold", display: "block", marginBottom: "8px" }}
+        >
+          Reference:
+        </label>
         <div style={{ position: "relative", width: "100%" }}>
-          {isEditingReference ? (
-            <>
-              <Input
-                value={newReference}
-                onChange={(e) => setNewReference(e.target.value)}
-                placeholder="Edit Reference"
-                style={{ width: '100%' }}
-              />
-              <CloseCircleOutlined
-                style={{
-                  position: "absolute",
-                  right: 10,
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                  fontSize: "16px",
-                  cursor: "pointer",
-                }}
-                onClick={handleCancelReferenceEdit}
-              />
-            </>
-          ) : (
-            <EditableDropdown
-              options={referenceOptions}
-              onSave={(value) => {
-                setNewReference(value);
-                setIsEditingReference(true);
-              }}
-            />
-          )}
+          <NewEditableDropdown
+            value={newReference}
+            onChange={setNewReference}
+            onProvenanceChange={(key: string | null) => {
+              // do nothing as update reference doesn't trigger anything
+            }}
+            options={predefinedReferenceValues.map((value, index) => ({
+              key: index.toString(),
+              label: value,
+            }))}
+          />
         </div>
       </div>
 
       <div style={{ marginBottom: "20px" }}>
-        <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '8px' }}>Comments:</label>
+        <label
+          style={{ fontWeight: "bold", display: "block", marginBottom: "8px" }}
+        >
+          Comments:
+        </label>
         <Input.TextArea
           value={comments}
           onChange={(e) => setComments(e.target.value)}
           placeholder="Enter comments"
-          style={{ width: '100%' }}
+          style={{ width: "100%" }}
           rows={4}
         />
       </div>
@@ -192,4 +157,3 @@ const EditModal: React.FC<EditModalProps> = ({
 };
 
 export default EditModal;
-

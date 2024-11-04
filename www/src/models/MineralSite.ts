@@ -1,3 +1,4 @@
+import { count } from "console";
 import { CandidateEntity } from "./CandidateEntity";
 import { LocationInfo } from "./LocationInfo";
 import { Reference } from "./Reference";
@@ -14,22 +15,34 @@ export class MineralSite {
   depositTypeCandidate: CandidateEntity[];
   reference: Reference[];
   sameAs: string[];
-  max_grade:Float32Array;
-  max_tonnes:Float32Array;
+  max_grade: Float32Array;
+  max_tonnes: Float32Array;
 
-  public constructor(
-    id: string,
-    recordId: string,
-    sourceId: string,
-    createdBy: string,
-    name: string,
-    locationInfo: LocationInfo,
-    depositTypeCandidate: CandidateEntity[],
-    reference: Reference[],
-    sameAs: string[],
-    max_grade:Float32Array,
-    max_tonnes:Float32Array
-  ) {
+  public constructor({
+    id,
+    recordId,
+    sourceId,
+    createdBy,
+    name,
+    locationInfo,
+    depositTypeCandidate,
+    reference,
+    sameAs,
+    max_grade,
+    max_tonnes,
+  }: {
+    id: string;
+    recordId: string;
+    sourceId: string;
+    createdBy: string;
+    name: string;
+    locationInfo: LocationInfo;
+    depositTypeCandidate: CandidateEntity[];
+    reference: Reference[];
+    sameAs: string[];
+    max_grade: Float32Array;
+    max_tonnes: Float32Array;
+  }) {
     this.id = id;
     this.recordId = recordId;
     this.sourceId = sourceId;
@@ -39,8 +52,8 @@ export class MineralSite {
     this.depositTypeCandidate = depositTypeCandidate;
     this.reference = reference;
     this.sameAs = sameAs;
-    this.max_grade=max_grade;
-    this.max_tonnes=max_tonnes
+    this.max_grade = max_grade;
+    this.max_tonnes = max_tonnes;
   }
 
   public update(
@@ -84,19 +97,21 @@ export class MineralSite {
   }
 
   public clone(): MineralSite {
-    return new MineralSite(
-      this.id,
-      this.recordId,
-      this.sourceId,
-      this.createdBy,
-      this.name,
-      this.locationInfo.clone(),
-      this.depositTypeCandidate.map((candidate) => candidate.clone()),
-      this.reference.map((reference) => reference.clone()),
-      this.sameAs,
-      this.max_grade,
-      this.max_tonnes
-    );
+    return new MineralSite({
+      id: this.id,
+      recordId: this.recordId,
+      sourceId: this.sourceId,
+      createdBy: this.createdBy,
+      name: this.name,
+      locationInfo: this.locationInfo.clone(),
+      depositTypeCandidate: this.depositTypeCandidate.map((candidate) =>
+        candidate.clone()
+      ),
+      reference: this.reference.map((reference) => reference.clone()),
+      sameAs: this.sameAs,
+      max_grade: this.max_grade,
+      max_tonnes: this.max_tonnes,
+    });
   }
 
   public static findMineralSiteByUsername(
@@ -140,25 +155,33 @@ export class MineralSite {
       // tonnage: this.tonnage,
       reference: this.reference,
       sameAs: this.sameAs,
-      max_grade:this.max_grade,
-      max_tonnes:this.max_tonnes
+      max_grade: this.max_grade,
+      max_tonnes: this.max_tonnes,
       // comments: this.comments,
     };
   }
 
-  public static deserialize(obj: any): MineralSite {
-    return new MineralSite(
-      obj.uri,
-      obj.record_id,
-      obj.source_id,
-      obj.created_by,
-      obj.name,
-      LocationInfo.deserialize(obj.location_info),
-      obj.deposit_type_candidate.map(CandidateEntity.deserialize),
-      obj.reference.map(Reference.deserialize),
-      obj.same_as,
-      obj.max_grade,
-      obj.max_tonnes
-    );
+  public static deserialize(id: string, obj: any): MineralSite {
+    return new MineralSite({
+      id: id,
+      recordId: obj.record_id,
+      sourceId: obj.source_id,
+      createdBy: obj.created_by,
+      name: obj.name,
+      locationInfo:
+        obj.location_info !== undefined
+          ? LocationInfo.deserialize(obj.location_info)
+          : new LocationInfo({
+              country: [],
+              state_or_province: [],
+            }),
+      depositTypeCandidate: (obj.deposit_type_candidate || []).map(
+        CandidateEntity.deserialize
+      ),
+      reference: obj.reference.map(Reference.deserialize),
+      sameAs: obj.sameAs,
+      max_grade: obj.max_grade,
+      max_tonnes: obj.max_tonnes,
+    });
   }
 }
