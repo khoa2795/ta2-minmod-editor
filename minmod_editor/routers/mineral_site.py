@@ -10,7 +10,7 @@ router = APIRouter(tags=["mineral_sites"])
 
 @router.get("/get_resource/{resource_id}")
 def get_resource_details(resource_id: str):
-    url = f"https://minmod.isi.edu/resource/{resource_id}?format=json"
+    url = f"https://minmod.isi.edu/test/api/v1/mineral-sites/{resource_id}?format=json"
 
     resp = httpx.get(url, verify=False)
     resp.raise_for_status()

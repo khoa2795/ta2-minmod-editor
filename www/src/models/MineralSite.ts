@@ -14,6 +14,8 @@ export class MineralSite {
   depositTypeCandidate: CandidateEntity[];
   reference: Reference[];
   sameAs: string[];
+  max_grade:Float32Array;
+  max_tonnes:Float32Array;
 
   public constructor(
     id: string,
@@ -24,7 +26,9 @@ export class MineralSite {
     locationInfo: LocationInfo,
     depositTypeCandidate: CandidateEntity[],
     reference: Reference[],
-    sameAs: string[]
+    sameAs: string[],
+    max_grade:Float32Array,
+    max_tonnes:Float32Array
   ) {
     this.id = id;
     this.recordId = recordId;
@@ -35,6 +39,8 @@ export class MineralSite {
     this.depositTypeCandidate = depositTypeCandidate;
     this.reference = reference;
     this.sameAs = sameAs;
+    this.max_grade=max_grade;
+    this.max_tonnes=max_tonnes
   }
 
   public update(
@@ -87,7 +93,9 @@ export class MineralSite {
       this.locationInfo.clone(),
       this.depositTypeCandidate.map((candidate) => candidate.clone()),
       this.reference.map((reference) => reference.clone()),
-      this.sameAs
+      this.sameAs,
+      this.max_grade,
+      this.max_tonnes
     );
   }
 
@@ -132,6 +140,8 @@ export class MineralSite {
       // tonnage: this.tonnage,
       reference: this.reference,
       sameAs: this.sameAs,
+      max_grade:this.max_grade,
+      max_tonnes:this.max_tonnes
       // comments: this.comments,
     };
   }
@@ -146,7 +156,9 @@ export class MineralSite {
       LocationInfo.deserialize(obj.location_info),
       obj.deposit_type_candidate.map(CandidateEntity.deserialize),
       obj.reference.map(Reference.deserialize),
-      obj.same_as
+      obj.same_as,
+      obj.max_grade,
+      obj.max_tonnes
     );
   }
 }

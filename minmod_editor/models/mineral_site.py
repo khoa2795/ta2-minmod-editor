@@ -1,47 +1,43 @@
 from __future__ import annotations
-
 from typing import Optional, Sequence, TypeVar
-
 from minmodkg.api.models.mineral_site import (
     CandidateExtractedEntity,
     Document,
     LocationInfo,
+    MineralSite as KGMineralSite,
+    Reference,
 )
-from minmodkg.api.models.mineral_site import MineralSite as KGMineralSite
-from minmodkg.api.models.mineral_site import Reference
 from pydantic import Field
 
 T = TypeVar("T")
 
-
 def get_item(obj: Optional[T | Sequence[T]]) -> Optional[T]:
     if obj is None:
         return None
-    if isinstance(obj, Sequence):
+    if isinstance(obj, (list, tuple)): 
         return obj[0]
     return obj
 
-
 def lod_to_candidate_extracted_entity(obj: dict) -> CandidateExtractedEntity:
-    # TODO: undo this!!
+        # TODO: undo this!!
     # return CandidateExtractedEntity(
     #     source=obj["source"],
     #     confidence=obj["confidence"],
     #     observed_name=obj.get("observed_name"),
     #     normalized_uri=obj.get("normalized_uri"),
     # )
+    _x = get_item(obj.get("normalized_uri"))
+    if _x is not None:
+        print(f"_x: {_x}, type: {type(_x)}")  
 
     return CandidateExtractedEntity(
         source=get_item(obj["source"]),
         confidence=float(get_item(obj["confidence"])),
         observed_name=get_item(obj.get("observed_name")),
         normalized_uri=(
-            _x["@id"]
-            if (_x := get_item(obj.get("normalized_uri"))) is not None
-            else None
+            _x["@id"] if isinstance(_x, dict) and "@id" in _x else None
         ),
     )
-
 
 def lod_to_location_info(obj: dict) -> LocationInfo:
     props = dict()
@@ -58,36 +54,39 @@ def lod_to_location_info(obj: dict) -> LocationInfo:
         props["location"] = obj["location"]
     return LocationInfo(**props)
 
-
 def lod_to_document(obj: dict) -> Document:
-    print(">>>", obj)
+    print(">>>", obj)  
     return Document(
         doi=obj.get("doi"),
-        # TODO: fix me.
-        uri=obj.get("uri", obj["@id"]),
-        title=obj.get("title"),
+        uri=obj.get("uri", obj.get("@id")),  
+        title=obj.get("title", "Unknown Title")  
     )
 
-
-def lod_to_reference(obj: dict):
+def lod_to_reference(obj: dict) -> Reference:
     return Reference(
-        document=lod_to_document(obj["document"]),
-        # TODO: fix me!! load page info correctly !!!
-        page_info=[],
+        document=lod_to_document(obj.get("document", {})), 
+        page_info=obj.get("page_info", []), 
         comment=obj.get("comment"),
         property=obj.get("property"),
     )
 
+def get_max_grade_and_tonnes(mineral_inventory: list[dict]) -> tuple[float, float]:
+    max_grade = 0.0
+    max_tonnes = 0.0
+    for item in mineral_inventory:
+        if "grade" in item and "value" in item["grade"]:
+            max_grade = max(max_grade, item["grade"]["value"])
+        if "ore" in item and "value" in item["ore"]:
+            max_tonnes = max(max_tonnes, item["ore"]["value"])
+    return max_grade, max_tonnes
 
 class MineralSite(KGMineralSite):
     uri: str
-
+    max_grade: Optional[float] = None
+    max_tonnes: Optional[float] = None
 
 def lod_to_mineral_site(obj: dict) -> MineralSite:
-    if "location_info" in obj:
-        location_info = lod_to_location_info(obj["location_info"])
-    else:
-        location_info = None
+    location_info = lod_to_location_info(obj.get("location_info", {}))
 
     if "deposit_type_candidate" in obj:
         if isinstance(obj["deposit_type_candidate"], list):
@@ -110,23 +109,22 @@ def lod_to_mineral_site(obj: dict) -> MineralSite:
     else:
         reference = []
 
+    max_grade, max_tonnes = get_max_grade_and_tonnes(obj.get("mineral_inventory", []))
+
     return MineralSite(
-        uri=obj["@id"],
-        name=obj.get("@label", ""),
-        source_id=obj["source_id"],
-        record_id=obj["record_id"],
-        # TODO: fix me!! created_by & modified_at can be a list -- fix me please !!!
+        uri=obj.get("@id", "Unknown URI"), 
+        name=obj.get("@label", "Unknown Name"),  
+        source_id=obj.get("source_id", "Unknown Source ID"),
+        record_id=obj.get("record_id", "Unknown Record ID"),
         modified_at=(
-            max(obj["modified_at"])
-            if isinstance(obj["modified_at"], list)
-            else obj["modified_at"]
+            max(obj["modified_at"]) if isinstance(obj.get("modified_at"), list) else obj.get("modified_at", "Unknown Date")
         ),
         created_by=(
-            obj["created_by"][0]
-            if isinstance(obj["created_by"], list)
-            else obj["created_by"]
+            obj["created_by"][0] if isinstance(obj.get("created_by"), list) else obj.get("created_by", "Unknown Creator")
         ),
         location_info=location_info,
         deposit_type_candidate=deposit_type_candidate,
         reference=reference,
+        max_grade=max_grade, 
+        max_tonnes=max_tonnes,  
     )

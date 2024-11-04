@@ -422,7 +422,7 @@ def get_deposit_types():
 
 @app.get("/get_site_info/{resource_id}")
 def get_site_info(resource_id: str):
-    url = f"https://minmod.isi.edu/resource/{resource_id}?format=json"
+    url = f"https://minmod.isi.edu/test/api/v1/mineral-sites/{resource_id}?format=json"
 
     try:
         response = requests.get(url, verify=False)

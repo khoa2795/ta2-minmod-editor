@@ -59,9 +59,12 @@ const DetailedView: React.FC<DetailedViewProps> = ({
       const details = await Promise.all(
         allMsFields.map(async (msField, index) => {
           const resourceId = msField.split("resource/")[1];
+          console.log("Resource ID", resourceId)
           const response = await fetch(`/get_resource/${resourceId}`);
           if (response.ok) {
             const result = await response.json();
+            console.log(JSON.stringify(result, null, 2));
+
             return MineralSite.deserialize(result);
           }
           return null;
@@ -225,13 +228,13 @@ const DetailedView: React.FC<DetailedViewProps> = ({
                     {["Site Name", "Location", "Deposit Type"].includes(
                       col.title
                     ) && (
-                      <EditOutlined
-                        className="edit-icon-header"
-                        onClick={() =>
-                          handleEditClick(editingRowId as number, col.title)
-                        }
-                      />
-                    )}
+                        <EditOutlined
+                          className="edit-icon-header"
+                          onClick={() =>
+                            handleEditClick(editingRowId as number, col.title)
+                          }
+                        />
+                      )}
                   </div>
                 </th>
               ))}
@@ -240,19 +243,18 @@ const DetailedView: React.FC<DetailedViewProps> = ({
           <tbody>
             {detailedData.map((resource) => (
               <tr key={resource.id}>
-                <td>{resource.name}</td>
-                <td>{resource.locationInfo.location}</td>
-                <td>{resource.locationInfo.crs?.observed_name}</td>
-                <td>{resource.locationInfo.country[0]?.observed_name}</td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
+                <td>{resource.name || ""}</td>
+                <td>{resource.locationInfo.location || ""}</td>
+                <td>{resource.locationInfo.crs?.observed_name || ""}</td>
+                <td>{resource.locationInfo.country[0]?.observed_name || ""}</td>
+                <td>{resource.locationInfo.state_or_province[0]?.observed_name || ""}</td>
+                <td>{resource.locationInfo.state_or_province[0]?.observed_name || ""}</td>
+                <td>{resource.depositTypeCandidate[0]?.observed_name || ""}</td>
+                <td>{resource.depositTypeCandidate[0]?.confidence || ""}</td>
+                <td>{resource.max_grade !== undefined ? resource.max_grade : ""}</td>
+                <td>{resource.max_tonnes !== undefined ? resource.max_tonnes : ""}</td>
                 <td>
-                  {resource.reference[0].document.title ||
-                    resource.reference[0].document.uri}
+                  {resource.reference[0]?.document.title || resource.reference[0]?.document.uri || ""}
                 </td>
                 <td></td> {/* New comments column */}
                 <td>
