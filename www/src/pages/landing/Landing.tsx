@@ -105,10 +105,11 @@ const TableData: React.FC = () => {
   };
 
   const handleUngroup = (rowIndex: number) => {
+    console.log("Ungrouping row:", rowIndex);
     const rowData = filteredData[rowIndex];
-    setCurrentRowData(rowData); // Set the data for the selected row
+    setCurrentRowData(rowData); // Set data for the selected row
     setIsUngroupVisible(true); // Show the Ungroup component
-    setUngroupedRowIndex(rowIndex); // Set the ungrouped row index
+    setUngroupedRowIndex(rowIndex); // Set ungrouped row index
   };
 
   const columns = [
@@ -453,10 +454,10 @@ const TableData: React.FC = () => {
                         <td key={colIndex} style={{ width: col.width }}>
                           {col.render
                             ? col.render(
-                                row[col.dataIndex as keyof TableRow],
-                                row,
-                                rowIndex
-                              )
+                              row[col.dataIndex as keyof TableRow],
+                              row,
+                              rowIndex
+                            )
                             : row[col.dataIndex as keyof TableRow]}
                         </td>
                       ))}
@@ -472,22 +473,20 @@ const TableData: React.FC = () => {
                         </td>
                       </tr>
                     )}
-                    {ungroupedRowIndex === rowIndex &&
-                      isUngroupVisible &&
-                      currentRowData && (
-                        <tr>
-                          <td colSpan={columns.length}>
-                            <Ungroup
-                              allMsFields={currentRowData.all_ms_fields}
-                              onClose={() => {
-                                setIsUngroupVisible(false);
-                                setUngroupedRowIndex(null);
-                                setCurrentRowData(null);
-                              }}
-                            />
-                          </td>
-                        </tr>
-                      )}
+                    {ungroupedRowIndex === rowIndex && isUngroupVisible && currentRowData && (
+                      <tr>
+                        <td colSpan={columns.length}>
+                          <Ungroup
+                            allMsFields={currentRowData.all_ms_fields}
+                            onClose={() => {
+                              setIsUngroupVisible(false);
+                              setUngroupedRowIndex(null);
+                              setCurrentRowData(null);
+                            }}
+                          />
+                        </td>
+                      </tr>
+                    )}
                   </React.Fragment>
                 ))}
               </tbody>

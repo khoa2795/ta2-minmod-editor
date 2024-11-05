@@ -1,33 +1,19 @@
 import React, { useState, useEffect } from "react";
+import { Checkbox } from "antd";
 import "./DetailedView.css";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { Checkbox } from "antd"; // Use Checkbox instead of Radio
+import { MineralSite } from "../../models/MineralSite";
+import { mineralSiteStore } from "../../stores/MineralSiteStore";
 
-interface ResourceDetails {
-  id: number;
-  siteName: string;
-  location: string;
-  crs: string;
-  country: string;
-  state_or_province: string;
-  commodity: string;
-  depositType: string;
-  depositConfidence: string;
-  grade: string;
-  tonnage: string;
-  reference?: string;
-  source?: string;
-}
-
-interface DetailedViewProps {
+interface UngroupProps {
   allMsFields: string[];
   onClose: () => void;
 }
 
-const Ungroup: React.FC<DetailedViewProps> = ({ allMsFields, onClose }) => {
+const Ungroup: React.FC<UngroupProps> = ({ allMsFields, onClose }) => {
   const [columns, setColumns] = useState([
-    { title: "Select", width: 45 }, // Column for checkboxes
+    { title: "Select", width: 45 },
     { title: "Site Name", width: 150 },
     { title: "Location", width: 120 },
     { title: "CRS", width: 80 },
@@ -39,29 +25,25 @@ const Ungroup: React.FC<DetailedViewProps> = ({ allMsFields, onClose }) => {
     { title: "Grade", width: 80 },
     { title: "Tonnage", width: 80 },
     { title: "Reference", width: 100 },
+    { title: "Comments", width: 150 },
     { title: "Source", width: 100 },
   ]);
 
-  const [detailedData, setDetailedData] = useState<ResourceDetails[]>([]);
+  const [detailedData, setDetailedData] = useState<MineralSite[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
-  const [selectedRows, setSelectedRows] = useState<number[]>([]); // State for selected rows
+  const [selectedRows, setSelectedRows] = useState<{ [key: string]: boolean }>({}); // Track selection state per row using an object
 
   useEffect(() => {
     const fetchDetails = async () => {
       setLoading(true);
-      const details = await Promise.all(
-        allMsFields.map(async (msField, index) => {
+      const mineralSites = await Promise.all(
+        allMsFields.map(async (msField) => {
           const resourceId = msField.split("resource/")[1];
-          const response = await fetch(`/get_resource/${resourceId}`);
-          if (response.ok) {
-            const result = await response.json();
-            return { ...result.data, id: index + 1 };
-          }
-          return null;
+          return await mineralSiteStore.getById(resourceId);
         })
       );
 
-      const validDetails = details.filter((detail) => detail !== null);
+      const validDetails = mineralSites.filter((site) => site !== null) as MineralSite[];
       setDetailedData(validDetails);
       setLoading(false);
     };
@@ -69,47 +51,19 @@ const Ungroup: React.FC<DetailedViewProps> = ({ allMsFields, onClose }) => {
     fetchDetails();
   }, [allMsFields]);
 
-  const onResize = (index: number, newWidth: number) => {
-    setColumns((prevColumns) => {
-      const newColumns = [...prevColumns];
-      newColumns[index].width = Math.max(newWidth, 50);
-      return newColumns;
-    });
-  };
-
-  const handleMouseDown = (index: number, e: React.MouseEvent) => {
-    e.preventDefault();
-    const startX = e.clientX;
-    const startWidth = columns[index].width;
-
-    const onMouseMove = (moveEvent: MouseEvent) => {
-      const newWidth = startWidth + (moveEvent.clientX - startX);
-      onResize(index, newWidth);
-    };
-
-    const onMouseUp = () => {
-      document.removeEventListener("mousemove", onMouseMove);
-      document.removeEventListener("mouseup", onMouseUp);
-    };
-
-    document.addEventListener("mousemove", onMouseMove);
-    document.addEventListener("mouseup", onMouseUp);
-  };
-
-  const handleRowSelect = (rowId: number) => {
-    setSelectedRows((prevSelected) => {
-      if (prevSelected.includes(rowId)) {
-        return prevSelected.filter((id) => id !== rowId); // Deselect if already selected
-      }
-      return [...prevSelected, rowId]; // Add to selection
-    });
+  // Toggle selection for a row
+  const handleCheckboxChange = (id: string) => {
+    setSelectedRows((prevSelected) => ({
+      ...prevSelected,
+      [id]: !prevSelected[id], // Toggle the selection state of the specific row
+    }));
   };
 
   return (
     <div className="detailed-view-container">
       <ToastContainer />
       <div className="detailed-view-header">
-        <span>Detailed View</span>
+        <span>Ungrouped View</span>
         <button className="close-button" onClick={onClose}>
           Close
         </button>
@@ -126,20 +80,6 @@ const Ungroup: React.FC<DetailedViewProps> = ({ allMsFields, onClose }) => {
                   style={{ width: col.width, position: "relative" }}
                 >
                   <div>{col.title}</div>
-                  {index < columns.length - 1 && (
-                    <div
-                      onMouseDown={(e) => handleMouseDown(index, e)}
-                      style={{
-                        cursor: "col-resize",
-                        position: "absolute",
-                        right: "0",
-                        top: "0",
-                        height: "100%",
-                        width: "10px",
-                        backgroundColor: "transparent",
-                      }}
-                    />
-                  )}
                 </th>
               ))}
             </tr>
@@ -149,28 +89,33 @@ const Ungroup: React.FC<DetailedViewProps> = ({ allMsFields, onClose }) => {
               <tr key={resource.id}>
                 <td>
                   <Checkbox
-                    checked={selectedRows.includes(resource.id)}
-                    onChange={() => handleRowSelect(resource.id)}
+                    checked={!!selectedRows[resource.id]} // Convert to boolean and use its state
+                    onChange={() => handleCheckboxChange(resource.id)}
                   />
                 </td>
-                <td>{resource.siteName}</td>
-                <td>{resource.location}</td>
-                <td>{resource.crs}</td>
-                <td>{resource.country}</td>
-                <td>{resource.state_or_province}</td>
-                <td>{resource.commodity}</td>
-                <td>{resource.depositType}</td>
-                <td>{resource.depositConfidence}</td>
-                <td>{resource.grade}</td>
-                <td>{resource.tonnage}</td>
-                <td>{resource.reference}</td>
+                <td>{resource.name || ""}</td>
+                <td>{resource.locationInfo.location || ""}</td>
+                <td>{resource.locationInfo.crs?.observed_name || ""}</td>
+                <td>{resource.locationInfo.country[0]?.observed_name || ""}</td>
+                <td>{resource.locationInfo.state_or_province[0]?.observed_name || ""}</td>
                 <td>
-                  {resource.source ? (
-                    <a
-                      href={resource.source}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
+                  {(resource as any).mineral_inventory?.[0]?.commodity?.observed_name || ""}
+                </td>
+                <td>{resource.depositTypeCandidate[0]?.observed_name || ""}</td>
+                <td>{resource.depositTypeCandidate[0]?.confidence || ""}</td>
+                <td>
+                  {resource.max_grade !== undefined ? resource.max_grade : ""}
+                </td>
+                <td>
+                  {resource.max_tonnes !== undefined ? resource.max_tonnes : ""}
+                </td>
+                <td>
+                  {resource.reference[0]?.document.title || resource.reference[0]?.document.uri || ""}
+                </td>
+                <td></td> {/* Placeholder for Comments column */}
+                <td>
+                  {resource.source_id ? (
+                    <a href={resource.source_id} target="_blank" rel="noopener noreferrer">
                       View Source
                     </a>
                   ) : (

@@ -7,9 +7,9 @@ export type MineralSiteProperty = "name" | "depositType" | "location";
 
 export class MineralSite {
   id: string;
-  recordId: string;
-  sourceId: string;
-  createdBy: string;
+  record_id: string;
+  source_id: string;
+  created_by: string;
   name: string;
   locationInfo: LocationInfo;
   depositTypeCandidate: CandidateEntity[];
@@ -20,9 +20,9 @@ export class MineralSite {
 
   public constructor({
     id,
-    recordId,
-    sourceId,
-    createdBy,
+    record_id,
+    source_id,
+    created_by,
     name,
     locationInfo,
     depositTypeCandidate,
@@ -32,9 +32,9 @@ export class MineralSite {
     max_tonnes,
   }: {
     id: string;
-    recordId: string;
-    sourceId: string;
-    createdBy: string;
+    record_id: string;
+    source_id: string;
+    created_by: string;
     name: string;
     locationInfo: LocationInfo;
     depositTypeCandidate: CandidateEntity[];
@@ -44,9 +44,9 @@ export class MineralSite {
     max_tonnes: Float32Array;
   }) {
     this.id = id;
-    this.recordId = recordId;
-    this.sourceId = sourceId;
-    this.createdBy = createdBy;
+    this.record_id = record_id;
+    this.source_id = source_id;
+    this.created_by = created_by;
     this.name = name;
     this.locationInfo = locationInfo;
     this.depositTypeCandidate = depositTypeCandidate;
@@ -99,9 +99,9 @@ export class MineralSite {
   public clone(): MineralSite {
     return new MineralSite({
       id: this.id,
-      recordId: this.recordId,
-      sourceId: this.sourceId,
-      createdBy: this.createdBy,
+      record_id: this.record_id,
+      source_id: this.source_id,
+      created_by: this.created_by,
       name: this.name,
       locationInfo: this.locationInfo.clone(),
       depositTypeCandidate: this.depositTypeCandidate.map((candidate) =>
@@ -120,7 +120,7 @@ export class MineralSite {
   ): MineralSite | undefined {
     const fullUsername = `/user/${username}`;
     return mineralSites.find((mineralSite) =>
-      mineralSite.createdBy.endsWith(fullUsername)
+      mineralSite.created_by.endsWith(fullUsername)
     );
   }
 
@@ -131,8 +131,8 @@ export class MineralSite {
     // TODO: should replace it with logic in the backend.
     const curatedMineralSite = mineralSites[0].clone();
     // TODO: fix me, we need to make sure source_id is a valid URL, we will have error when source id is http://example.com?test=abc.
-    curatedMineralSite.sourceId = `${curatedMineralSite.sourceId}?username=${username}`;
-    curatedMineralSite.createdBy = `https://minmod.isi.edu/user/${username}`;
+    curatedMineralSite.source_id = `${curatedMineralSite.source_id}?username=${username}`;
+    curatedMineralSite.created_by = `https://minmod.isi.edu/user/${username}`;
     return curatedMineralSite;
   }
 
@@ -140,9 +140,9 @@ export class MineralSite {
     // convert mineral site to the format that the server required to save the mineral site.
     return {
       id: this.id,
-      record_id: this.recordId,
-      source_id: this.sourceId,
-      created_by: this.createdBy,
+      record_id: this.record_id,
+      source_id: this.source_id,
+      created_by: this.created_by,
       siteName: this.name,
       // location: this.location,
       // crs: this.crs,
@@ -164,9 +164,9 @@ export class MineralSite {
   public static deserialize(id: string, obj: any): MineralSite {
     return new MineralSite({
       id: id,
-      recordId: obj.record_id,
-      sourceId: obj.source_id,
-      createdBy: obj.created_by,
+      record_id: obj.record_id,
+      source_id: obj.source_id,
+      created_by: obj.created_by,
       name: obj.name,
       locationInfo:
         obj.location_info !== undefined

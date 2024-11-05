@@ -105,40 +105,53 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     setReferenceOptions(options);
 
     if (allMsFields.length > 0) {
-        const firstResourceId = allMsFields[0].split("resource/")[1];
-        const site = await mineralSiteStore.getById(firstResourceId);
+        const firstResource_id = allMsFields[0].split("resource/")[1];
+        const site = await mineralSiteStore.getById(firstResource_id);
         setFirstSiteData(site);
     }
 };
 
 
-  const handleSaveChanges = async (
-    property: MineralSiteProperty,
-    property_value: string,
-    reference: Reference
-  ) => {
-    const sessionId = localStorage.getItem("session_id");
-    if (!sessionId) {
-      toast.error("Session ID not found. Please log in again.");
-      return;
-    }
+const handleSaveChanges = async (
+  property: MineralSiteProperty,
+  property_value: string,
+  reference: Reference
+) => {
+  console.log("handleSaveChanges called with:", { property, property_value, reference });
 
-    if (!firstSiteData || !firstSiteData.location_info) {
-      toast.error("Site data is incomplete or not loaded.");
-      return;
-    }
+  const sessionId = localStorage.getItem("session_id");
+  if (!sessionId) {
+    toast.error("Session ID not found. Please log in again.");
+    return;
+  }
 
-    let curatedMineralSite =
-      MineralSite.findMineralSiteByUsername(detailedData, username) ||
-      MineralSite.createDefaultCuratedMineralSite(detailedData, username);
-    curatedMineralSite = curatedMineralSite.update(
-      property,
-      property_value,
-      reference
-    );
+  try {
+    const curatedMineralSite = MineralSite.createDefaultCuratedMineralSite(detailedData, username)
+      .update(property, property_value, reference);
 
-    try {
-      const createResponse = await fetch("/submit_mineral_site", {
+    // Try creating the mineral site
+    const createResponse = await fetch("/submit_mineral_site", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: `session=${sessionId}`,
+      },
+      body: JSON.stringify(curatedMineralSite.serialize()),
+      credentials: "include",
+    });
+
+    if (createResponse.ok) {
+      const responseData = await createResponse.json();
+      toast.success("Data submitted successfully");
+
+      setDetailedData((prevData) => [...prevData, curatedMineralSite]);
+    } else if (createResponse.status === 403) {
+      // Site already exists, so update instead
+      console.log("Resource already exists. Attempting to update.");
+
+      const existingResource_id = createdRecordUri;
+      console.log("existingResource_id",existingResource_id)
+      const updateResponse = await fetch(`/test/api/v1/mineral-sites/${existingResource_id}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -148,56 +161,31 @@ const DetailedView: React.FC<DetailedViewProps> = ({
         credentials: "include",
       });
 
-      if (createResponse.ok) {
-        const responseData = await createResponse.json();
-        const newRecordUri = responseData.uri;
-        const resourceId = newRecordUri.split("resource/")[1];
-        setCreatedRecordUri(resourceId);
-        toast.success("Data submitted successfully");
+      if (updateResponse.ok) {
+        toast.success("Data updated successfully");
 
-        setDetailedData((prevData) => [...prevData, curatedMineralSite]);
-      } else if (createResponse.status === 403) {
-        // Site already exists: Update instead
-        console.log("Site already exists. Proceeding to update.");
-        const existingResourceId = createdRecordUri;
-
-        const updateResponse = await fetch(
-          `/test/api/v1/mineral-sites/${existingResourceId}`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Cookie: `session=${sessionId}`,
-            },
-            body: JSON.stringify(curatedMineralSite.serialize()),
-            credentials: "include",
-          }
+        setDetailedData((prevData) =>
+          prevData.map((item) =>
+            item.record_id === curatedMineralSite.record_id
+              ? curatedMineralSite
+              : item
+          )
         );
-
-        if (updateResponse.ok) {
-          toast.success("Data updated successfully");
-
-          setDetailedData((prevData) =>
-            prevData.map((item) =>
-              item.recordId === curatedMineralSite.recordId
-                ? curatedMineralSite
-                : item
-            )
-          );
-        } else {
-          const errorData = await updateResponse.json();
-          toast.error(`Update failed: ${errorData.detail}`);
-        }
       } else {
-        const errorData = await createResponse.json();
-        toast.error(`Error: ${errorData.detail}`);
+        const errorData = await updateResponse.json();
+        toast.error(`Update failed: ${errorData.detail}`);
       }
-    } catch (error) {
-      toast.error("Failed to submit data.");
+    } else {
+      const errorData = await createResponse.json();
+      toast.error(`Error: ${errorData.detail}`);
     }
+  } catch (error) {
+    toast.error("Failed to submit data.");
+  }
 
-    setModalVisible(false);
-  };
+  setModalVisible(false);
+};
+
   console.log("@@@", detailedData);
   return (
     <div className="detailed-view-container">
@@ -266,9 +254,9 @@ const DetailedView: React.FC<DetailedViewProps> = ({
                 </td>
                 <td></td> {/* New comments column */}
                 <td>
-                  {resource.sourceId ? (
+                  {resource.source_id ? (
                     <a
-                      href={resource.sourceId}
+                      href={resource.source_id}
                       target="_blank"
                       rel="noopener noreferrer"
                     >

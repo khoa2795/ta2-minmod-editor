@@ -36,7 +36,6 @@ export const NewEditableDropdown = (props: NewEditableDropdownProps) => {
   const items: MenuProps["items"] = props.options.map((option) => ({
     key: option.key,
     label: option.label,
-    primary: true,
     onClick: () => {
       setSelectingValue(true);
       props.onChange(option.label);

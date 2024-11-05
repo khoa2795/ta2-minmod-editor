@@ -53,6 +53,11 @@ const EditModal: React.FC<EditModalProps> = ({
       message.error("Reference is required before saving.");
       return;
     }
+    console.log("Saving with property:", property);
+    console.log("Saving with editValue:", editValue);
+    console.log("Saving with reference:", newReference);
+  
+    // Call onSave and pass parameters
     onSave(
       property,
       editValue,
@@ -66,6 +71,7 @@ const EditModal: React.FC<EditModalProps> = ({
     );
     onClose();
   };
+  
 
   return (
     <Modal
