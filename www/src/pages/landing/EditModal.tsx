@@ -68,9 +68,13 @@ const EditModal: React.FC<EditModalProps> = ({
   };
 
   // Determine dropdown options based on the property
+  const siteSpecificDepositTypes = mineralSites
+    .map((site) => site.depositTypeCandidate[0]?.observed_name || "")
+    .filter((type) => type); // Filter out undefined or empty strings
+
   const dropdownOptions =
     property === "depositType"
-      ? depositTypes
+      ? Array.from(new Set([...siteSpecificDepositTypes, ...depositTypes])) // Combine site-specific and all deposit types without duplicates
       : property === "name"
       ? mineralSites.map((site) => site.name)
       : property === "location"
