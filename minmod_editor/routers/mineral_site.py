@@ -3,8 +3,6 @@ from __future__ import annotations
 import httpx
 from fastapi import APIRouter
 
-from minmod_editor.models.mineral_site import lod_to_mineral_site
-
 router = APIRouter(tags=["mineral_sites"])
 
 

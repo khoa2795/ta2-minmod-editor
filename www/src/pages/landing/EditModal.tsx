@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Modal, Input, Button, message, Select } from "antd";
 import { MineralSite, MineralSiteProperty } from "../../models/MineralSite";
-import { Reference } from "../../models/Reference";
+import { Reference, Document } from "../../models/Reference";
 import { NewEditableDropdown } from "../../components/NewEditableDropdown";
 
 const { Option } = Select;
@@ -13,43 +13,26 @@ interface EditModalProps {
   propertyReadableName: string;
   property: MineralSiteProperty;
   depositTypes: string[];
-  onSave: (
-    property: MineralSiteProperty,
-    value: string,
-    reference: Reference
-  ) => void;
+  onSave: (property: MineralSiteProperty, value: string, reference: Reference) => void;
   referenceOptions: string[];
 }
 
-const EditModal: React.FC<EditModalProps> = ({
-  visible,
-  onClose,
-  mineralSites,
-  propertyReadableName,
-  property,
-  depositTypes,
-  onSave,
-  referenceOptions,
-}) => {
+const EditModal: React.FC<EditModalProps> = ({ visible, onClose, mineralSites, propertyReadableName, property, depositTypes, onSave, referenceOptions }) => {
   const [editValue, setEditValue] = useState<string>("");
-  const [newReference, setNewReference] = useState<string>("");
+  const [newReference, setNewReference] = useState<{ uri: string; title?: string }>({ uri: "" });
   const [comments, setComments] = useState<string>("");
 
   const updateProvenance = (key: string | null) => {
     if (key !== null) {
       const selectedSite = mineralSites[parseInt(key)];
-      setNewReference(
-        selectedSite.reference[0]?.document.title ||
-        selectedSite.reference[0]?.document.uri ||
-        "Unknown"
-      );
+      setNewReference({ title: selectedSite.reference[0]?.document.title, uri: selectedSite.reference[0]?.document.uri });
     } else {
-      setNewReference("");
+      setNewReference({ uri: "" });
     }
   };
 
   const handleSave = () => {
-    if (!newReference.trim()) {
+    if (newReference.uri.trim() === "") {
       message.error("Reference is required before saving.");
       return;
     }
@@ -57,10 +40,7 @@ const EditModal: React.FC<EditModalProps> = ({
       property,
       editValue,
       new Reference({
-        document: {
-          title: newReference,
-          uri: "",
-        },
+        document: new Document(newReference.uri, newReference.title),
         comment: comments,
       })
     );
@@ -68,9 +48,7 @@ const EditModal: React.FC<EditModalProps> = ({
   };
 
   // Determine dropdown options based on the property
-  const siteSpecificDepositTypes = mineralSites
-    .map((site) => site.depositTypeCandidate[0]?.observed_name || "")
-    .filter((type) => type); // Filter out undefined or empty strings
+  const siteSpecificDepositTypes = mineralSites.map((site) => site.depositTypeCandidate[0]?.observed_name || "").filter((type) => type); // Filter out undefined or empty strings
 
   const dropdownOptions =
     property === "depositType"
@@ -84,6 +62,7 @@ const EditModal: React.FC<EditModalProps> = ({
   // Generate reference options based on mineralSites for consistent behavior
   const consistentReferenceOptions = mineralSites.map((site) => ({
     key: site.id.toString(),
+    // TODO: fix not showing unknown reference
     label: site.reference[0]?.document.title || site.reference[0]?.document.uri || "Unknown",
   }));
 
@@ -94,25 +73,21 @@ const EditModal: React.FC<EditModalProps> = ({
       onOk={handleSave}
       onCancel={onClose}
       footer={[
-        <Button key="cancel" onClick={onClose}>Cancel</Button>,
-        <Button key="save" type="primary" onClick={handleSave}>Save</Button>,
+        <Button key="cancel" onClick={onClose}>
+          Cancel
+        </Button>,
+        <Button key="save" type="primary" onClick={handleSave}>
+          Save
+        </Button>,
       ]}
       bodyStyle={{ padding: "20px" }}
       centered
     >
       <div style={{ marginBottom: "20px" }}>
-        <label style={{ fontWeight: "bold", display: "block", marginBottom: "8px" }}>
-          {propertyReadableName}:
-        </label>
+        <label style={{ fontWeight: "bold", display: "block", marginBottom: "8px" }}>{propertyReadableName}:</label>
         <div style={{ position: "relative", width: "100%" }}>
           {property === "depositType" ? (
-            <Select
-              showSearch
-              value={editValue}
-              onChange={setEditValue}
-              style={{ width: "100%" }}
-              placeholder="Select a deposit type or enter your own"
-            >
+            <Select showSearch value={editValue} onChange={setEditValue} style={{ width: "100%" }} placeholder="Select a deposit type or enter your own">
               {dropdownOptions.map((option, index) => (
                 <Option key={index} value={option}>
                   {option}
@@ -135,28 +110,18 @@ const EditModal: React.FC<EditModalProps> = ({
       </div>
 
       <div style={{ marginBottom: "20px" }}>
-        <label style={{ fontWeight: "bold", display: "block", marginBottom: "8px" }}>
-          Reference:
-        </label>
+        <label style={{ fontWeight: "bold", display: "block", marginBottom: "8px" }}>Reference:</label>
         <NewEditableDropdown
-          value={newReference}
-          onChange={setNewReference}
+          value={newReference.uri}
+          onChange={(uri) => setNewReference({ uri, title: undefined })}
           onProvenanceChange={(key: string | null) => {}}
           options={consistentReferenceOptions}
         />
       </div>
 
       <div style={{ marginBottom: "20px" }}>
-        <label style={{ fontWeight: "bold", display: "block", marginBottom: "8px" }}>
-          Comments:
-        </label>
-        <Input.TextArea
-          value={comments}
-          onChange={(e) => setComments(e.target.value)}
-          placeholder="Enter comments"
-          style={{ width: "100%" }}
-          rows={4}
-        />
+        <label style={{ fontWeight: "bold", display: "block", marginBottom: "8px" }}>Comments:</label>
+        <Input.TextArea value={comments} onChange={(e) => setComments(e.target.value)} placeholder="Enter comments" style={{ width: "100%" }} rows={4} />
       </div>
     </Modal>
   );
