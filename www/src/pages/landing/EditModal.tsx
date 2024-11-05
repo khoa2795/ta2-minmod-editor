@@ -1,8 +1,11 @@
 import React, { useState } from "react";
-import { Modal, Input, Button, message } from "antd";
+import { Modal, Input, Button, message, Select } from "antd";
 import { MineralSite, MineralSiteProperty } from "../../models/MineralSite";
 import { Reference } from "../../models/Reference";
 import { NewEditableDropdown } from "../../components/NewEditableDropdown";
+import { property } from "lodash";
+
+const { Option } = Select;
 
 interface EditModalProps {
   visible: boolean;
@@ -33,9 +36,13 @@ const EditModal: React.FC<EditModalProps> = ({
   const [newReference, setNewReference] = useState<string>("");
   const [comments, setComments] = useState<string>("");
 
+  console.log("property in editmodal", property)
+  console.log("property in editmodal for deposit types ", depositTypes)
+
+
+
   const updateProvenance = (key: string | null) => {
     if (key !== null) {
-      // Set reference to one of the mineral sites
       const selectedSite = mineralSites[parseInt(key)];
       setNewReference(
         selectedSite.reference[0]?.document.title ||
@@ -43,7 +50,6 @@ const EditModal: React.FC<EditModalProps> = ({
         "Unknown"
       );
     } else {
-      // Create new value -- allow user to enter a custom reference
       setNewReference("");
     }
   };
@@ -53,11 +59,6 @@ const EditModal: React.FC<EditModalProps> = ({
       message.error("Reference is required before saving.");
       return;
     }
-    console.log("Saving with property:", property);
-    console.log("Saving with editValue:", editValue);
-    console.log("Saving with reference:", newReference);
-  
-    // Call onSave and pass parameters
     onSave(
       property,
       editValue,
@@ -71,7 +72,16 @@ const EditModal: React.FC<EditModalProps> = ({
     );
     onClose();
   };
-  
+
+  // Determine dropdown options based on the property
+  const dropdownOptions =
+    property === "depositType"
+      ? depositTypes
+      : property === "name"
+      ? mineralSites.map((site) => site.name)
+      : property === "location"
+      ? mineralSites.map((site) => site.locationInfo.location || "")
+      : [];
 
   return (
     <Modal
@@ -91,15 +101,32 @@ const EditModal: React.FC<EditModalProps> = ({
           {propertyReadableName}:
         </label>
         <div style={{ position: "relative", width: "100%" }}>
-          <NewEditableDropdown
-            value={editValue}
-            onChange={setEditValue}
-            onProvenanceChange={updateProvenance}
-            options={referenceOptions.map((value, index) => ({
-              key: index.toString(),
-              label: value,
-            }))}
-          />
+          {property === "depositType" ? (
+            <Select
+              showSearch
+              value={editValue}
+              onChange={setEditValue}
+              style={{ width: "100%" }}
+              placeholder="Select a deposit type or enter your own"
+            >
+              {dropdownOptions.map((option, index) => (
+                <Option key={index} value={option}>
+                  {option}
+                </Option>
+              ))}
+              <Option value="custom">Enter your own</Option>
+            </Select>
+          ) : (
+            <NewEditableDropdown
+              value={editValue}
+              onChange={setEditValue}
+              onProvenanceChange={updateProvenance}
+              options={dropdownOptions.map((option, index) => ({
+                key: index.toString(),
+                label: option,
+              }))}
+            />
+          )}
         </div>
       </div>
 
@@ -107,19 +134,15 @@ const EditModal: React.FC<EditModalProps> = ({
         <label style={{ fontWeight: "bold", display: "block", marginBottom: "8px" }}>
           Reference:
         </label>
-        <div style={{ position: "relative", width: "100%" }}>
-          <NewEditableDropdown
-            value={newReference}
-            onChange={setNewReference}
-            onProvenanceChange={(key: string | null) => {
-              // Do nothing as update reference doesn’t trigger anything additional
-            }}
-            options={mineralSites.map((site, index) => ({
-              key: index.toString(),
-              label: site.reference[0]?.document.title || site.reference[0]?.document.uri || "Unknown",
-            }))}
-          />
-        </div>
+        <NewEditableDropdown
+          value={newReference}
+          onChange={setNewReference}
+          onProvenanceChange={(key: string | null) => {}}
+          options={referenceOptions.map((value, index) => ({
+            key: index.toString(),
+            label: value,
+          }))}
+        />
       </div>
 
       <div style={{ marginBottom: "20px" }}>

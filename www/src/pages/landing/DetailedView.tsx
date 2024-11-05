@@ -85,33 +85,35 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     setEditingRowId(rowId);
     setModalTitle(title);
     setModalVisible(true);
-
-    // Set a default value for propertyKey to avoid it being unassigned
-    let propertyKey: MineralSiteProperty = "name";  // Default to "name"
+    
+    // Define the propertyKey and options based on the title
+    let propertyKey: MineralSiteProperty = "name";
     let options: string[] = [];
-
-    // Update propertyKey and options based on the title
+  
     if (title === "Site Name") {
       propertyKey = "name";
+      setProperty(propertyKey);
       options = detailedData.map(site => site.name);
     } else if (title === "Location") {
       propertyKey = "location";
+      setProperty(propertyKey);
       options = detailedData.map(site => site.locationInfo.location || "");
     } else if (title === "Deposit Type") {
       propertyKey = "depositType";
-      options = detailedData.map(site => site.depositTypeCandidate[0]?.observed_name || "");
+      setProperty("depositType");
+      options = depositTypes; // Use depositTypes directly here
     }
-
-    // Set the determined property and options
-    setProperty(propertyKey);
+  
+    // Set the determined property and reference options
     setReferenceOptions(options);
-
+  
     if (allMsFields.length > 0) {
       const firstResource_id = allMsFields[0].split("resource/")[1];
       const site = await mineralSiteStore.getById(firstResource_id);
       setFirstSiteData(site);
     }
   };
+  console.log("chosen value",property)
 
   const handleSaveChanges = async (
     property: MineralSiteProperty,
@@ -146,23 +148,20 @@ const DetailedView: React.FC<DetailedViewProps> = ({
         const responseData = await createResponse.json();
         toast.success("Data submitted successfully");
 
-        // Extract the unique identifier from the URI
         const newResourceId = responseData.uri.split("resource/")[1];
-        setCreatedRecordUri(newResourceId); // Store the URI part for potential future use
+        setCreatedRecordUri(newResourceId); 
 
-        // Append the new entry to detailedData with the unique ID and ensure `reference` and `comments` are set
         setDetailedData((prevData) => [
           ...prevData,
           {
             ...curatedMineralSite,
             id: newResourceId,
             reference: reference,
-            comments: property_value  // Assuming `property_value` is meant to be the comments
+            comments: property_value 
           } as unknown as MineralSite,
         ]);
 
       } else if (createResponse.status === 403) {
-        // Resource already exists. Use the stored URI part for the update request.
         console.log("Resource already exists. Attempting to update.");
 
         const updateResponse = await fetch(`/test/api/v1/mineral-sites/${createdRecordUri}`, {
@@ -299,7 +298,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
         onClose={() => setModalVisible(false)}
         mineralSites={detailedData}
         propertyReadableName={modalTitle}
-        property={"name"} // TODO: fix me!
+        property={property || "name"} // TODO: fix me!
         depositTypes={depositTypes}
         onSave={handleSaveChanges}
         referenceOptions={referenceOptions} // Pass reference options
