@@ -3,7 +3,6 @@ import { Modal, Input, Button, message, Select } from "antd";
 import { MineralSite, MineralSiteProperty } from "../../models/MineralSite";
 import { Reference } from "../../models/Reference";
 import { NewEditableDropdown } from "../../components/NewEditableDropdown";
-import { property } from "lodash";
 
 const { Option } = Select;
 
@@ -35,11 +34,6 @@ const EditModal: React.FC<EditModalProps> = ({
   const [editValue, setEditValue] = useState<string>("");
   const [newReference, setNewReference] = useState<string>("");
   const [comments, setComments] = useState<string>("");
-
-  console.log("property in editmodal", property)
-  console.log("property in editmodal for deposit types ", depositTypes)
-
-
 
   const updateProvenance = (key: string | null) => {
     if (key !== null) {
@@ -82,6 +76,12 @@ const EditModal: React.FC<EditModalProps> = ({
       : property === "location"
       ? mineralSites.map((site) => site.locationInfo.location || "")
       : [];
+
+  // Generate reference options based on mineralSites for consistent behavior
+  const consistentReferenceOptions = mineralSites.map((site) => ({
+    key: site.id.toString(),
+    label: site.reference[0]?.document.title || site.reference[0]?.document.uri || "Unknown",
+  }));
 
   return (
     <Modal
@@ -138,10 +138,7 @@ const EditModal: React.FC<EditModalProps> = ({
           value={newReference}
           onChange={setNewReference}
           onProvenanceChange={(key: string | null) => {}}
-          options={referenceOptions.map((value, index) => ({
-            key: index.toString(),
-            label: value,
-          }))}
+          options={consistentReferenceOptions}
         />
       </div>
 
