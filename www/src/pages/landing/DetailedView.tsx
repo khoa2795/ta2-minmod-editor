@@ -128,9 +128,8 @@ const handleSaveChanges = async (
   try {
     const curatedMineralSite = MineralSite.createDefaultCuratedMineralSite(detailedData, username)
       .update(property, property_value, reference);
-      console.log("curatedMineralSite:", JSON.stringify(curatedMineralSite, null, 2));
+    console.log("curatedMineralSite:", JSON.stringify(curatedMineralSite, null, 2));
 
-    // Try creating the mineral site
     const createResponse = await fetch("/submit_mineral_site", {
       method: "POST",
       headers: {
@@ -145,13 +144,16 @@ const handleSaveChanges = async (
       const responseData = await createResponse.json();
       toast.success("Data submitted successfully");
 
-      setDetailedData((prevData) => [...prevData, curatedMineralSite]);
+      // Update the detailedData state to append the new entry
+      setDetailedData((prevData) => [
+        ...prevData,
+        { ...curatedMineralSite, id: responseData.id } as MineralSite, // Cast to MineralSite
+      ]);
     } else if (createResponse.status === 403) {
-      // Site already exists, so update instead
+      // Handle update logic if needed...
       console.log("Resource already exists. Attempting to update.");
 
       const existingResource_id = createdRecordUri;
-      console.log("existingResource_id",existingResource_id)
       const updateResponse = await fetch(`/test/api/v1/mineral-sites/${existingResource_id}`, {
         method: "POST",
         headers: {
@@ -186,6 +188,7 @@ const handleSaveChanges = async (
 
   setModalVisible(false);
 };
+
 
   console.log("@@@", detailedData);
   return (
