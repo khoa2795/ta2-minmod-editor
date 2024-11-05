@@ -9,7 +9,7 @@ export class MineralSite {
   id: string;
   record_id: string;
   source_id: string;
-  created_by: string;
+  created_by: string[];
   name: string;
   locationInfo: LocationInfo;
   depositTypeCandidate: CandidateEntity[];
@@ -34,7 +34,7 @@ export class MineralSite {
     id: string;
     record_id: string;
     source_id: string;
-    created_by: string;
+    created_by: string[];
     name: string;
     locationInfo: LocationInfo;
     depositTypeCandidate: CandidateEntity[];
@@ -120,7 +120,7 @@ export class MineralSite {
   ): MineralSite | undefined {
     const fullUsername = `/user/${username}`;
     return mineralSites.find((mineralSite) =>
-      mineralSite.created_by.endsWith(fullUsername)
+      mineralSite.created_by[0].endsWith(fullUsername)
     );
   }
 
@@ -132,7 +132,7 @@ export class MineralSite {
     const curatedMineralSite = mineralSites[0].clone();
     // TODO: fix me, we need to make sure source_id is a valid URL, we will have error when source id is http://example.com?test=abc.
     curatedMineralSite.source_id = `${curatedMineralSite.source_id}?username=${username}`;
-    curatedMineralSite.created_by = `https://minmod.isi.edu/user/${username}`;
+    curatedMineralSite.created_by = [`https://minmod.isi.edu/user/${username}`];
     return curatedMineralSite;
   }
 

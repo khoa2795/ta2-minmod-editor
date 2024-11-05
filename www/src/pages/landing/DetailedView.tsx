@@ -128,6 +128,7 @@ const handleSaveChanges = async (
   try {
     const curatedMineralSite = MineralSite.createDefaultCuratedMineralSite(detailedData, username)
       .update(property, property_value, reference);
+      console.log("curatedMineralSite:", JSON.stringify(curatedMineralSite, null, 2));
 
     // Try creating the mineral site
     const createResponse = await fetch("/submit_mineral_site", {
