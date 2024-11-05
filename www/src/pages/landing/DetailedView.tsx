@@ -12,12 +12,14 @@ interface DetailedViewProps {
   allMsFields: string[];
   username: string;
   onClose: () => void;
+  commodity: string;
 }
 
 const DetailedView: React.FC<DetailedViewProps> = ({
   allMsFields,
   username,
   onClose,
+ commodity,
 }) => {
   const [columns, setColumns] = useState([
     { title: "Site Name", width: 150 },
@@ -45,7 +47,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
   const [createdRecordUri, setCreatedRecordUri] = useState<string | null>(null);
   const [referenceOptions, setReferenceOptions] = useState<string[]>([]);
   const [property, setProperty] = useState<MineralSiteProperty | null>(null);
-
+  const [toggle, setToggle]=useState();
   useEffect(() => {
     const fetchDepositTypes = async () => {
       const response = await fetch("/get_deposit_types");
@@ -90,14 +92,14 @@ const DetailedView: React.FC<DetailedViewProps> = ({
 
     // Update propertyKey and options based on the title
     if (title === "Site Name") {
-        propertyKey = "name";
-        options = detailedData.map(site => site.name);
+      propertyKey = "name";
+      options = detailedData.map(site => site.name);
     } else if (title === "Location") {
-        propertyKey = "location";
-        options = detailedData.map(site => site.locationInfo.location || "");
+      propertyKey = "location";
+      options = detailedData.map(site => site.locationInfo.location || "");
     } else if (title === "Deposit Type") {
-        propertyKey = "depositType";
-        options = detailedData.map(site => site.depositTypeCandidate[0]?.observed_name || "");
+      propertyKey = "depositType";
+      options = detailedData.map(site => site.depositTypeCandidate[0]?.observed_name || "");
     }
 
     // Set the determined property and options
@@ -105,56 +107,32 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     setReferenceOptions(options);
 
     if (allMsFields.length > 0) {
-        const firstResource_id = allMsFields[0].split("resource/")[1];
-        const site = await mineralSiteStore.getById(firstResource_id);
-        setFirstSiteData(site);
+      const firstResource_id = allMsFields[0].split("resource/")[1];
+      const site = await mineralSiteStore.getById(firstResource_id);
+      setFirstSiteData(site);
     }
-};
+  };
 
+  const handleSaveChanges = async (
+    property: MineralSiteProperty,
+    property_value: string,
+    reference: Reference
+  ) => {
+    console.log("handleSaveChanges called with:", { property, property_value, reference });
 
-const handleSaveChanges = async (
-  property: MineralSiteProperty,
-  property_value: string,
-  reference: Reference
-) => {
-  console.log("handleSaveChanges called with:", { property, property_value, reference });
+    const sessionId = localStorage.getItem("session_id");
+    if (!sessionId) {
+      toast.error("Session ID not found. Please log in again.");
+      return;
+    }
 
-  const sessionId = localStorage.getItem("session_id");
-  if (!sessionId) {
-    toast.error("Session ID not found. Please log in again.");
-    return;
-  }
+    try {
+      const curatedMineralSite = MineralSite.createDefaultCuratedMineralSite(detailedData, username)
+        .update(property, property_value, reference);
+      console.log("curatedMineralSite:", JSON.stringify(curatedMineralSite, null, 2));
 
-  try {
-    const curatedMineralSite = MineralSite.createDefaultCuratedMineralSite(detailedData, username)
-      .update(property, property_value, reference);
-    console.log("curatedMineralSite:", JSON.stringify(curatedMineralSite, null, 2));
-
-    const createResponse = await fetch("/submit_mineral_site", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Cookie: `session=${sessionId}`,
-      },
-      body: JSON.stringify(curatedMineralSite.serialize()),
-      credentials: "include",
-    });
-
-    if (createResponse.ok) {
-      const responseData = await createResponse.json();
-      toast.success("Data submitted successfully");
-
-      // Update the detailedData state to append the new entry
-      setDetailedData((prevData) => [
-        ...prevData,
-        { ...curatedMineralSite, id: responseData.id } as MineralSite, // Cast to MineralSite
-      ]);
-    } else if (createResponse.status === 403) {
-      // Handle update logic if needed...
-      console.log("Resource already exists. Attempting to update.");
-
-      const existingResource_id = createdRecordUri;
-      const updateResponse = await fetch(`/test/api/v1/mineral-sites/${existingResource_id}`, {
+      // Try creating the mineral site
+      const createResponse = await fetch("/submit_mineral_site", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -164,30 +142,72 @@ const handleSaveChanges = async (
         credentials: "include",
       });
 
-      if (updateResponse.ok) {
-        toast.success("Data updated successfully");
+      if (createResponse.ok) {
+        const responseData = await createResponse.json();
+        toast.success("Data submitted successfully");
 
-        setDetailedData((prevData) =>
-          prevData.map((item) =>
-            item.record_id === curatedMineralSite.record_id
-              ? curatedMineralSite
-              : item
-          )
-        );
+        // Extract the unique identifier from the URI
+        const newResourceId = responseData.uri.split("resource/")[1];
+        setCreatedRecordUri(newResourceId); // Store the URI part for potential future use
+
+        // Append the new entry to detailedData with the unique ID and ensure `reference` and `comments` are set
+        setDetailedData((prevData) => [
+          ...prevData,
+          {
+            ...curatedMineralSite,
+            id: newResourceId,
+            reference: reference,
+            comments: property_value  // Assuming `property_value` is meant to be the comments
+          } as unknown as MineralSite,
+        ]);
+
+      } else if (createResponse.status === 403) {
+        // Resource already exists. Use the stored URI part for the update request.
+        console.log("Resource already exists. Attempting to update.");
+
+        const updateResponse = await fetch(`/test/api/v1/mineral-sites/${createdRecordUri}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Cookie: `session=${sessionId}`,
+          },
+          body: JSON.stringify(curatedMineralSite.serialize()),
+          credentials: "include",
+        });
+
+        if (updateResponse.ok) {
+          toast.success("Data updated successfully");
+
+          // Update only the specific entry in detailedData with `reference` and `comments`
+          setDetailedData((prevData) =>
+            prevData.map((item) =>
+              item.id === createdRecordUri
+                ? {
+                  ...curatedMineralSite,
+                  id: createdRecordUri,
+                  reference: reference,
+                  comments: property_value  // Set comments directly
+                } as unknown as MineralSite
+                : item
+            )
+          );
+
+        } else {
+          const errorData = await updateResponse.json();
+          toast.error(`Update failed: ${errorData.detail}`);
+        }
       } else {
-        const errorData = await updateResponse.json();
-        toast.error(`Update failed: ${errorData.detail}`);
+        const errorData = await createResponse.json();
+        toast.error(`Error: ${errorData.detail}`);
       }
-    } else {
-      const errorData = await createResponse.json();
-      toast.error(`Error: ${errorData.detail}`);
+    } catch (error) {
+      toast.error("Failed to submit data.");
     }
-  } catch (error) {
-    toast.error("Failed to submit data.");
-  }
 
-  setModalVisible(false);
-};
+    setModalVisible(false);
+  };
+
+
 
 
   console.log("@@@", detailedData);
@@ -216,13 +236,13 @@ const handleSaveChanges = async (
                     {["Site Name", "Location", "Deposit Type"].includes(
                       col.title
                     ) && (
-                      <EditOutlined
-                        className="edit-icon-header"
-                        onClick={() =>
-                          handleEditClick(editingRowId as number, col.title)
-                        }
-                      />
-                    )}
+                        <EditOutlined
+                          className="edit-icon-header"
+                          onClick={() =>
+                            handleEditClick(editingRowId as number, col.title)
+                          }
+                        />
+                      )}
                   </div>
                 </th>
               ))}
@@ -240,8 +260,7 @@ const handleSaveChanges = async (
                     ""}
                 </td>
                 <td>
-                  {resource.locationInfo.state_or_province[0]?.observed_name ||
-                    ""}
+                {commodity}
                 </td>
                 <td>{resource.depositTypeCandidate[0]?.observed_name || ""}</td>
                 <td>{resource.depositTypeCandidate[0]?.confidence || ""}</td>

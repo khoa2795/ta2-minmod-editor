@@ -469,6 +469,7 @@ const TableData: React.FC = () => {
                             allMsFields={row.all_ms_fields}
                             username={username ?? ""}
                             onClose={() => toggleRow(rowIndex)}
+                            commodity={row.commodity}
                           />
                         </td>
                       </tr>
