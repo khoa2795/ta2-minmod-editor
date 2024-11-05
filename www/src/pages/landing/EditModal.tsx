@@ -1,7 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Modal, Input, Button, message } from "antd";
-import { CloseCircleOutlined } from "@ant-design/icons";
-import EditableDropdown from "../../components/editableDropDown";
 import { MineralSite, MineralSiteProperty } from "../../models/MineralSite";
 import { Reference } from "../../models/Reference";
 import { NewEditableDropdown } from "../../components/NewEditableDropdown";
@@ -35,23 +33,17 @@ const EditModal: React.FC<EditModalProps> = ({
   const [newReference, setNewReference] = useState<string>("");
   const [comments, setComments] = useState<string>("");
 
-  const predefinedPropertyValues = mineralSites.map((site) =>
-    site.getProperty(property)
-  );
-  const predefinedReferenceValues = mineralSites.map(
-    (site) => site.reference[0].document.title || site.reference[0].document.uri
-  );
-
   const updateProvenance = (key: string | null) => {
     if (key !== null) {
-      // set reference to one of the site
+      // Set reference to one of the mineral sites
       const selectedSite = mineralSites[parseInt(key)];
       setNewReference(
-        selectedSite.reference[0].document.title ||
-          selectedSite.reference[0].document.uri
+        selectedSite.reference[0]?.document.title ||
+        selectedSite.reference[0]?.document.uri ||
+        "Unknown"
       );
     } else {
-      // create new value -- enter your own reference
+      // Create new value -- allow user to enter a custom reference
       setNewReference("");
     }
   };
@@ -78,38 +70,26 @@ const EditModal: React.FC<EditModalProps> = ({
   return (
     <Modal
       visible={visible}
-      title={
-        <span style={{ fontSize: "18px", fontWeight: "bold" }}>
-          Edit {propertyReadableName}
-        </span>
-      }
+      title={<span style={{ fontSize: "18px", fontWeight: "bold" }}>Edit {propertyReadableName}</span>}
       onOk={handleSave}
       onCancel={onClose}
       footer={[
-        <Button key="cancel" onClick={onClose}>
-          Cancel
-        </Button>,
-        <Button key="save" type="primary" onClick={handleSave}>
-          Save
-        </Button>,
+        <Button key="cancel" onClick={onClose}>Cancel</Button>,
+        <Button key="save" type="primary" onClick={handleSave}>Save</Button>,
       ]}
       bodyStyle={{ padding: "20px" }}
       centered
     >
       <div style={{ marginBottom: "20px" }}>
-        <label
-          style={{ fontWeight: "bold", display: "block", marginBottom: "8px" }}
-        >
+        <label style={{ fontWeight: "bold", display: "block", marginBottom: "8px" }}>
           {propertyReadableName}:
         </label>
         <div style={{ position: "relative", width: "100%" }}>
           <NewEditableDropdown
             value={editValue}
             onChange={setEditValue}
-            onProvenanceChange={(key: string | null) => {
-              updateProvenance(key);
-            }}
-            options={predefinedPropertyValues.map((value, index) => ({
+            onProvenanceChange={updateProvenance}
+            options={referenceOptions.map((value, index) => ({
               key: index.toString(),
               label: value,
             }))}
@@ -118,9 +98,7 @@ const EditModal: React.FC<EditModalProps> = ({
       </div>
 
       <div style={{ marginBottom: "20px" }}>
-        <label
-          style={{ fontWeight: "bold", display: "block", marginBottom: "8px" }}
-        >
+        <label style={{ fontWeight: "bold", display: "block", marginBottom: "8px" }}>
           Reference:
         </label>
         <div style={{ position: "relative", width: "100%" }}>
@@ -128,20 +106,18 @@ const EditModal: React.FC<EditModalProps> = ({
             value={newReference}
             onChange={setNewReference}
             onProvenanceChange={(key: string | null) => {
-              // do nothing as update reference doesn't trigger anything
+              // Do nothing as update reference doesn’t trigger anything additional
             }}
-            options={predefinedReferenceValues.map((value, index) => ({
+            options={mineralSites.map((site, index) => ({
               key: index.toString(),
-              label: value,
+              label: site.reference[0]?.document.title || site.reference[0]?.document.uri || "Unknown",
             }))}
           />
         </div>
       </div>
 
       <div style={{ marginBottom: "20px" }}>
-        <label
-          style={{ fontWeight: "bold", display: "block", marginBottom: "8px" }}
-        >
+        <label style={{ fontWeight: "bold", display: "block", marginBottom: "8px" }}>
           Comments:
         </label>
         <Input.TextArea

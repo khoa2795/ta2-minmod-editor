@@ -44,6 +44,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
   const [firstSiteData, setFirstSiteData] = useState<any>(null);
   const [createdRecordUri, setCreatedRecordUri] = useState<string | null>(null);
   const [referenceOptions, setReferenceOptions] = useState<string[]>([]);
+  const [property, setProperty] = useState<MineralSiteProperty | null>(null);
 
   useEffect(() => {
     const fetchDepositTypes = async () => {
@@ -83,14 +84,33 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     setModalTitle(title);
     setModalVisible(true);
 
-    if (allMsFields.length > 0) {
-      // TODO: fix me!
-      const firstResourceId = allMsFields[0].split("resource/")[1];
-      console.log("firstResourceId", firstResourceId);
-      const site = await mineralSiteStore.getById(firstResourceId);
-      setFirstSiteData(site);
+    // Set a default value for propertyKey to avoid it being unassigned
+    let propertyKey: MineralSiteProperty = "name";  // Default to "name"
+    let options: string[] = [];
+
+    // Update propertyKey and options based on the title
+    if (title === "Site Name") {
+        propertyKey = "name";
+        options = detailedData.map(site => site.name);
+    } else if (title === "Location") {
+        propertyKey = "location";
+        options = detailedData.map(site => site.locationInfo.location || "");
+    } else if (title === "Deposit Type") {
+        propertyKey = "depositType";
+        options = detailedData.map(site => site.depositTypeCandidate[0]?.observed_name || "");
     }
-  };
+
+    // Set the determined property and options
+    setProperty(propertyKey);
+    setReferenceOptions(options);
+
+    if (allMsFields.length > 0) {
+        const firstResourceId = allMsFields[0].split("resource/")[1];
+        const site = await mineralSiteStore.getById(firstResourceId);
+        setFirstSiteData(site);
+    }
+};
+
 
   const handleSaveChanges = async (
     property: MineralSiteProperty,

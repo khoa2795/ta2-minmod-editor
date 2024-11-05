@@ -70,12 +70,12 @@ export class MineralSite {
         another.name = value;
         break;
       // TODO: fix me!
-      // case "depositType":
-      //   another.depositType = value;
-      //   break;
-      // case "location":
-      //   another.location = value;
-      //   break;
+      case "depositType":
+        another.depositTypeCandidate[0].observed_name=value
+        break;
+      case "location":
+        another.locationInfo.location = value;
+        break;
       default:
         throw new Error(`Invalid property: ${property}`);
     }
@@ -87,10 +87,10 @@ export class MineralSite {
       case "name":
         return this.name;
       // TODO: fix me!
-      // case "depositType":
-      //   return this.depositType;
-      // case "location":
-      //   return this.location;
+      case "depositType":
+        return this.depositTypeCandidate[0]?.observed_name || ""
+      case "location":
+        return this.locationInfo.location || "";
       default:
         throw new Error(`Invalid property: ${property}`);
     }
