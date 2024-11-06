@@ -107,22 +107,24 @@ const DetailedView: React.FC<DetailedViewProps> = ({ allMsFields, username, onCl
     }
   };
   console.log("firstsitedata", firstSiteData);
-
   console.log("chosen value", property);
+
+
+
 
   const handleSaveChanges = async (property: MineralSiteProperty, property_value: string, reference: Reference) => {
     console.log("handleSaveChanges called with:", { property, property_value, reference });
-
+  
     const sessionId = localStorage.getItem("session_id");
     if (!sessionId) {
       toast.error("Session ID not found. Please log in again.");
       return;
     }
-
+  
     try {
       const curatedMineralSite = MineralSite.createDefaultCuratedMineralSite(detailedData, username).update(property, property_value, reference);
       console.log("curatedMineralSite:", JSON.stringify(curatedMineralSite, null, 2));
-
+  
       // Try creating the mineral site
       const createResponse = await fetch("/submit_mineral_site", {
         method: "POST",
@@ -133,18 +135,24 @@ const DetailedView: React.FC<DetailedViewProps> = ({ allMsFields, username, onCl
         body: JSON.stringify(curatedMineralSite.serialize()),
         credentials: "include",
       });
-
+  
       if (createResponse.ok) {
         const responseData = await createResponse.json();
         toast.success("Data submitted successfully");
-
+  
         const newResourceId = responseData.uri.split("resource/")[1];
         setCreatedRecordUri(newResourceId);
-
-        setDetailedData((prevData) => [...prevData, curatedMineralSite]);
-      } else if (createResponse.status === 403) {
+        setDetailedData((prevData) => [
+          ...prevData,
+          {
+            ...curatedMineralSite,
+            id: newResourceId,
+            reference: reference,
+            comments: property_value 
+          } as unknown as MineralSite,
+        ]);      } else if (createResponse.status === 403) {
         console.log("Resource already exists. Attempting to update.");
-
+  
         const updateResponse = await fetch(`/test/api/v1/mineral-sites/${createdRecordUri}`, {
           method: "POST",
           headers: {
@@ -154,12 +162,23 @@ const DetailedView: React.FC<DetailedViewProps> = ({ allMsFields, username, onCl
           body: JSON.stringify(curatedMineralSite.serialize()),
           credentials: "include",
         });
-
+  
         if (updateResponse.ok) {
           toast.success("Data updated successfully");
-
-          // Update only the specific entry in detailedData with `reference` and `comments`
-          setDetailedData((prevData) => prevData.map((item) => (item.id === createdRecordUri ? curatedMineralSite : item)));
+  
+          // Update only the specific entry in detailedData with the new property and value
+          setDetailedData((prevData) =>
+          prevData.map((item) =>
+            item.id === createdRecordUri
+              ? {
+                ...curatedMineralSite,
+                id: createdRecordUri,
+                reference: reference,
+                comments: property_value  
+              } as unknown as MineralSite
+              : item
+          )
+        );
         } else {
           const errorData = await updateResponse.json();
           toast.error(`Update failed: ${errorData.detail}`);
@@ -171,9 +190,13 @@ const DetailedView: React.FC<DetailedViewProps> = ({ allMsFields, username, onCl
     } catch (error) {
       toast.error("Failed to submit data.");
     }
-
+  
     setModalVisible(false);
   };
+  
+  
+  
+  
 
   console.log("@@@", detailedData);
   return (
@@ -202,9 +225,8 @@ const DetailedView: React.FC<DetailedViewProps> = ({ allMsFields, username, onCl
             </tr>
           </thead>
           <tbody>
-            {detailedData.map((resource) => (
-              <tr key={resource.id}>
-                <td>{resource.name || ""}</td>
+            {detailedData.map((resource,index) => (
+              <tr key={`${resource.id}_${index}`}>                <td>{resource.name || ""}</td>
                 <td>{resource.locationInfo.location || ""}</td>
                 <td>{resource.locationInfo.crs?.observed_name || ""}</td>
                 <td>{resource.locationInfo.country[0]?.observed_name || ""}</td>
