@@ -3,7 +3,7 @@ import { CandidateEntity } from "./CandidateEntity";
 import { LocationInfo } from "./LocationInfo";
 import { Reference } from "./Reference";
 
-export type MineralSiteProperty = "name" | "depositType" | "location";
+export type MineralSiteProperty = "name" | "location" | "depositType" | "grade" | "tonnage";
 
 export class MineralSite {
   id: string;
@@ -76,25 +76,33 @@ export class MineralSite {
       case "location":
         another.locationInfo.location = value;
         break;
+      case "grade":
+          another.max_grade = new Float32Array([parseFloat(value)]);
+          break;
+      case "tonnage":
+          another.max_tonnes = new Float32Array([parseFloat(value)]);
+          break;
       default:
-        throw new Error(`Invalid property: ${property}`);
+          throw new Error(`Invalid property: ${property}`);
+      }
+      return another;
     }
-    return another;
-  }
-
-  public getProperty(property: MineralSiteProperty): string {
-    switch (property) {
-      case "name":
-        return this.name;
-      // TODO: fix me!
-      case "depositType":
-        return this.depositTypeCandidate[0]?.observed_name || ""
-      case "location":
-        return this.locationInfo.location || "";
-      default:
-        throw new Error(`Invalid property: ${property}`);
+    public getProperty(property: MineralSiteProperty): string {
+      switch (property) {
+        case "name":
+          return this.name;
+        case "depositType":
+          return this.depositTypeCandidate[0]?.observed_name || "";
+        case "location":
+          return this.locationInfo.location || "";
+        case "grade":
+          return this.max_grade ? this.max_grade[0].toFixed(5) : "0.00000";
+        case "tonnage":
+          return this.max_tonnes ? this.max_tonnes[0].toFixed(5) : "0.00000";
+        default:
+          throw new Error(`Invalid property: ${property}`);
+      }
     }
-  }
 
   public clone(): MineralSite {
     return new MineralSite({
