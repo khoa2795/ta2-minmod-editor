@@ -32,6 +32,14 @@ const DetailedView: React.FC<DetailedViewProps> = ({ allMsFields, username, onCl
     { title: "Source", width: 100 },
   ]);
 
+  const onResize = (index: number, newWidth: number) => {
+    setColumns((prevColumns) => {
+      const updatedColumns = [...prevColumns];
+      updatedColumns[index] = { ...updatedColumns[index], width: newWidth };
+      return updatedColumns;
+    });
+  };
+
   const [detailedData, setDetailedData] = useState<MineralSite[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [modalVisible, setModalVisible] = useState(false);
@@ -145,7 +153,6 @@ const DetailedView: React.FC<DetailedViewProps> = ({ allMsFields, username, onCl
           {
             ...curatedMineralSite,
             id: newResourceId,
-            reference: reference,
             comments: property_value 
           } as unknown as MineralSite,
         ]);
@@ -171,8 +178,6 @@ const DetailedView: React.FC<DetailedViewProps> = ({ allMsFields, username, onCl
                 ? {
                     ...curatedMineralSite,
                     id: createdRecordUri,
-                    reference: reference,
-                    comments: property_value  
                   } as unknown as MineralSite
                 : item
             )
@@ -210,14 +215,50 @@ const DetailedView: React.FC<DetailedViewProps> = ({ allMsFields, username, onCl
             <tr>
               {columns.map((col, index) => (
                 <th key={index} style={{ width: col.width, position: "relative" }}>
-                  <div className="header-with-icon">
-                    {col.title}
-                    {["Site Name", "Location", "Deposit Type", "Grade", "Tonnage"].includes(col.title) && (
-                      <EditOutlined className="edit-icon-header" onClick={() => handleEditClick(editingRowId as number, col.title)} />
-                    )}
-                  </div>
-                </th>
+  <div className="header-container">
+    {/* Column Title and Edit Icon */}
+    <div className="header-with-icon">
+      <span>{col.title}</span>
+      {["Site Name", "Location", "Deposit Type", "Grade", "Tonnage"].includes(col.title) && (
+        <EditOutlined
+          className="edit-icon-header"
+          onClick={() => handleEditClick(editingRowId as number, col.title)}
+          style={{ marginLeft: 8, cursor: "pointer", zIndex: 1 }}
+        />
+      )}
+    </div>
+    {/* Resize Handle */}
+    <div
+      className="resize-handle"
+      style={{ cursor: "col-resize", position: "absolute", right: 0, top: 0, bottom: 0, width: 8 }}
+      onMouseDown={(e) => {
+        e.preventDefault();
+        const startX = e.clientX;
+        const startWidth = col.width;
+
+        const onMouseMove = (moveEvent: MouseEvent) => {
+          const newWidth = Math.max(
+            startWidth + (moveEvent.clientX - startX),
+            50
+          );
+          onResize(index, newWidth);
+        };
+
+        const onMouseUp = () => {
+          document.removeEventListener("mousemove", onMouseMove);
+          document.removeEventListener("mouseup", onMouseUp);
+        };
+
+        document.addEventListener("mousemove", onMouseMove);
+        document.addEventListener("mouseup", onMouseUp);
+      }}
+    />
+  </div>
+</th>
+     
+
               ))}
+              
             </tr>
           </thead>
           <tbody>
