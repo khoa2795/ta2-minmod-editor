@@ -125,6 +125,35 @@
   overflow-y: auto;
   overflow-x: hidden;
 }
+.sticky-selected-rows {
+  position: sticky;
+  top: 0;
+  background: #f0f8ff;
+  padding: 10px;
+  border-bottom: 2px solid #005b84;
+  z-index: 1;
+}
+
+.sticky-selected-rows h3 {
+  margin: 0 0 10px;
+  font-weight: bold;
+}
+
+.selected-rows-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.selected-rows-table th, .selected-rows-table td {
+  padding: 8px;
+  border: 1px solid #ddd;
+  text-align: left;
+}
+
+.selected-rows-table th {
+  background-color: #005b84;
+  color: white;
+}
 
 /* Responsive design for smaller screens */
 @media screen and (max-width: 768px) {

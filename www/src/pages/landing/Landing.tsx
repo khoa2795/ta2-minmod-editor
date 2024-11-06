@@ -24,6 +24,7 @@ const TableData: React.FC = () => {
   ); // To track which row is ungrouped
   const [username, setUserName] = useState<string | null>(null);
   const [toggle, setToggle] = useState(false);
+  const [selectedRows, setSelectedRows] = useState<TableRow[]>([]); // Stores selected rows
 
   useEffect(() => {
     const token = localStorage.getItem("session_id");
@@ -104,20 +105,39 @@ const TableData: React.FC = () => {
     }
   };
 
-  const handleUngroup = (rowIndex: number) => {
-    console.log("Ungrouping row:", rowIndex);
-    const rowData = filteredData[rowIndex];
-    setCurrentRowData(rowData); // Set data for the selected row
-    setIsUngroupVisible(true); // Show the Ungroup component
-    setUngroupedRowIndex(rowIndex); // Set ungrouped row index
+
+
+  const handleRowSelection = (row: TableRow) => {
+    setSelectedRows((prevSelectedRows) => {
+      const isRowSelected = prevSelectedRows.find((selectedRow) => selectedRow.id === row.id);
+      if (isRowSelected) {
+        // Deselect row
+        return prevSelectedRows.filter((selectedRow) => selectedRow.id !== row.id);
+      } else {
+        // Select row
+        return [...prevSelectedRows, row];
+      }
+    });
   };
+
+
+  const closeUngroup = () => {
+    setIsUngroupVisible(false);
+    setCurrentRowData(null);
+  };
+
 
   const [columns, setColumns] = useState([
     {
       title: "Select",
       dataIndex: "select",
       width: 45,
-      render: () => <Checkbox />,
+      render: (_: any, record: TableRow) => (
+        <Checkbox
+          checked={selectedRows.some((row) => row.id === record.id)}
+          onChange={() => handleRowSelection(record)}
+        />
+      ),
     },
     {
       title: "Site Name",
@@ -243,17 +263,12 @@ const TableData: React.FC = () => {
           : "";
       },
       sorter: true,
-    },
-    {
+    }, {
       title: "Actions",
       dataIndex: "actions",
-      width: 100, // Adjusted width for Edit and Ungroup buttons
+      width: 100,
       render: (_: any, row: TableRow, rowIndex: number) => (
-        <div
-          style={{
-            textAlign: "center",
-          }}
-        >
+        <div style={{ textAlign: "center" }}>
           <Space direction="vertical">
             <MyButton title="Edit" onClick={() => toggleRow(rowIndex)} />
             <MyButton title="Ungroup" onClick={() => handleUngroup(rowIndex)} />
@@ -297,8 +312,7 @@ const TableData: React.FC = () => {
   };
 
   const handleGroup = () => {
-    // Handle group functionality here
-    console.log("Group button clicked");
+
   };
 
   const toggleRow = (rowIndex: number) => {
@@ -310,7 +324,15 @@ const TableData: React.FC = () => {
       return [...prevExpandedRows, rowIndex];
     });
   };
-
+  const handleUngroup = (rowIndex: number) => {
+    console.log("Toggling row:", rowIndex);
+    setExpandedRows((prevExpandedRows) => {
+      if (prevExpandedRows.includes(rowIndex)) {
+        return prevExpandedRows.filter((index) => index !== rowIndex);
+      }
+      return [...prevExpandedRows, rowIndex];
+    });
+  };
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -330,8 +352,8 @@ const TableData: React.FC = () => {
     (currentPage - 1) * pageSize,
     currentPage * pageSize
   );
- 
- 
+
+
 
   return (
     <div className="mineral-table-container">
@@ -342,6 +364,41 @@ const TableData: React.FC = () => {
           Logout
         </Button>
       </div>
+      {/* Sticky Selected Rows */}
+      {selectedRows.length > 0 && (
+        <div className="sticky-selected-rows">
+          <h3>Selected Rows</h3>
+          <table className="selected-rows-table">
+            <thead>
+              <tr>
+                {columns.map((col) => (
+                  <th key={col.dataIndex}>{col.title}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {selectedRows.map((row, rowIndex) => (
+                <tr key={row.id}>
+                  {columns.map((col) => (
+                    <td key={col.dataIndex}>
+                      {col.render ? col.render(row[col.dataIndex as keyof TableRow], row, rowIndex) : row[col.dataIndex as keyof TableRow]}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+      {/* Render Ungroup component as an overlay when isUngroupVisible is true */}
+      {isUngroupVisible && currentRowData && (
+        <div className="ungroup-overlay">
+          <Ungroup
+            allMsFields={currentRowData.all_ms_fields}
+            onClose={closeUngroup}
+          />
+        </div>
+      )}
 
       {/* Search Bar and Group Button */}
       <div
@@ -475,19 +532,11 @@ const TableData: React.FC = () => {
                         </td>
                       </tr>
                     )}
-                    {ungroupedRowIndex === rowIndex && isUngroupVisible && currentRowData && (
-                      <tr>
-                        <td colSpan={columns.length}>
-                          <Ungroup
-                            allMsFields={currentRowData.all_ms_fields}
-                            onClose={() => {
-                              setIsUngroupVisible(false);
-                              setUngroupedRowIndex(null);
-                              setCurrentRowData(null);
-                            }}
-                          />
-                        </td>
-                      </tr>
+                    {ungroupedRowIndex !== null && isUngroupVisible && currentRowData && (
+                      <Ungroup
+                      allMsFields={row.all_ms_fields}
+                      onClose={() => toggleRow(rowIndex)}
+                      />
                     )}
                   </React.Fragment>
                 ))}
