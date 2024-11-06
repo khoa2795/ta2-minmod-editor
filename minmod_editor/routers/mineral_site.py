@@ -13,6 +13,6 @@ def get_mineral_site(resource_id: str):
     resp = httpx.get(url, verify=False)
     resp.raise_for_status()
     data = resp.json()
-
+    print("data",data)
     # mineral_site = lod_to_mineral_site(data)
     return data

@@ -162,6 +162,25 @@ export class MineralSite {
   }
 
   public static deserialize(id: string, obj: any): MineralSite {
+    // Calculate max grade and max ore values, with default to 0 if no valid values are found, rounded to 5 decimal places
+    const maxGrade = Math.max(
+      0,
+      ...obj.mineral_inventory
+        .filter((inventory: any) => inventory.grade && inventory.grade.value !== undefined)
+        .map((inventory: any) => inventory.grade.value)
+    );
+  
+    const maxTonnes = Math.max(
+      0,
+      ...obj.mineral_inventory
+        .filter((inventory: any) => inventory.ore && inventory.ore.value !== undefined)
+        .map((inventory: any) => inventory.ore.value)
+    );
+  
+    // Round to 5 decimal places
+    const roundedMaxGrade = parseFloat(maxGrade.toFixed(5));
+    const roundedMaxTonnes = parseFloat(maxTonnes.toFixed(5));
+  
     return new MineralSite({
       id: id,
       record_id: obj.record_id,
@@ -180,8 +199,13 @@ export class MineralSite {
       ),
       reference: obj.reference.map(Reference.deserialize),
       sameAs: obj.sameAs,
-      max_grade: obj.max_grade,
-      max_tonnes: obj.max_tonnes,
+      max_grade: new Float32Array([roundedMaxGrade]), // Rounded to 5 decimal places
+      max_tonnes: new Float32Array([roundedMaxTonnes]), // Rounded to 5 decimal places
     });
   }
+  
+  
+  
+  
+  
 }

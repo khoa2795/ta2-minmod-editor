@@ -60,8 +60,10 @@ const DetailedView: React.FC<DetailedViewProps> = ({ allMsFields, username, onCl
           return await mineralSiteStore.getByURI(msField);
         })
       );
+      console.log("allMsFields",allMsFields)
 
       const validDetails = mineralSites;
+      console.log("validation",validDetails)
       setDetailedData(validDetails as MineralSite[]);
       setLoading(false);
 
@@ -104,6 +106,8 @@ const DetailedView: React.FC<DetailedViewProps> = ({ allMsFields, username, onCl
       setFirstSiteData(site);
     }
   };
+  console.log("firstsitedata", firstSiteData);
+
   console.log("chosen value", property);
 
   const handleSaveChanges = async (property: MineralSiteProperty, property_value: string, reference: Reference) => {
@@ -208,8 +212,8 @@ const DetailedView: React.FC<DetailedViewProps> = ({ allMsFields, username, onCl
                 <td>{commodity}</td>
                 <td>{resource.depositTypeCandidate[0]?.observed_name || ""}</td>
                 <td>{resource.depositTypeCandidate[0]?.confidence || ""}</td>
-                <td>{resource.max_grade !== undefined ? resource.max_grade : ""}</td>
-                <td>{resource.max_tonnes !== undefined ? resource.max_tonnes : ""}</td>
+                <td>{resource.max_grade ? resource.max_grade[0].toFixed(5) : "0.00000"}</td>
+                <td>{resource.max_tonnes ? resource.max_tonnes[0].toFixed(5) : "0.00000"}</td>
                 <td>{resource.reference[0]?.document.title || resource.reference[0]?.document.uri || ""}</td>
                 <td></td> {/* New comments column */}
                 <td>
