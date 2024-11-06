@@ -112,7 +112,7 @@ const TableData: React.FC = () => {
     setUngroupedRowIndex(rowIndex); // Set ungrouped row index
   };
 
-  const columns = [
+  const [columns, setColumns] = useState([
     {
       title: "Select",
       dataIndex: "select",
@@ -261,8 +261,14 @@ const TableData: React.FC = () => {
         </div>
       ),
     },
-  ];
-
+  ]);
+  const onResize = (index: number, newWidth: number) => {
+    setColumns((prevColumns) => {
+      const newColumns = [...prevColumns];
+      newColumns[index] = { ...newColumns[index], width: newWidth };
+      return newColumns;
+    });
+  };
   const handleSearch = async (value: string) => {
     if (value) {
       try {
@@ -305,13 +311,6 @@ const TableData: React.FC = () => {
     });
   };
 
-  const onResize = (index: number, newWidth: number) => {
-    const newColumns = [...columns];
-    newColumns[index] = {
-      ...newColumns[index],
-      width: newWidth,
-    };
-  };
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -331,6 +330,8 @@ const TableData: React.FC = () => {
     (currentPage - 1) * pageSize,
     currentPage * pageSize
   );
+ 
+ 
 
   return (
     <div className="mineral-table-container">
@@ -519,5 +520,6 @@ const TableData: React.FC = () => {
     </div>
   );
 };
+
 
 export default TableData;
