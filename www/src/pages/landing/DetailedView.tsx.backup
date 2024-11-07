@@ -8,51 +8,41 @@ import { MineralSite, MineralSiteProperty } from "../../models/MineralSite";
 import { Reference } from "../../models/Reference";
 import { mineralSiteStore } from "../../stores/MineralSiteStore";
 import { Commodity } from "../../models/Commodity";
-import { ResizableTable } from "../../components/ResizableTable";
 
 interface DetailedViewProps {
   allMsFields: string[];
   username: string;
   onClose: () => void;
-  commodity: Commodity;
+  commodity: string;
 }
 
-export const Row = ({ site, commodity }: { site: MineralSite; commodity: Commodity }) => {
-  const gradeTonnage = site.gradeTonnage[commodity.uri];
-  let fmtTonnage;
-  let fmtGrade;
+// export const Row = ({ site, commodity }: { site: MineralSite; commodity: Commodity }) => {
+//   return (
+//     <tr key={site.id}>
+//       <td>{site.name || ""}</td>
+//       <td>{site.locationInfo.location || ""}</td>
+//       <td>{site.locationInfo.crs?.observed_name || ""}</td>
+//       <td>{site.locationInfo.country[0]?.observed_name || ""}</td>
+//       <td>{site.locationInfo.state_or_province[0]?.observed_name || ""}</td>
+//       <td>{commodity.name}</td>
+//       <td>{site.depositTypeCandidate[0]?.observed_name || ""}</td>
+//       <td>{site.depositTypeCandidate[0]?.confidence || ""}</td>
+//       <td>{site.gradeTonnage[commodity].totalGrade?.toFixed(5)}</td>
+//       <td>{site.gradeTonnage[commodity].totalTonnage?.toFixed(5)}</td>
+//       <td>
+//         {site.sourceId ? (
+//           <a href={site.reference[0]?.document.uri || ""} target="_blank" rel="noopener noreferrer">
+//             {site.reference[0]?.document.uri || ""}
+//           </a>
+//         ) : (
+//           "N/A"
+//         )}
+//       </td>
+//     </tr>
+//   );
+// };
 
-  if (gradeTonnage !== undefined) {
-    fmtGrade = gradeTonnage.totalGrade?.toFixed(5);
-    fmtTonnage = gradeTonnage.totalTonnage?.toFixed(5);
-  }
-
-  return (
-    <tr key={site.id}>
-      <td>{site.name || ""}</td>
-      <td>{site.locationInfo.location || ""}</td>
-      <td>{site.locationInfo.crs?.observed_name || ""}</td>
-      <td>{site.locationInfo.country[0]?.observed_name || ""}</td>
-      <td>{site.locationInfo.state_or_province[0]?.observed_name || ""}</td>
-      <td>{commodity.name}</td>
-      <td>{site.depositTypeCandidate[0]?.observed_name || ""}</td>
-      <td>{site.depositTypeCandidate[0]?.confidence || ""}</td>
-      <td>{fmtGrade}</td>
-      <td>{fmtTonnage}</td>
-      <td>
-        {site.sourceId ? (
-          <a href={site.reference[0]?.document.uri || ""} target="_blank" rel="noopener noreferrer">
-            {site.reference[0]?.document.uri || ""}
-          </a>
-        ) : (
-          "N/A"
-        )}
-      </td>
-    </tr>
-  );
-};
-
-const DetailedView: React.FC<DetailedViewProps> = ({ allMsFields, username, onClose, commodity }) => {
+export const DetailedView: React.FC<DetailedViewProps> = ({ allMsFields, username, onClose, commodity }) => {
   const [columns, setColumns] = useState([
     { title: "Site Name", width: 150 },
     { title: "Location", width: 120 },
@@ -292,8 +282,28 @@ const DetailedView: React.FC<DetailedViewProps> = ({ allMsFields, username, onCl
             </tr>
           </thead>
           <tbody>
-            {detailedData.map((site) => (
-              <Row key={site.id} site={site} commodity={commodity} />
+            {detailedData.map((resource, index) => (
+              <tr key={`${resource.id}_${index}`}>
+                <td>{resource.name || ""}</td>
+                <td>{resource.locationInfo.location || ""}</td>
+                <td>{resource.locationInfo.crs?.observed_name || ""}</td>
+                <td>{resource.locationInfo.country[0]?.observed_name || ""}</td>
+                <td>{resource.locationInfo.state_or_province[0]?.observed_name || ""}</td>
+                <td>{commodity}</td>
+                <td>{resource.depositTypeCandidate[0]?.observed_name || ""}</td>
+                <td>{resource.depositTypeCandidate[0]?.confidence || ""}</td>
+                <td>{resource.gradeTonnage[commodity].totalGrade?.toFixed(5)}</td>
+                <td>{resource.gradeTonnage[commodity].totalTonnage?.toFixed(5)}</td>
+                <td>
+                  {resource.sourceId ? (
+                    <a href={resource.reference[0]?.document.uri || ""} target="_blank" rel="noopener noreferrer">
+                      {resource.reference[0]?.document.uri || ""}
+                    </a>
+                  ) : (
+                    "N/A"
+                  )}
+                </td>
+              </tr>
             ))}
           </tbody>
         </table>
@@ -311,5 +321,3 @@ const DetailedView: React.FC<DetailedViewProps> = ({ allMsFields, username, onCl
     </div>
   );
 };
-
-export default DetailedView;

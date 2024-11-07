@@ -9,9 +9,10 @@ import { mineralSiteStore } from "../../stores/MineralSiteStore";
 interface UngroupProps {
   allMsFields: string[];
   onClose: () => void;
+  commodity: string;
 }
 
-const Ungroup: React.FC<UngroupProps> = ({ allMsFields, onClose }) => {
+const Ungroup: React.FC<UngroupProps> = ({ allMsFields, onClose, commodity }) => {
   const [columns, setColumns] = useState([
     { title: "Select", width: 45 },
     { title: "Site Name", width: 150 },
@@ -75,10 +76,7 @@ const Ungroup: React.FC<UngroupProps> = ({ allMsFields, onClose }) => {
           <thead>
             <tr>
               {columns.map((col, index) => (
-                <th
-                  key={index}
-                  style={{ width: col.width, position: "relative" }}
-                >
+                <th key={index} style={{ width: col.width, position: "relative" }}>
                   <div>{col.title}</div>
                 </th>
               ))}
@@ -98,24 +96,16 @@ const Ungroup: React.FC<UngroupProps> = ({ allMsFields, onClose }) => {
                 <td>{resource.locationInfo.crs?.observed_name || ""}</td>
                 <td>{resource.locationInfo.country[0]?.observed_name || ""}</td>
                 <td>{resource.locationInfo.state_or_province[0]?.observed_name || ""}</td>
-                <td>
-                  {(resource as any).mineral_inventory?.[0]?.commodity?.observed_name || ""}
-                </td>
+                <td>{(resource as any).mineral_inventory?.[0]?.commodity?.observed_name || ""}</td>
                 <td>{resource.depositTypeCandidate[0]?.observed_name || ""}</td>
                 <td>{resource.depositTypeCandidate[0]?.confidence || ""}</td>
-                <td>
-                  {resource.max_grade !== undefined ? resource.max_grade : ""}
-                </td>
-                <td>
-                  {resource.max_tonnes !== undefined ? resource.max_tonnes : ""}
-                </td>
-                <td>
-                  {resource.reference[0]?.document.title || resource.reference[0]?.document.uri || ""}
-                </td>
+                <td>{resource.gradeTonnage[commodity].totalGrade?.toFixed(5)}</td>
+                <td>{resource.gradeTonnage[commodity].totalTonnage?.toFixed(5)}</td>
+                <td>{resource.reference[0]?.document.title || resource.reference[0]?.document.uri || ""}</td>
                 <td></td> {/* Placeholder for Comments column */}
                 <td>
-                  {resource.source_id ? (
-                    <a href={resource.source_id} target="_blank" rel="noopener noreferrer">
+                  {resource.sourceId ? (
+                    <a href={resource.sourceId} target="_blank" rel="noopener noreferrer">
                       View Source
                     </a>
                   ) : (

@@ -51,17 +51,17 @@ const EditModal: React.FC<EditModalProps> = ({ visible, onClose, mineralSites, p
   const siteSpecificDepositTypes = mineralSites.map((site) => site.depositTypeCandidate[0]?.observed_name || "").filter((type) => type); // Filter out undefined or empty strings
 
   const dropdownOptions =
-  property === "depositType"
-    ? Array.from(new Set([...siteSpecificDepositTypes, ...depositTypes])) // Combine site-specific and all deposit types without duplicates
-    : property === "name"
-    ? mineralSites.map((site) => site.name)
-    : property === "location"
-    ? mineralSites.map((site) => site.locationInfo.location || "")
-    : property === "grade"
-    ? mineralSites.map((site) => site.max_grade[0].toFixed(5)) // Extract grade values
-    : property === "tonnage"
-    ? mineralSites.map((site) => site.max_tonnes[0].toFixed(5)) // Extract tonnage values
-    : [];
+    property === "depositType"
+      ? Array.from(new Set([...siteSpecificDepositTypes, ...depositTypes])) // Combine site-specific and all deposit types without duplicates
+      : property === "name"
+      ? mineralSites.map((site) => site.name)
+      : property === "location"
+      ? mineralSites.map((site) => site.locationInfo.location || "")
+      : // : property === "grade"
+        // ? mineralSites.map((site) => site.max_grade[0].toFixed(5)) // Extract grade values
+        // : property === "tonnage"
+        // ? mineralSites.map((site) => site.max_tonnes[0].toFixed(5)) // Extract tonnage values
+        [];
 
   // Generate reference options based on mineralSites for consistent behavior
   const consistentReferenceOptions = mineralSites.map((site) => ({

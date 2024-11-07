@@ -7,10 +7,10 @@ import DetailedView from "./DetailedView";
 import SearchBar from "./SearchBar";
 import Ungroup from "./Ungroup"; // Import Ungroup component
 import { MyButton } from "../../components/MyButton";
-import { TableRow } from "../../models/DedupMineralSite";
+import { DedupMineralSite } from "../../models/DedupMineralSite";
 
 const TableData: React.FC = () => {
-  const [filteredData, setFilteredData] = useState<TableRow[]>([]);
+  const [filteredData, setFilteredData] = useState<DedupMineralSite[]>([]);
   const [expandedRows, setExpandedRows] = useState<number[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -18,13 +18,11 @@ const TableData: React.FC = () => {
   const [sortOrder, setSortOrder] = useState<"ascend" | "descend" | null>(null);
   const [sortColumn, setSortColumn] = useState<string | null>(null);
   const [isUngroupVisible, setIsUngroupVisible] = useState<boolean>(false); // State for Ungroup visibility
-  const [currentRowData, setCurrentRowData] = useState<TableRow | null>(null); // To store data for the Ungroup component
-  const [ungroupedRowIndex, setUngroupedRowIndex] = useState<number | null>(
-    null
-  ); // To track which row is ungrouped
+  const [currentRowData, setCurrentRowData] = useState<DedupMineralSite | null>(null); // To store data for the Ungroup component
+  const [ungroupedRowIndex, setUngroupedRowIndex] = useState<number | null>(null); // To track which row is ungrouped
   const [username, setUserName] = useState<string | null>(null);
   const [toggle, setToggle] = useState(false);
-  const [selectedRows, setSelectedRows] = useState<TableRow[]>([]); // Stores selected rows
+  const [selectedRows, setSelectedRows] = useState<DedupMineralSite[]>([]); // Stores selected rows
 
   useEffect(() => {
     const token = localStorage.getItem("session_id");
@@ -83,13 +81,11 @@ const TableData: React.FC = () => {
 
     if (order) {
       const sortedData = [...filteredData].sort((a, b) => {
-        const valueA = a[columnKey as keyof TableRow] || "";
-        const valueB = b[columnKey as keyof TableRow] || "";
+        const valueA = a[columnKey as keyof DedupMineralSite] || "";
+        const valueB = b[columnKey as keyof DedupMineralSite] || "";
 
         if (typeof valueA === "string" && typeof valueB === "string") {
-          return order === "ascend"
-            ? valueA.localeCompare(valueB)
-            : valueB.localeCompare(valueA);
+          return order === "ascend" ? valueA.localeCompare(valueB) : valueB.localeCompare(valueA);
         }
 
         if (typeof valueA === "number" && typeof valueB === "number") {
@@ -105,9 +101,7 @@ const TableData: React.FC = () => {
     }
   };
 
-
-
-  const handleRowSelection = (row: TableRow) => {
+  const handleRowSelection = (row: DedupMineralSite) => {
     setSelectedRows((prevSelectedRows) => {
       const isRowSelected = prevSelectedRows.find((selectedRow) => selectedRow.id === row.id);
       if (isRowSelected) {
@@ -120,35 +114,24 @@ const TableData: React.FC = () => {
     });
   };
 
-
   const closeUngroup = () => {
     setIsUngroupVisible(false);
     setCurrentRowData(null);
   };
-
 
   const [columns, setColumns] = useState([
     {
       title: "Select",
       dataIndex: "select",
       width: 45,
-      render: (_: any, record: TableRow) => (
-        <Checkbox
-          checked={selectedRows.some((row) => row.id === record.id)}
-          onChange={() => handleRowSelection(record)}
-        />
-      ),
+      render: (_: any, record: DedupMineralSite) => <Checkbox checked={selectedRows.some((row) => row.id === record.id)} onChange={() => handleRowSelection(record)} />,
     },
     {
       title: "Site Name",
       dataIndex: "siteName",
       width: 150,
       className: "site-name",
-      render: (value: any) => (
-        <div style={{ whiteSpace: "normal", wordWrap: "break-word" }}>
-          {value}
-        </div>
-      ),
+      render: (value: any) => <div style={{ whiteSpace: "normal", wordWrap: "break-word" }}>{value}</div>,
       sorter: true,
       sortIcons: true,
     },
@@ -158,11 +141,7 @@ const TableData: React.FC = () => {
       width: 70,
       className: "resizable",
       render: (value: any) => {
-        return value !== "NotSpecified" ? (
-          <span style={{ fontSize: "12px" }}>{value}</span>
-        ) : (
-          ""
-        );
+        return value !== "NotSpecified" ? <span style={{ fontSize: "12px" }}>{value}</span> : "";
       },
       sorter: true,
     },
@@ -245,9 +224,7 @@ const TableData: React.FC = () => {
       width: 60,
       render: (value: any) => {
         const numericValue = parseFloat(value);
-        return !isNaN(numericValue) && numericValue !== 0
-          ? numericValue.toFixed(5)
-          : "";
+        return !isNaN(numericValue) && numericValue !== 0 ? numericValue.toFixed(5) : "";
       },
       sorter: true,
     },
@@ -258,16 +235,15 @@ const TableData: React.FC = () => {
       className: "resizable",
       render: (value: any) => {
         const numericValue = parseFloat(value);
-        return !isNaN(numericValue) && numericValue !== 0
-          ? numericValue.toFixed(5)
-          : "";
+        return !isNaN(numericValue) && numericValue !== 0 ? numericValue.toFixed(5) : "";
       },
       sorter: true,
-    }, {
+    },
+    {
       title: "Actions",
       dataIndex: "actions",
       width: 100,
-      render: (_: any, row: TableRow, rowIndex: number) => (
+      render: (_: any, row: DedupMineralSite, rowIndex: number) => (
         <div style={{ textAlign: "center" }}>
           <Space direction="vertical">
             <MyButton title="Edit" onClick={() => toggleRow(rowIndex)} />
@@ -288,14 +264,14 @@ const TableData: React.FC = () => {
     if (value) {
       try {
         setLoading(true);
-        console.log("value",value)
+        console.log("value", value);
         const response = await fetch(`/get_sites/${value}`);
         if (response.ok) {
           const data = await response.json();
-          console.log("data",data)
+          console.log("data", data);
           const dataWithIds = data.data.map((row: any, index: number) => ({
             ...row,
-            id: index + 1, 
+            id: index + 1,
             all_ms_fields: row.all_ms_fields || [],
           }));
           setFilteredData(dataWithIds);
@@ -313,9 +289,7 @@ const TableData: React.FC = () => {
     }
   };
 
-  const handleGroup = () => {
-
-  };
+  const handleGroup = () => {};
 
   const toggleRow = (rowIndex: number) => {
     console.log("Toggling row:", rowIndex);
@@ -350,12 +324,7 @@ const TableData: React.FC = () => {
     setCurrentPage(1); // Reset to page 1 when the page size changes
   };
 
-  const paginatedData = filteredData.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  );
-
-
+  const paginatedData = filteredData.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   return (
     <div className="mineral-table-container">
@@ -382,9 +351,7 @@ const TableData: React.FC = () => {
               {selectedRows.map((row, rowIndex) => (
                 <tr key={row.id}>
                   {columns.map((col) => (
-                    <td key={col.dataIndex}>
-                      {col.render ? col.render(row[col.dataIndex as keyof TableRow], row, rowIndex) : row[col.dataIndex as keyof TableRow]}
-                    </td>
+                    <td key={col.dataIndex}>{col.render ? col.render(row[col.dataIndex as keyof DedupMineralSite], row, rowIndex) : row[col.dataIndex as keyof DedupMineralSite]}</td>
                   ))}
                 </tr>
               ))}
@@ -395,10 +362,7 @@ const TableData: React.FC = () => {
       {/* Render Ungroup component as an overlay when isUngroupVisible is true */}
       {isUngroupVisible && currentRowData && (
         <div className="ungroup-overlay">
-          <Ungroup
-            allMsFields={currentRowData.all_ms_fields}
-            onClose={closeUngroup}
-          />
+          <Ungroup allMsFields={currentRowData.all_ms_fields} onClose={closeUngroup} commodity={currentRowData.commodity} />
         </div>
       )}
 
@@ -441,11 +405,7 @@ const TableData: React.FC = () => {
               <thead>
                 <tr>
                   {columns.map((col, index) => (
-                    <th
-                      key={index}
-                      style={{ width: col.width }}
-                      className={col.className}
-                    >
+                    <th key={index} style={{ width: col.width }} className={col.className}>
                       <div
                         style={{
                           display: "flex",
@@ -464,12 +424,7 @@ const TableData: React.FC = () => {
                           onClick={() => handleSort(col.dataIndex)}
                         >
                           {col.title}
-                          {sortColumn === col.dataIndex &&
-                            (sortOrder === "ascend" ? (
-                              <ArrowUpOutlined />
-                            ) : (
-                              <ArrowDownOutlined />
-                            ))}
+                          {sortColumn === col.dataIndex && (sortOrder === "ascend" ? <ArrowUpOutlined /> : <ArrowDownOutlined />)}
                         </span>
                         <div
                           className="resize-handle"
@@ -479,22 +434,13 @@ const TableData: React.FC = () => {
                             const startWidth = col.width;
 
                             const onMouseMove = (moveEvent: MouseEvent) => {
-                              const newWidth = Math.max(
-                                startWidth + (moveEvent.clientX - startX),
-                                50
-                              );
+                              const newWidth = Math.max(startWidth + (moveEvent.clientX - startX), 50);
                               onResize(index, newWidth);
                             };
 
                             const onMouseUp = () => {
-                              document.removeEventListener(
-                                "mousemove",
-                                onMouseMove
-                              );
-                              document.removeEventListener(
-                                "mouseup",
-                                onMouseUp
-                              );
+                              document.removeEventListener("mousemove", onMouseMove);
+                              document.removeEventListener("mouseup", onMouseUp);
                             };
 
                             document.addEventListener("mousemove", onMouseMove);
@@ -512,34 +458,18 @@ const TableData: React.FC = () => {
                     <tr>
                       {columns.map((col, colIndex) => (
                         <td key={colIndex} style={{ width: col.width }}>
-                          {col.render
-                            ? col.render(
-                              row[col.dataIndex as keyof TableRow],
-                              row,
-                              rowIndex
-                            )
-                            : row[col.dataIndex as keyof TableRow]}
+                          {col.render ? col.render(row[col.dataIndex as keyof DedupMineralSite], row, rowIndex) : row[col.dataIndex as keyof DedupMineralSite]}
                         </td>
                       ))}
                     </tr>
                     {expandedRows.includes(rowIndex) && (
                       <tr>
                         <td colSpan={columns.length}>
-                          <DetailedView
-                            allMsFields={row.all_ms_fields}
-                            username={username ?? ""}
-                            onClose={() => toggleRow(rowIndex)}
-                            commodity={row.commodity}
-                          />
+                          <DetailedView allMsFields={row.all_ms_fields} username={username ?? ""} onClose={() => toggleRow(rowIndex)} commodity={row.commodity} />
                         </td>
                       </tr>
                     )}
-                    {ungroupedRowIndex !== null && isUngroupVisible && currentRowData && (
-                      <Ungroup
-                      allMsFields={row.all_ms_fields}
-                      onClose={() => toggleRow(rowIndex)}
-                      />
-                    )}
+                    {ungroupedRowIndex !== null && isUngroupVisible && currentRowData && <Ungroup allMsFields={row.all_ms_fields} onClose={() => toggleRow(rowIndex)} commodity={row.commodity} />}
                   </React.Fragment>
                 ))}
               </tbody>
@@ -552,18 +482,8 @@ const TableData: React.FC = () => {
               onChange={handlePageChange}
               style={{ textAlign: "center", marginTop: "20px" }}
               showSizeChanger
-              pageSizeOptions={[
-                "10",
-                "20",
-                "50",
-                "100",
-                `${filteredData.length}`,
-              ]}
-              onShowSizeChange={(_, size) =>
-                handlePageSizeChange(
-                  size === filteredData.length ? filteredData.length : size
-                )
-              }
+              pageSizeOptions={["10", "20", "50", "100", `${filteredData.length}`]}
+              onShowSizeChange={(_, size) => handlePageSizeChange(size === filteredData.length ? filteredData.length : size)}
             />
           </>
         )}
@@ -571,6 +491,5 @@ const TableData: React.FC = () => {
     </div>
   );
 };
-
 
 export default TableData;

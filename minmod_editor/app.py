@@ -1,7 +1,7 @@
 import logging
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Union
-from .config import URI_MINMOD_APP 
+
 import requests
 from fastapi import (
     Body,
@@ -20,6 +20,8 @@ from jose import jwt
 from pydantic import BaseModel, validator
 
 from minmod_editor.routers import mineral_site
+
+from .config import URI_MINMOD_APP
 
 # Logging setup
 logger = logging.getLogger(__name__)
@@ -131,7 +133,7 @@ async def login(
 async def get_current_user(request: Request):
     try:
         # Directly call the /whoami endpoint using the session token
-        url = URI_MINMOD_APP+"whoami"
+        url = URI_MINMOD_APP + "whoami"
         session_id = request.cookies.get("session_id")
         logger.info(f"session_id token B: {session_id}")
 
@@ -207,7 +209,7 @@ async def submit_mineral_site(
 
     # Make the request to the external API
     response = requests.post(
-        uri+"mineral-sites",
+        f"{URI_MINMOD_APP}mineral-sites",
         headers=minmod_headers,
         json=mineral_site,
         verify=False,
@@ -242,7 +244,7 @@ async def update_mineral_site(
     # Retrieve session ID from cookies
 
     # Send PUT request to external API
-    url = URI_MINMOD_APP+"mineral-sites/{site_id}"
+    url = URI_MINMOD_APP + "mineral-sites/{site_id}"
     response = requests.post(url, headers=minmod_header, json=update_data, verify=False)
 
     # Check response and handle errors if any
@@ -253,82 +255,6 @@ async def update_mineral_site(
     # Extract and return response data
     response_data = response.json()
     return {"status": response_data.get("status"), "uri": response_data.get("uri")}
-
-
-
-
-
-@app.get("/get_sites/{commodity}")
-def get_sites(commodity: str):
-    url = f"{URI_MINMOD_APP}dedup-mineral-sites/{commodity}"
-
-    try:
-        response = requests.get(url, verify=False)
-        response.raise_for_status()
-        data = response.json()
-
-        processed_data = []
-
-        for group in data:
-            first_site = group.get("sites", [{}])[0]
-            location = group.get("best_loc_wkt")
-
-            # Handle cases where location is MULTIPOINT or GEOMETRYCOLLECTION
-            if location and (location.startswith("POINT")):
-                # Keep the POINT keyword intact and clean up extra spaces
-                coordinates = location.strip()
-            elif location and (
-                location.startswith("MULTIPOINT")
-                or location.startswith("GEOMETRYCOLLECTION")
-            ):
-                # Fallback to best_loc_centroid_epsg_4326 if available
-                coordinates = group.get("best_loc_centroid_epsg_4326", "").strip()
-                if not coordinates:
-                    coordinates = " "  # Default to empty if both are unavailable
-            else:
-                coordinates = (
-                    " "  # Default if location is missing or in an unhandled format
-                )
-
-            deposit_type = ""
-            deposit_confidence = "0.0000"
-            if group.get("deposit_types"):
-                deposit_type = group["deposit_types"][0].get("name", "")
-                deposit_confidence = (
-                    f"{group['deposit_types'][0].get('confidence', 0):.4f}"
-                )
-
-            total_grade = group.get("total_grade")
-            total_grade_str = (
-                f"{total_grade:.8f}" if total_grade is not None else "0.00000"
-            )
-
-            total_tonnage = group.get("total_tonnage")
-            total_tonnage_str = f"{total_tonnage}" if total_tonnage is not None else "0"
-
-            all_ms_fields = [site.get("id", "") for site in group.get("sites", [])]
-
-            site_info = {
-                "siteName": first_site.get("name", ""),
-                "siteType": first_site.get("type", ""),
-                "siteRank": first_site.get("rank", ""),
-                "location": coordinates,  # Now includes the full "POINT" string or fallback value
-                "crs": group.get("best_loc_crs", ""),
-                "country": first_site.get("country", ""),
-                "state": first_site.get("state_or_province", ""),
-                "depositType": deposit_type,
-                "depositConfidence": deposit_confidence,
-                "commodity": commodity,
-                "grade": total_grade_str,
-                "tonnage": total_tonnage_str,
-                "all_ms_fields": all_ms_fields,
-            }
-            processed_data.append(site_info)
-
-        return {"data": processed_data}
-
-    except requests.exceptions.RequestException as e:
-        return {"error": str(e)}
 
 
 @app.get("/get_commodities")
@@ -351,7 +277,7 @@ def get_commodities():
 
 @app.get("/get_deposit_types")
 def get_deposit_types():
-    url = URI_MINMOD_APP+"deposit-types"
+    url = URI_MINMOD_APP + "deposit-types"
 
     try:
         response = requests.get(url, verify=False)  # Set verify=True in production
