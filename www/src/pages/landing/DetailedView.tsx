@@ -29,7 +29,6 @@ const DetailedView: React.FC<DetailedViewProps> = ({ allMsFields, username, onCl
     { title: "Tonnage", width: 80 },
     { title: "Reference", width: 100 },
     { title: "Comments", width: 150 }, // New comments column
-    { title: "Source", width: 100 },
   ]);
 
   const onResize = (index: number, newWidth: number) => {
@@ -69,10 +68,10 @@ const DetailedView: React.FC<DetailedViewProps> = ({ allMsFields, username, onCl
           return await mineralSiteStore.getByURI(msField);
         })
       );
-      console.log("allMsFields",allMsFields);
+      console.log("allMsFields", allMsFields);
 
       const validDetails = mineralSites;
-      console.log("validation",validDetails);
+      console.log("validation", validDetails);
       setDetailedData(validDetails as MineralSite[]);
       setLoading(false);
 
@@ -86,10 +85,10 @@ const DetailedView: React.FC<DetailedViewProps> = ({ allMsFields, username, onCl
     setEditingRowId(rowId);
     setModalTitle(title);
     setModalVisible(true);
-  
+
     let propertyKey: MineralSiteProperty = "name";
     let options: string[] = [];
-  
+
     if (title === "Site Name") {
       propertyKey = "name";
       options = detailedData.map((site) => site.name);
@@ -106,32 +105,32 @@ const DetailedView: React.FC<DetailedViewProps> = ({ allMsFields, username, onCl
       propertyKey = "tonnage";
       options = detailedData.map((site) => site.max_tonnes[0].toFixed(5));
     }
-  
+
     setProperty(propertyKey);
     setReferenceOptions(options); // Make sure options are set for the dropdown
-  
+
     if (allMsFields.length > 0) {
       const firstResource_id = allMsFields[0].split("resource/")[1];
       const site = await mineralSiteStore.getById(firstResource_id);
       setFirstSiteData(site);
     }
   };
-  
-  
+
+
 
   const handleSaveChanges = async (property: MineralSiteProperty, property_value: string, reference: Reference) => {
     console.log("handleSaveChanges called with:", { property, property_value, reference });
-  
+
     const sessionId = localStorage.getItem("session_id");
     if (!sessionId) {
       toast.error("Session ID not found. Please log in again.");
       return;
     }
-  
+
     try {
       const curatedMineralSite = MineralSite.createDefaultCuratedMineralSite(detailedData, username).update(property, property_value, reference);
       console.log("curatedMineralSite:", JSON.stringify(curatedMineralSite, null, 2));
-  
+
       const createResponse = await fetch("/submit_mineral_site", {
         method: "POST",
         headers: {
@@ -141,11 +140,11 @@ const DetailedView: React.FC<DetailedViewProps> = ({ allMsFields, username, onCl
         body: JSON.stringify(curatedMineralSite.serialize()),
         credentials: "include",
       });
-  
+
       if (createResponse.ok) {
         const responseData = await createResponse.json();
         toast.success("Data submitted successfully");
-  
+
         const newResourceId = responseData.uri.split("resource/")[1];
         setCreatedRecordUri(newResourceId);
         setDetailedData((prevData) => [
@@ -153,12 +152,12 @@ const DetailedView: React.FC<DetailedViewProps> = ({ allMsFields, username, onCl
           {
             ...curatedMineralSite,
             id: newResourceId,
-            comments: property_value 
+            comments: property_value
           } as unknown as MineralSite,
         ]);
       } else if (createResponse.status === 403) {
         console.log("Resource already exists. Attempting to update.");
-  
+
         const updateResponse = await fetch(`/test/api/v1/mineral-sites/${createdRecordUri}`, {
           method: "POST",
           headers: {
@@ -168,17 +167,17 @@ const DetailedView: React.FC<DetailedViewProps> = ({ allMsFields, username, onCl
           body: JSON.stringify(curatedMineralSite.serialize()),
           credentials: "include",
         });
-  
+
         if (updateResponse.ok) {
           toast.success("Data updated successfully");
-  
+
           setDetailedData((prevData) =>
             prevData.map((item) =>
               item.id === createdRecordUri
                 ? {
-                    ...curatedMineralSite,
-                    id: createdRecordUri,
-                  } as unknown as MineralSite
+                  ...curatedMineralSite,
+                  id: createdRecordUri,
+                } as unknown as MineralSite
                 : item
             )
           );
@@ -193,7 +192,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({ allMsFields, username, onCl
     } catch (error) {
       toast.error("Failed to submit data.");
     }
-  
+
     setModalVisible(false);
   };
 
@@ -215,50 +214,50 @@ const DetailedView: React.FC<DetailedViewProps> = ({ allMsFields, username, onCl
             <tr>
               {columns.map((col, index) => (
                 <th key={index} style={{ width: col.width, position: "relative" }}>
-  <div className="header-container">
-    {/* Column Title and Edit Icon */}
-    <div className="header-with-icon">
-      <span>{col.title}</span>
-      {["Site Name", "Location", "Deposit Type", "Grade", "Tonnage"].includes(col.title) && (
-        <EditOutlined
-          className="edit-icon-header"
-          onClick={() => handleEditClick(editingRowId as number, col.title)}
-          style={{ marginLeft: 8, cursor: "pointer", zIndex: 1 }}
-        />
-      )}
-    </div>
-    {/* Resize Handle */}
-    <div
-      className="resize-handle"
-      style={{ cursor: "col-resize", position: "absolute", right: 0, top: 0, bottom: 0, width: 8 }}
-      onMouseDown={(e) => {
-        e.preventDefault();
-        const startX = e.clientX;
-        const startWidth = col.width;
+                  <div className="header-container">
+                    {/* Column Title and Edit Icon */}
+                    <div className="header-with-icon">
+                      <span>{col.title}</span>
+                      {["Site Name", "Location", "Deposit Type", "Grade", "Tonnage"].includes(col.title) && (
+                        <EditOutlined
+                          className="edit-icon-header"
+                          onClick={() => handleEditClick(editingRowId as number, col.title)}
+                          style={{ marginLeft: 8, cursor: "pointer", zIndex: 1 }}
+                        />
+                      )}
+                    </div>
+                    {/* Resize Handle */}
+                    <div
+                      className="resize-handle"
+                      style={{ cursor: "col-resize", position: "absolute", right: 0, top: 0, bottom: 0, width: 8 }}
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        const startX = e.clientX;
+                        const startWidth = col.width;
 
-        const onMouseMove = (moveEvent: MouseEvent) => {
-          const newWidth = Math.max(
-            startWidth + (moveEvent.clientX - startX),
-            50
-          );
-          onResize(index, newWidth);
-        };
+                        const onMouseMove = (moveEvent: MouseEvent) => {
+                          const newWidth = Math.max(
+                            startWidth + (moveEvent.clientX - startX),
+                            50
+                          );
+                          onResize(index, newWidth);
+                        };
 
-        const onMouseUp = () => {
-          document.removeEventListener("mousemove", onMouseMove);
-          document.removeEventListener("mouseup", onMouseUp);
-        };
+                        const onMouseUp = () => {
+                          document.removeEventListener("mousemove", onMouseMove);
+                          document.removeEventListener("mouseup", onMouseUp);
+                        };
 
-        document.addEventListener("mousemove", onMouseMove);
-        document.addEventListener("mouseup", onMouseUp);
-      }}
-    />
-  </div>
-</th>
-     
+                        document.addEventListener("mousemove", onMouseMove);
+                        document.addEventListener("mouseup", onMouseUp);
+                      }}
+                    />
+                  </div>
+                </th>
+
 
               ))}
-              
+
             </tr>
           </thead>
           <tbody>
@@ -274,32 +273,31 @@ const DetailedView: React.FC<DetailedViewProps> = ({ allMsFields, username, onCl
                 <td>{resource.depositTypeCandidate[0]?.confidence || ""}</td>
                 <td>{resource.max_grade ? resource.max_grade[0].toFixed(5) : "0.00000"}</td>
                 <td>{resource.max_tonnes ? resource.max_tonnes[0].toFixed(5) : "0.00000"}</td>
-                <td>{resource.reference[0]?.document.title || resource.reference[0]?.document.uri || ""}</td>
-                <td></td> {/* New comments column */}
                 <td>
                   {resource.source_id ? (
-                    <a href={resource.source_id} target="_blank" rel="noopener noreferrer">
-                      View Source
+                    <a href={resource.reference[0]?.document.uri || ""} target="_blank" rel="noopener noreferrer">
+                      {resource.reference[0]?.document.uri || ""}
                     </a>
                   ) : (
                     "N/A"
                   )}
                 </td>
+                <td></td> {/* New comments column */}
               </tr>
             ))}
           </tbody>
         </table>
       )}
-<EditModal
-  visible={modalVisible}
-  onClose={() => setModalVisible(false)}
-  mineralSites={detailedData}
-  propertyReadableName={modalTitle}
-  property={property || "name"}
-  depositTypes={depositTypes}
-  onSave={handleSaveChanges}
-  referenceOptions={referenceOptions} // Pass options here for dropdown
-/>
+      <EditModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        mineralSites={detailedData}
+        propertyReadableName={modalTitle}
+        property={property || "name"}
+        depositTypes={depositTypes}
+        onSave={handleSaveChanges}
+        referenceOptions={referenceOptions} // Pass options here for dropdown
+      />
 
     </div>
   );
