@@ -1,0 +1,1 @@
+URI_MINMOD_APP ="https://dev.minmod.isi.edu/api/v1/"

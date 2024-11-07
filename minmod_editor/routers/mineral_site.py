@@ -4,11 +4,12 @@ import httpx
 from fastapi import APIRouter
 
 router = APIRouter(tags=["mineral_sites"])
-
+uri = "https://dev.minmod.isi.edu/api/v1/"
 
 @router.get("/mineral-sites/{resource_id}")
 def get_mineral_site(resource_id: str):
-    url = f"https://minmod.isi.edu/test/api/v1/mineral-sites/{resource_id}"
+    print("resource_id",resource_id)
+    url = f"{uri}mineral-sites/{resource_id}"
 
     resp = httpx.get(url, verify=False)
     resp.raise_for_status()

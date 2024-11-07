@@ -110,6 +110,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({ allMsFields, username, onCl
     setReferenceOptions(options); // Make sure options are set for the dropdown
 
     if (allMsFields.length > 0) {
+      console.log("allMsFields",allMsFields)
       const firstResource_id = allMsFields[0].split("resource/")[1];
       const site = await mineralSiteStore.getById(firstResource_id);
       setFirstSiteData(site);

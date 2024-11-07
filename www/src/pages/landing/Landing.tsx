@@ -288,13 +288,15 @@ const TableData: React.FC = () => {
     if (value) {
       try {
         setLoading(true);
+        console.log("value",value)
         const response = await fetch(`/get_sites/${value}`);
         if (response.ok) {
           const data = await response.json();
+          console.log("data",data)
           const dataWithIds = data.data.map((row: any, index: number) => ({
             ...row,
-            id: index + 1, // Add a unique id to each row
-            all_ms_fields: row.all_ms_fields || [], // Map `all_ms_fields` from the response
+            id: index + 1, 
+            all_ms_fields: row.all_ms_fields || [],
           }));
           setFilteredData(dataWithIds);
           setCurrentPage(1);

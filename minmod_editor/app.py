@@ -1,7 +1,7 @@
 import logging
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Union
-
+from .config import URI_MINMOD_APP 
 import requests
 from fastapi import (
     Body,
@@ -79,7 +79,7 @@ async def login(
     form_data: OAuth2PasswordRequestForm = Depends(), response: Response = Response()
 ):
     # Authenticate user using an external API
-    url = "https://minmod.isi.edu/test/api/v1/login"
+    url = f"{URI_MINMOD_APP}login"
     payload = {"username": form_data.username, "password": form_data.password}
 
     try:
@@ -87,7 +87,7 @@ async def login(
         logger.info(
             f"Sending authentication request to {url} for user: {form_data.username}"
         )
-        login_response = requests.post(url, params=payload, verify=False)
+        login_response = requests.post(url, json=payload, verify=False)
 
         if login_response.status_code == 200 and login_response.json() == "Logged in":
             logger.info(f"User '{form_data.username}' logged in successfully")
@@ -131,7 +131,7 @@ async def login(
 async def get_current_user(request: Request):
     try:
         # Directly call the /whoami endpoint using the session token
-        url = "https://minmod.isi.edu/test/api/v1/whoami"
+        url = URI_MINMOD_APP+"whoami"
         session_id = request.cookies.get("session_id")
         logger.info(f"session_id token B: {session_id}")
 
@@ -207,7 +207,7 @@ async def submit_mineral_site(
 
     # Make the request to the external API
     response = requests.post(
-        "https://minmod.isi.edu/test/api/v1/mineral-sites",
+        uri+"mineral-sites",
         headers=minmod_headers,
         json=mineral_site,
         verify=False,
@@ -242,7 +242,7 @@ async def update_mineral_site(
     # Retrieve session ID from cookies
 
     # Send PUT request to external API
-    url = f"https://minmod.isi.edu/test/api/v1/mineral-sites/{site_id}"
+    url = URI_MINMOD_APP+"mineral-sites/{site_id}"
     response = requests.post(url, headers=minmod_header, json=update_data, verify=False)
 
     # Check response and handle errors if any
@@ -255,61 +255,12 @@ async def update_mineral_site(
     return {"status": response_data.get("status"), "uri": response_data.get("uri")}
 
 
-@app.get("/get_site_data")
-def get_site_data():
-    url = "https://minmod.isi.edu/resource/site__api-cdr-land-v1-docs-documents__0249cf080edc4c536abfde9e13867b5ee755b880a247857956ddf23b72a44211d4?format=json"
 
-    try:
-        response = requests.get(url, verify=False)
-        response.raise_for_status()
-        data = response.json()
-
-        # Extract fields from data
-        site_name = data.get("@label", "")
-        location_info = data.get("location_info", {})
-        mineral_inventory = data.get("mineral_inventory", [])
-        country_info = location_info.get("country", {}).get("observed_name", "Unknown")
-        state_info = location_info.get("state_or_province", {}).get(
-            "observed_name", "Unknown"
-        )
-
-        # Prepare processed data list
-        processed_data = []
-
-        for inventory in mineral_inventory:
-            inventory_data = {
-                "siteName": site_name,
-                "location": f"{country_info}, {state_info}",
-                "crs": "N/A",
-                "country": country_info,
-                "state": state_info,
-                "commodity": inventory.get("commodity", {}).get("observed_name", ""),
-                "depositType": data.get("deposit_type_candidate", {}).get(
-                    "observed_name", ""
-                ),
-                "depositConfidence": data.get("deposit_type_candidate", {}).get(
-                    "confidence", "0.0000"
-                ),
-                "grade": inventory.get("grade", {}).get("value", "0.00000000"),
-                "tonnage": inventory.get("ore", {}).get("value", "0"),
-                "reference": inventory.get("reference", {})
-                .get("document", {})
-                .get("title", ""),
-                "source": inventory.get("reference", {})
-                .get("document", {})
-                .get("uri", ""),
-            }
-            processed_data.append(inventory_data)
-
-        return {"data": processed_data}
-
-    except requests.exceptions.RequestException as e:
-        return {"error": str(e)}
 
 
 @app.get("/get_sites/{commodity}")
 def get_sites(commodity: str):
-    url = f"https://minmod.isi.edu/api/v1/dedup_mineral_sites/{commodity}"
+    url = f"{URI_MINMOD_APP}dedup-mineral-sites/{commodity}"
 
     try:
         response = requests.get(url, verify=False)
@@ -349,18 +300,18 @@ def get_sites(commodity: str):
 
             total_grade = group.get("total_grade")
             total_grade_str = (
-                f"{total_grade:.8f}" if total_grade is not None else "0.00000000"
+                f"{total_grade:.8f}" if total_grade is not None else "0.00000"
             )
 
             total_tonnage = group.get("total_tonnage")
             total_tonnage_str = f"{total_tonnage}" if total_tonnage is not None else "0"
 
-            all_ms_fields = [site.get("ms", "") for site in group.get("sites", [])]
+            all_ms_fields = [site.get("id", "") for site in group.get("sites", [])]
 
             site_info = {
-                "siteName": first_site.get("ms_name", ""),
-                "siteType": first_site.get("ms_type", ""),
-                "siteRank": first_site.get("ms_rank", ""),
+                "siteName": first_site.get("name", ""),
+                "siteType": first_site.get("type", ""),
+                "siteRank": first_site.get("rank", ""),
                 "location": coordinates,  # Now includes the full "POINT" string or fallback value
                 "crs": group.get("best_loc_crs", ""),
                 "country": first_site.get("country", ""),
@@ -382,7 +333,7 @@ def get_sites(commodity: str):
 
 @app.get("/get_commodities")
 def get_commodities():
-    url = "https://minmod.isi.edu/api/v1/commodities?is_critical=true"
+    url = f"{URI_MINMOD_APP}commodities?is_critical=true"
 
     try:
         response = requests.get(url, verify=False)
@@ -400,7 +351,7 @@ def get_commodities():
 
 @app.get("/get_deposit_types")
 def get_deposit_types():
-    url = "https://minmod.isi.edu/api/v1/deposit_types"
+    url = URI_MINMOD_APP+"deposit_types"
 
     try:
         response = requests.get(url, verify=False)  # Set verify=True in production
