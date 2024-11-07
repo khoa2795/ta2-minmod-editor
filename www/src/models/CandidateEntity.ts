@@ -1,36 +1,40 @@
 export class CandidateEntity {
   source: string;
   confidence: number;
-  observed_name?: string;
-  normalized_uri?: string;
+  observedName?: string;
+  normalizedURI?: string;
 
-  public constructor({
-    source,
-    confidence,
-    observed_name,
-    normalized_uri,
-  }: {
-    source: string;
-    confidence: number;
-    observed_name?: string;
-    normalized_uri?: string;
-  }) {
+  public constructor({ source, confidence, observedName, normalizedURI }: { source: string; confidence: number; observedName?: string; normalizedURI?: string }) {
     this.source = source;
     this.confidence = confidence;
-    this.observed_name = observed_name;
-    this.normalized_uri = normalized_uri;
-  }
-
-  public static deserialize(obj: any): CandidateEntity {
-    return new CandidateEntity({ ...obj });
+    this.observedName = observedName;
+    this.normalizedURI = normalizedURI;
   }
 
   public clone(): CandidateEntity {
     return new CandidateEntity({
       source: this.source,
       confidence: this.confidence,
-      observed_name: this.observed_name,
-      normalized_uri: this.normalized_uri,
+      observedName: this.observedName,
+      normalizedURI: this.normalizedURI,
     });
+  }
+
+  public static deserialize(obj: any): CandidateEntity {
+    return new CandidateEntity({
+      source: obj.source,
+      confidence: obj.confidence,
+      observedName: obj.observed_name,
+      normalizedURI: obj.normalized_uri,
+    });
+  }
+
+  public serialize(): object {
+    return {
+      source: this.source,
+      confidence: this.confidence,
+      observed_name: this.observedName,
+      normalized_uri: this.normalizedURI,
+    };
   }
 }

@@ -22,7 +22,7 @@ export class Reference {
 
   public clone(): Reference {
     return new Reference({
-      document: new Document(this.document.uri, this.document.title),
+      document: this.document.clone(),
       comment: this.comment,
       property: this.property,
       // pageInfo: this.pageInfo
@@ -32,9 +32,18 @@ export class Reference {
   public static deserialize(obj: any): Reference {
     obj = {
       ...obj,
-      document: new Document(obj.document.uri, obj.document.title),
+      document: Document.deserialize(obj.document),
     };
     return new Reference(obj);
+  }
+
+  public serialize(): object {
+    return {
+      document: this.document.serialize(),
+      comment: this.comment,
+      property: this.property,
+      // pageInfo: this.pageInfo
+    };
   }
 }
 
@@ -42,9 +51,25 @@ export class Document {
   uri: string;
   title?: string;
 
-  public constructor(uri: string, title?: string) {
+  public constructor({ uri, title }: { uri: string; title?: string }) {
     this.uri = uri;
     this.title = title;
+  }
+
+  public clone(): Document {
+    return new Document({ uri: this.uri, title: this.title });
+  }
+  public static deserialize(obj: any): Document {
+    return new Document({
+      uri: obj.uri,
+      title: obj.title,
+    });
+  }
+  public serialize(): object {
+    return {
+      uri: this.uri,
+      title: this.title,
+    };
   }
 }
 

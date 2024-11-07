@@ -30,7 +30,7 @@ export class ShortMineralSite {
 
   public static deserialize(obj: any): ShortMineralSite {
     return new ShortMineralSite({
-      uri: obj.uri,
+      uri: obj.id,
       name: obj.name,
       type: obj.type,
       rank: obj.rank,

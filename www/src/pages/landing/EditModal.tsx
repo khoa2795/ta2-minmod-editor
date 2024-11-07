@@ -40,7 +40,7 @@ const EditModal: React.FC<EditModalProps> = ({ visible, onClose, mineralSites, p
       property,
       editValue,
       new Reference({
-        document: new Document(newReference.uri, newReference.title),
+        document: new Document({ uri: newReference.uri, title: newReference.title }),
         comment: comments,
       })
     );
@@ -48,7 +48,7 @@ const EditModal: React.FC<EditModalProps> = ({ visible, onClose, mineralSites, p
   };
 
   // Determine dropdown options based on the property
-  const siteSpecificDepositTypes = mineralSites.map((site) => site.depositTypeCandidate[0]?.observed_name || "").filter((type) => type); // Filter out undefined or empty strings
+  const siteSpecificDepositTypes = mineralSites.map((site) => site.depositTypeCandidate[0]?.observedName || "").filter((type) => type); // Filter out undefined or empty strings
 
   const dropdownOptions =
     property === "depositType"
@@ -65,7 +65,7 @@ const EditModal: React.FC<EditModalProps> = ({ visible, onClose, mineralSites, p
 
   // Generate reference options based on mineralSites for consistent behavior
   const consistentReferenceOptions = mineralSites.map((site) => ({
-    key: site.id.toString(),
+    key: site.uri.toString(),
     // TODO: fix not showing unknown reference
     label: site.reference[0]?.document.title || site.reference[0]?.document.uri || "Unknown",
   }));

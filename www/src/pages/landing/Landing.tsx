@@ -301,7 +301,6 @@ const TableData: React.FC = () => {
     try {
       setLoading(true);
       const dataWithIds = await dedupMineralSiteStore.findByCommodity(value);
-      console.log("search", { value, dataWithIds });
       setFilteredData(dataWithIds);
       setCurrentPage(1);
     } finally {
@@ -486,7 +485,7 @@ const TableData: React.FC = () => {
                     {expandedRows.includes(rowIndex) && (
                       <tr>
                         <td colSpan={columns.length}>
-                          <DetailedView allMsFields={row.getSiteURIs()} username={username ?? ""} onClose={() => toggleRow(rowIndex)} commodity={commodityStore.getCommodityByURI(row.commodity)!} />
+                          <DetailedView siteIds={row.getSiteURIs()} username={username ?? ""} onClose={() => toggleRow(rowIndex)} commodity={commodityStore.getCommodityByURI(row.commodity)!} />
                         </td>
                       </tr>
                     )}

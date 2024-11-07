@@ -8,9 +8,10 @@ import { gt } from "lodash";
 export type MineralSiteProperty = "name" | "location" | "depositType" | "grade" | "tonnage";
 
 export class MineralSite {
-  id: string;
+  uri: string;
   sourceId: string;
   recordId: string;
+  dedupSiteURI: string;
   createdBy: string[];
   name: string;
   locationInfo: LocationInfo;
@@ -20,7 +21,7 @@ export class MineralSite {
   gradeTonnage: { [commodity: string]: GradeTonnageOfCommodity };
 
   public constructor({
-    id,
+    uri: uri,
     recordId,
     sourceId,
     createdBy,
@@ -30,10 +31,12 @@ export class MineralSite {
     reference,
     sameAs,
     gradeTonnage,
+    dedupSiteURI,
   }: {
-    id: string;
+    uri: string;
     recordId: string;
     sourceId: string;
+    dedupSiteURI: string;
     createdBy: string[];
     name: string;
     locationInfo: LocationInfo;
@@ -42,9 +45,10 @@ export class MineralSite {
     sameAs: string[];
     gradeTonnage: { [commodity: string]: GradeTonnageOfCommodity };
   }) {
-    this.id = id;
+    this.uri = uri;
     this.recordId = recordId;
     this.sourceId = sourceId;
+    this.dedupSiteURI = dedupSiteURI;
     this.createdBy = createdBy;
     this.name = name;
     this.locationInfo = locationInfo;
@@ -65,7 +69,7 @@ export class MineralSite {
         break;
       // TODO: fix me!
       case "depositType":
-        another.depositTypeCandidate[0].observed_name = value;
+        another.depositTypeCandidate[0].observedName = value;
         break;
       case "location":
         another.locationInfo.location = value;
@@ -86,7 +90,7 @@ export class MineralSite {
       case "name":
         return this.name;
       case "depositType":
-        return this.depositTypeCandidate[0]?.observed_name || "";
+        return this.depositTypeCandidate[0]?.observedName || "";
       case "location":
         return this.locationInfo.location || "";
       case "grade":
@@ -100,9 +104,10 @@ export class MineralSite {
 
   public clone(): MineralSite {
     return new MineralSite({
-      id: this.id,
+      uri: this.uri,
       recordId: this.recordId,
       sourceId: this.sourceId,
+      dedupSiteURI: this.dedupSiteURI,
       createdBy: this.createdBy,
       name: this.name,
       locationInfo: this.locationInfo.clone(),
@@ -129,30 +134,69 @@ export class MineralSite {
 
   public serialize(): object {
     // convert mineral site to the format that the server required to save the mineral site.
+    // TODO: validate for the location
+    const reference = this.reference.map((ref) => ref.serialize());
+    let mineralInventory = [];
+
+    for (const gt of Object.values(this.gradeTonnage)) {
+      mineralInventory.push({
+        // TODO: fix me! find correct source
+        // TODO: get correct users
+        category: ["Inferred", "Indicated", "Measured"].map((cat) => ({
+          source: "https://minmod.isi.edu/user/tester",
+          confidence: 1.0,
+          normalizedURI: `https://minmod.isi.edu/resource/${cat}`,
+        })),
+        commodity: {
+          source: "https://minmod.isi.edu/user/tester",
+          confidence: 1.0,
+          normalizedURI: gt.commodity,
+        },
+        ore: {
+          value: gt.totalTonnage,
+          unit: {
+            source: "https://minmod.isi.edu/user/tester",
+            confidence: 1.0,
+            normalizedURI: "https://minmod.isi.edu/resource/Q202",
+          },
+        },
+        grade: {
+          value: gt.totalGrade,
+          unit: {
+            source: "https://minmod.isi.edu/user/tester",
+            confidence: 1.0,
+            normalizedURI: "https://minmod.isi.edu/resource/Q201",
+          },
+        },
+        reference: reference[0],
+      });
+    }
+
     return {
+      name: this.name,
       record_id: this.recordId,
       source_id: this.sourceId,
       created_by: this.createdBy,
-      // location: this.location,
-      // crs: this.crs,
-      // country: this.country,
-      // state_or_province: this.state_or_province,
-      // commodity: this.commodity,
-      // depositType: this.depositType,
-      // depositConfidence: this.depositConfidence,
-      // grade: this.grade,
-      // tonnage: this.tonnage,
-      reference: this.reference,
-      sameAs: this.sameAs,
-      // comments: this.comments,
+      dedup_site_uri: this.dedupSiteURI,
+      location_info: {
+        country: this.locationInfo.country.map((country) => country.serialize()),
+        state_or_province: this.locationInfo.state_or_province.map((state_or_province) => state_or_province.serialize()),
+        crs: this.locationInfo.crs?.serialize(),
+        location: this.locationInfo.location,
+      },
+      deposit_type_candidate: this.depositTypeCandidate.map((depositTypeCandidate) => depositTypeCandidate.serialize()),
+      mineral_inventory: mineralInventory,
+      reference: reference,
+      same_as: this.sameAs,
     };
   }
 
-  public static deserialize(id: string, obj: any): MineralSite {
+  public static deserialize(uri: string, obj: any): MineralSite {
     return new MineralSite({
-      id: id,
+      uri: uri,
       recordId: obj.record_id,
       sourceId: obj.source_id,
+      dedupSiteURI: obj.dedup_site_uri,
       createdBy: obj.created_by,
       name: obj.name,
       locationInfo:

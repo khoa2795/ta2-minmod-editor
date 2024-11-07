@@ -11,7 +11,7 @@ import { Commodity } from "../../models/Commodity";
 import { ResizableTable } from "../../components/ResizableTable";
 
 interface DetailedViewProps {
-  allMsFields: string[];
+  siteIds: string[];
   username: string;
   onClose: () => void;
   commodity: Commodity;
@@ -27,16 +27,25 @@ export const Row = ({ site, commodity }: { site: MineralSite; commodity: Commodi
     fmtTonnage = gradeTonnage.totalTonnage?.toFixed(5);
   }
 
+  let depositName = undefined;
+  let depositConfidence = undefined;
+
+  if (site.depositTypeCandidate.length > 0) {
+    const dt = site.depositTypeCandidate[0];
+    depositName = dt.observedName;
+    depositConfidence = dt.confidence.toFixed(3);
+  }
+
   return (
-    <tr key={site.id}>
+    <tr key={site.uri}>
       <td>{site.name || ""}</td>
       <td>{site.locationInfo.location || ""}</td>
-      <td>{site.locationInfo.crs?.observed_name || ""}</td>
-      <td>{site.locationInfo.country[0]?.observed_name || ""}</td>
-      <td>{site.locationInfo.state_or_province[0]?.observed_name || ""}</td>
+      <td>{site.locationInfo.crs?.observedName || ""}</td>
+      <td>{site.locationInfo.country[0]?.observedName || ""}</td>
+      <td>{site.locationInfo.state_or_province[0]?.observedName || ""}</td>
       <td>{commodity.name}</td>
-      <td>{site.depositTypeCandidate[0]?.observed_name || ""}</td>
-      <td>{site.depositTypeCandidate[0]?.confidence || ""}</td>
+      <td>{depositName}</td>
+      <td>{depositConfidence}</td>
       <td>{fmtGrade}</td>
       <td>{fmtTonnage}</td>
       <td>
@@ -52,7 +61,7 @@ export const Row = ({ site, commodity }: { site: MineralSite; commodity: Commodi
   );
 };
 
-const DetailedView: React.FC<DetailedViewProps> = ({ allMsFields, username, onClose, commodity }) => {
+const DetailedView: React.FC<DetailedViewProps> = ({ siteIds, username, onClose, commodity }) => {
   const [columns, setColumns] = useState([
     { title: "Site Name", width: 150 },
     { title: "Location", width: 120 },
@@ -101,11 +110,11 @@ const DetailedView: React.FC<DetailedViewProps> = ({ allMsFields, username, onCl
     const fetchDetails = async () => {
       setLoading(true);
       const mineralSites = await Promise.all(
-        allMsFields.map(async (msField, index) => {
-          return await mineralSiteStore.getByURI(msField);
+        siteIds.map(async (siteId) => {
+          return await mineralSiteStore.getByURI(siteId);
         })
       );
-      console.log("allMsFields", allMsFields);
+      console.log("allMsFields", siteIds);
 
       const validDetails = mineralSites;
       console.log("validation", validDetails);
@@ -116,7 +125,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({ allMsFields, username, onCl
       setReferenceOptions(allReferences);
     };
     fetchDetails();
-  }, [allMsFields]);
+  }, [siteIds]);
 
   const handleEditClick = async (rowId: number, title: string) => {
     setEditingRowId(rowId);
@@ -151,9 +160,9 @@ const DetailedView: React.FC<DetailedViewProps> = ({ allMsFields, username, onCl
     setProperty(propertyKey);
     setReferenceOptions(options); // Make sure options are set for the dropdown
 
-    if (allMsFields.length > 0) {
-      console.log("allMsFields", allMsFields);
-      const firstResource_id = allMsFields[0].split("resource/")[1];
+    if (siteIds.length > 0) {
+      console.log("allMsFields", siteIds);
+      const firstResource_id = siteIds[0].split("resource/")[1];
       const site = await mineralSiteStore.getById(firstResource_id);
       setFirstSiteData(site);
     }
@@ -214,7 +223,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({ allMsFields, username, onCl
 
           setDetailedData((prevData) =>
             prevData.map((item) =>
-              item.id === createdRecordUri
+              item.uri === createdRecordUri
                 ? ({
                     ...curatedMineralSite,
                     id: createdRecordUri,
@@ -293,7 +302,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({ allMsFields, username, onCl
           </thead>
           <tbody>
             {detailedData.map((site) => (
-              <Row key={site.id} site={site} commodity={commodity} />
+              <Row key={site.uri} site={site} commodity={commodity} />
             ))}
           </tbody>
         </table>

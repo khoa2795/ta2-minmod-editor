@@ -84,20 +84,20 @@ const Ungroup: React.FC<UngroupProps> = ({ allMsFields, onClose, commodity }) =>
           </thead>
           <tbody>
             {detailedData.map((resource) => (
-              <tr key={resource.id}>
+              <tr key={resource.uri}>
                 <td>
                   <Checkbox
-                    checked={!!selectedRows[resource.id]} // Convert to boolean and use its state
-                    onChange={() => handleCheckboxChange(resource.id)}
+                    checked={!!selectedRows[resource.uri]} // Convert to boolean and use its state
+                    onChange={() => handleCheckboxChange(resource.uri)}
                   />
                 </td>
                 <td>{resource.name || ""}</td>
                 <td>{resource.locationInfo.location || ""}</td>
-                <td>{resource.locationInfo.crs?.observed_name || ""}</td>
-                <td>{resource.locationInfo.country[0]?.observed_name || ""}</td>
-                <td>{resource.locationInfo.state_or_province[0]?.observed_name || ""}</td>
+                <td>{resource.locationInfo.crs?.observedName || ""}</td>
+                <td>{resource.locationInfo.country[0]?.observedName || ""}</td>
+                <td>{resource.locationInfo.state_or_province[0]?.observedName || ""}</td>
                 <td>{(resource as any).mineral_inventory?.[0]?.commodity?.observed_name || ""}</td>
-                <td>{resource.depositTypeCandidate[0]?.observed_name || ""}</td>
+                <td>{resource.depositTypeCandidate[0]?.observedName || ""}</td>
                 <td>{resource.depositTypeCandidate[0]?.confidence || ""}</td>
                 <td>{resource.gradeTonnage[commodity].totalGrade?.toFixed(5)}</td>
                 <td>{resource.gradeTonnage[commodity].totalTonnage?.toFixed(5)}</td>
