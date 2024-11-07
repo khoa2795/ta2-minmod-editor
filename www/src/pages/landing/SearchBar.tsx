@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Input, AutoComplete } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import "./Search.css";
+import { commodityStore } from "../../stores/CommodityStore";
 
 interface SearchBarProps {
   onSearch: (value: string) => void;
@@ -14,14 +15,9 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
   useEffect(() => {
     const fetchCommodities = async () => {
       try {
-        const response = await fetch("/get_commodities");
-        if (response.ok) {
-          const data = await response.json();
-          setCommodities(data.commodities.sort()); // Sort alphabetically
-          setFilteredCommodities(data.commodities.sort()); // Initialize filtered list
-        } else {
-          console.error("Error fetching commodities:", response.statusText);
-        }
+        const commodities = (await commodityStore.fetchAll()).map((commodity) => commodity.name);
+        setCommodities(commodities);
+        setFilteredCommodities(commodities);
       } catch (error) {
         console.error("Error fetching commodities:", error);
       }
@@ -32,13 +28,12 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
 
   const handleSearchChange = (value: string) => {
     // Filter commodities based on user input
-    setFilteredCommodities(
-      commodities.filter((commodity) =>
-        commodity.toLowerCase().includes(value.toLowerCase())
-      )
-    );
+    setFilteredCommodities(commodities.filter((commodity) => commodity.toLowerCase().includes(value.toLowerCase())));
     // Call parent onSearch handler
-    onSearch(value);
+    // TODO: fix me!!
+    if (commodityStore.hasFetch() && commodityStore.getCommodityByName(value) !== undefined) {
+      onSearch(value);
+    }
   };
 
   return (
@@ -49,11 +44,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
         onSearch={handleSearchChange} // Filter suggestions as user types
         style={{ width: "100%" }}
       >
-        <Input
-          placeholder="Search by Commodity"
-          prefix={<SearchOutlined />}
-          className="search-bar"
-        />
+        <Input placeholder="Search by Commodity" prefix={<SearchOutlined />} className="search-bar" />
       </AutoComplete>
     </div>
   );

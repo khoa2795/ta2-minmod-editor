@@ -16,6 +16,10 @@ export class MineralSiteStore {
   public async getByURIs(uris: string[]): Promise<MineralSite[]> {
     return Promise.all(uris.map(this.getByURI));
   }
+
+  public async createMineralSite(ms: MineralSite): Promise<1> {
+    return 1;
+  }
 }
 
 export const mineralSiteStore = new MineralSiteStore();

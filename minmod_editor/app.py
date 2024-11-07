@@ -257,7 +257,7 @@ async def update_mineral_site(
     return {"status": response_data.get("status"), "uri": response_data.get("uri")}
 
 
-@app.get("/get_commodities")
+@app.get("/commodities")
 def get_commodities():
     url = f"{URI_MINMOD_APP}commodities?is_critical=true"
 
@@ -266,11 +266,10 @@ def get_commodities():
         response.raise_for_status()
         commodities = response.json()
 
-        # Extract commodity names or IDs if needed
-        commodities_list = [commodity.get("name") for commodity in commodities]
-
-        return {"commodities": commodities_list}
-
+        return [
+            {"uri": commodity["uri"], "name": commodity["name"]}
+            for commodity in commodities
+        ]
     except requests.exceptions.RequestException as e:
         return {"error": str(e)}
 

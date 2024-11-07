@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, ReactElement } from "react";
 import { Button, Checkbox, Spin, Pagination, Space } from "antd";
 import { ArrowUpOutlined, ArrowDownOutlined } from "@ant-design/icons";
 import "react-resizable/css/styles.css";
@@ -8,6 +8,27 @@ import SearchBar from "./SearchBar";
 import Ungroup from "./Ungroup"; // Import Ungroup component
 import { MyButton } from "../../components/MyButton";
 import { DedupMineralSite } from "../../models/DedupMineralSite";
+import { dedupMineralSiteStore } from "../../stores/DedupMineralSiteStore";
+import { commodityStore } from "../../stores/CommodityStore";
+
+// const Number = (val: number) => {
+
+// }
+
+// TODO: fix typing!
+function renderColumn(column: { dataIndex?: string; render?: (cell: any, row: DedupMineralSite, rowIndex: number) => any }, row: DedupMineralSite, rowIndex: number): ReactElement {
+  if (column.render !== undefined) {
+    let cell = null;
+    if (column.dataIndex !== undefined) {
+      cell = row[column.dataIndex as keyof DedupMineralSite];
+    }
+    return column.render(cell, row, rowIndex);
+  }
+  if (column.dataIndex !== undefined) {
+    return row[column.dataIndex as keyof DedupMineralSite] as any;
+  }
+  throw new Error("Column must have either a dataIndex or a render function");
+}
 
 const TableData: React.FC = () => {
   const [filteredData, setFilteredData] = useState<DedupMineralSite[]>([]);
@@ -103,10 +124,10 @@ const TableData: React.FC = () => {
 
   const handleRowSelection = (row: DedupMineralSite) => {
     setSelectedRows((prevSelectedRows) => {
-      const isRowSelected = prevSelectedRows.find((selectedRow) => selectedRow.id === row.id);
+      const isRowSelected = prevSelectedRows.find((selectedRow) => selectedRow.uri === row.uri);
       if (isRowSelected) {
         // Deselect row
-        return prevSelectedRows.filter((selectedRow) => selectedRow.id !== row.id);
+        return prevSelectedRows.filter((selectedRow) => selectedRow.uri !== row.uri);
       } else {
         // Select row
         return [...prevSelectedRows, row];
@@ -124,24 +145,24 @@ const TableData: React.FC = () => {
       title: "Select",
       dataIndex: "select",
       width: 45,
-      render: (_: any, record: DedupMineralSite) => <Checkbox checked={selectedRows.some((row) => row.id === record.id)} onChange={() => handleRowSelection(record)} />,
+      render: (_: any, site: DedupMineralSite) => <Checkbox checked={selectedRows.some((row) => row.uri === site.uri)} onChange={() => handleRowSelection(site)} />,
     },
     {
       title: "Site Name",
-      dataIndex: "siteName",
       width: 150,
       className: "site-name",
-      render: (value: any) => <div style={{ whiteSpace: "normal", wordWrap: "break-word" }}>{value}</div>,
+      render: (_: any, site: DedupMineralSite) => {
+        return <div style={{ whiteSpace: "normal", wordWrap: "break-word" }}>{site.getName()}</div>;
+      },
       sorter: true,
       sortIcons: true,
     },
     {
       title: "Site Type",
-      dataIndex: "siteType",
       width: 70,
       className: "resizable",
-      render: (value: any) => {
-        return value !== "NotSpecified" ? <span style={{ fontSize: "12px" }}>{value}</span> : "";
+      render: (_: any, site: DedupMineralSite) => {
+        return <span style={{ fontSize: "12px" }}>{site.getSiteType()}</span>;
       },
       sorter: true,
     },
@@ -151,24 +172,21 @@ const TableData: React.FC = () => {
       width: 70,
       className: "resizable",
       sorter: true,
+      render: (_: any, site: DedupMineralSite) => {
+        return <span style={{ fontSize: "12px" }}>{site.getSiteRank()}</span>;
+      },
     },
     {
       title: "Location",
       dataIndex: "location",
       width: 80,
       className: "resizable",
-      render: (value: any) => {
-        const coords = value.match(/POINT\s*\(([-\d.]+)\s+([-\d.]+)\)/);
-
-        if (coords && coords.length === 3) {
-          const longitude = parseFloat(coords[1]).toFixed(5);
-          const latitude = parseFloat(coords[2]).toFixed(5);
+      render: (value: any, dedupSite: DedupMineralSite) => {
+        if (dedupSite.latitude !== undefined && dedupSite.longitude !== undefined) {
           return (
-            <div>
-              <span>{latitude}</span>
-              <br />
-              <span>{longitude}</span>
-            </div>
+            <span style={{ whiteSpace: "break-spaces" }}>
+              {dedupSite.latitude.toFixed(5)}, {dedupSite.longitude.toFixed(5)}
+            </span>
           );
         }
         return "";
@@ -176,19 +194,13 @@ const TableData: React.FC = () => {
       sorter: true,
     },
     {
-      title: "CRS",
-      dataIndex: "crs",
-      width: 80,
-      className: "resizable",
-      render: (value: any) => (value ? value.replace("EPSG:", "") : value),
-      sorter: true,
-    },
-    {
       title: "Country",
-      dataIndex: "country",
       width: 80,
       className: "resizable",
       sorter: true,
+      render: (_: any, site: DedupMineralSite) => {
+        return <div style={{ whiteSpace: "normal", wordWrap: "break-word" }}>{site.getCountry()}</div>;
+      },
     },
     {
       title: "State/Province",
@@ -196,6 +208,9 @@ const TableData: React.FC = () => {
       width: 120,
       className: "resizable",
       sorter: true,
+      render: (_: any, site: DedupMineralSite) => {
+        return <div style={{ whiteSpace: "normal", wordWrap: "break-word" }}>{site.getStateOrProvince()}</div>;
+      },
     },
     {
       title: "Deposit Type",
@@ -203,6 +218,13 @@ const TableData: React.FC = () => {
       width: 140,
       className: "resizable",
       sorter: true,
+      render: (_: any, site: DedupMineralSite) => {
+        const dt = site.getTop1DepositType();
+        if (dt === undefined) {
+          return "";
+        }
+        return <div style={{ whiteSpace: "normal", wordWrap: "break-word" }}>{dt.name}</div>;
+      },
     },
     {
       title: "Deposit Confidence",
@@ -210,6 +232,13 @@ const TableData: React.FC = () => {
       width: 120,
       className: "resizable",
       sorter: true,
+      render: (_: any, site: DedupMineralSite) => {
+        const dt = site.getTop1DepositType();
+        if (dt === undefined) {
+          return "";
+        }
+        return <div style={{ whiteSpace: "normal", wordWrap: "break-word" }}>{dt.confidence.toFixed(2)}</div>;
+      },
     },
     {
       title: "Commodity",
@@ -217,14 +246,20 @@ const TableData: React.FC = () => {
       width: 80,
       className: "resizable",
       sorter: true,
+      render: (commURI: string) => {
+        const commodity = commodityStore.getCommodityByURI(commURI)!;
+        return <a href={commodity.uri}>{commodity.name}</a>;
+      },
     },
     {
       title: "Grade",
       dataIndex: "grade",
       width: 60,
-      render: (value: any) => {
-        const numericValue = parseFloat(value);
-        return !isNaN(numericValue) && numericValue !== 0 ? numericValue.toFixed(5) : "";
+      render: (value: number | undefined) => {
+        if (value !== undefined) {
+          return value.toFixed(5);
+        }
+        return value;
       },
       sorter: true,
     },
@@ -233,9 +268,11 @@ const TableData: React.FC = () => {
       dataIndex: "tonnage",
       width: 80,
       className: "resizable",
-      render: (value: any) => {
-        const numericValue = parseFloat(value);
-        return !isNaN(numericValue) && numericValue !== 0 ? numericValue.toFixed(5) : "";
+      render: (value: number | undefined) => {
+        if (value !== undefined) {
+          return value.toFixed(5);
+        }
+        return value;
       },
       sorter: true,
     },
@@ -261,31 +298,14 @@ const TableData: React.FC = () => {
     });
   };
   const handleSearch = async (value: string) => {
-    if (value) {
-      try {
-        setLoading(true);
-        console.log("value", value);
-        const response = await fetch(`/get_sites/${value}`);
-        if (response.ok) {
-          const data = await response.json();
-          console.log("data", data);
-          const dataWithIds = data.data.map((row: any, index: number) => ({
-            ...row,
-            id: index + 1,
-            all_ms_fields: row.all_ms_fields || [],
-          }));
-          setFilteredData(dataWithIds);
-          setCurrentPage(1);
-        } else {
-          setFilteredData([]);
-        }
-      } catch (error) {
-        setFilteredData([]);
-      } finally {
-        setLoading(false);
-      }
-    } else {
-      setFilteredData([]);
+    try {
+      setLoading(true);
+      const dataWithIds = await dedupMineralSiteStore.findByCommodity(value);
+      console.log("search", { value, dataWithIds });
+      setFilteredData(dataWithIds);
+      setCurrentPage(1);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -349,9 +369,9 @@ const TableData: React.FC = () => {
             </thead>
             <tbody>
               {selectedRows.map((row, rowIndex) => (
-                <tr key={row.id}>
+                <tr key={row.uri}>
                   {columns.map((col) => (
-                    <td key={col.dataIndex}>{col.render ? col.render(row[col.dataIndex as keyof DedupMineralSite], row, rowIndex) : row[col.dataIndex as keyof DedupMineralSite]}</td>
+                    <td key={col.dataIndex}>{renderColumn(col, row, rowIndex)}</td>
                   ))}
                 </tr>
               ))}
@@ -362,7 +382,7 @@ const TableData: React.FC = () => {
       {/* Render Ungroup component as an overlay when isUngroupVisible is true */}
       {isUngroupVisible && currentRowData && (
         <div className="ungroup-overlay">
-          <Ungroup allMsFields={currentRowData.all_ms_fields} onClose={closeUngroup} commodity={currentRowData.commodity} />
+          <Ungroup allMsFields={currentRowData.getSiteURIs()} onClose={closeUngroup} commodity={currentRowData.commodity} />
         </div>
       )}
 
@@ -421,7 +441,8 @@ const TableData: React.FC = () => {
                             textOverflow: "ellipsis",
                             overflow: "hidden",
                           }}
-                          onClick={() => handleSort(col.dataIndex)}
+                          // TODO: fix me!!
+                          onClick={col.dataIndex !== undefined ? () => handleSort(col.dataIndex) : undefined}
                         >
                           {col.title}
                           {sortColumn === col.dataIndex && (sortOrder === "ascend" ? <ArrowUpOutlined /> : <ArrowDownOutlined />)}
@@ -454,22 +475,22 @@ const TableData: React.FC = () => {
               </thead>
               <tbody>
                 {paginatedData.map((row, rowIndex) => (
-                  <React.Fragment key={row.id}>
-                    <tr>
+                  <React.Fragment key={row.uri}>
+                    <tr key={row.uri}>
                       {columns.map((col, colIndex) => (
                         <td key={colIndex} style={{ width: col.width }}>
-                          {col.render ? col.render(row[col.dataIndex as keyof DedupMineralSite], row, rowIndex) : row[col.dataIndex as keyof DedupMineralSite]}
+                          {col.render ? col.render(row[col.dataIndex as keyof DedupMineralSite], row, rowIndex) : (row[col.dataIndex as keyof DedupMineralSite] as any)}
                         </td>
                       ))}
                     </tr>
                     {expandedRows.includes(rowIndex) && (
                       <tr>
                         <td colSpan={columns.length}>
-                          <DetailedView allMsFields={row.all_ms_fields} username={username ?? ""} onClose={() => toggleRow(rowIndex)} commodity={row.commodity} />
+                          <DetailedView allMsFields={row.getSiteURIs()} username={username ?? ""} onClose={() => toggleRow(rowIndex)} commodity={commodityStore.getCommodityByURI(row.commodity)!} />
                         </td>
                       </tr>
                     )}
-                    {ungroupedRowIndex !== null && isUngroupVisible && currentRowData && <Ungroup allMsFields={row.all_ms_fields} onClose={() => toggleRow(rowIndex)} commodity={row.commodity} />}
+                    {ungroupedRowIndex !== null && isUngroupVisible && currentRowData && <Ungroup allMsFields={row.getSiteURIs()} onClose={() => toggleRow(rowIndex)} commodity={row.commodity} />}
                   </React.Fragment>
                 ))}
               </tbody>
