@@ -351,7 +351,7 @@ def get_commodities():
 
 @app.get("/get_deposit_types")
 def get_deposit_types():
-    url = URI_MINMOD_APP+"deposit_types"
+    url = URI_MINMOD_APP+"deposit-types"
 
     try:
         response = requests.get(url, verify=False)  # Set verify=True in production

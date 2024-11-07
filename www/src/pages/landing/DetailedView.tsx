@@ -28,7 +28,6 @@ const DetailedView: React.FC<DetailedViewProps> = ({ allMsFields, username, onCl
     { title: "Grade", width: 80 },
     { title: "Tonnage", width: 80 },
     { title: "Reference", width: 100 },
-    { title: "Comments", width: 150 }, // New comments column
   ]);
 
   const onResize = (index: number, newWidth: number) => {
@@ -55,6 +54,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({ allMsFields, username, onCl
     const fetchDepositTypes = async () => {
       const response = await fetch("/get_deposit_types");
       const data = await response.json();
+      console.log("data for deposit type",data)
       setDepositTypes(data.deposit_types || []);
     };
     fetchDepositTypes();
@@ -88,6 +88,8 @@ const DetailedView: React.FC<DetailedViewProps> = ({ allMsFields, username, onCl
 
     let propertyKey: MineralSiteProperty = "name";
     let options: string[] = [];
+
+    console.log("depositType",depositTypes)
 
     if (title === "Site Name") {
       propertyKey = "name";
@@ -283,7 +285,6 @@ const DetailedView: React.FC<DetailedViewProps> = ({ allMsFields, username, onCl
                     "N/A"
                   )}
                 </td>
-                <td></td> {/* New comments column */}
               </tr>
             ))}
           </tbody>
