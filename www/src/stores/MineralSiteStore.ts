@@ -5,7 +5,7 @@ export class MineralSiteStore {
 
   public async getById(id: string): Promise<MineralSite> {
     const resp = await fetch(`${this.remoteURL}/${id}`);
-    return MineralSite.deserialize(id, await resp.json());
+    return MineralSite.deserialize(`https://minmod.isi.edu/resource/${id}`, await resp.json());
   }
 
   public async getByURI(uri: string): Promise<MineralSite> {

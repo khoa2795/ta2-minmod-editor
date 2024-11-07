@@ -178,66 +178,56 @@ const DetailedView: React.FC<DetailedViewProps> = ({ siteIds, username, onClose,
     }
 
     try {
-      const curatedMineralSite = MineralSite.createDefaultCuratedMineralSite(detailedData, username).update(property, property_value, reference);
-      console.log("curatedMineralSite:", JSON.stringify(curatedMineralSite, null, 2));
+      let curatedMineralSite = MineralSite.findMineralSiteByUsername(detailedData, username);
+      console.log("@@@", curatedMineralSite);
+      if (curatedMineralSite === undefined) {
+        const newCuratedMineralSite = MineralSite.createDefaultCuratedMineralSite(detailedData, username).update(property, property_value, reference);
+        console.log("curatedMineralSite:", JSON.stringify(newCuratedMineralSite, null, 2));
 
-      const createResponse = await fetch("/submit_mineral_site", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Cookie: `session=${sessionId}`,
-        },
-        body: JSON.stringify(curatedMineralSite.serialize()),
-        credentials: "include",
-      });
-
-      if (createResponse.ok) {
-        const responseData = await createResponse.json();
-        toast.success("Data submitted successfully");
-
-        const newResourceId = responseData.uri.split("resource/")[1];
-        setCreatedRecordUri(newResourceId);
-        setDetailedData((prevData) => [
-          ...prevData,
-          {
-            ...curatedMineralSite,
-            id: newResourceId,
-            comments: property_value,
-          } as unknown as MineralSite,
-        ]);
-      } else if (createResponse.status === 403) {
-        console.log("Resource already exists. Attempting to update.");
-
-        const updateResponse = await fetch(`/test/api/v1/mineral-sites/${createdRecordUri}`, {
+        const createResponse = await fetch("/submit_mineral_site", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             Cookie: `session=${sessionId}`,
           },
-          body: JSON.stringify(curatedMineralSite.serialize()),
+          body: JSON.stringify(newCuratedMineralSite.serialize()),
+          credentials: "include",
+        });
+
+        if (createResponse.ok) {
+          const responseData = await createResponse.json();
+          toast.success("Data submitted successfully");
+
+          const newResourceId = responseData.uri.split("resource/")[1];
+          newCuratedMineralSite.uri = responseData.uri;
+          setCreatedRecordUri(newResourceId);
+          setDetailedData((prevData) => [...prevData, newCuratedMineralSite]);
+        } else {
+          const errorData = await createResponse.json();
+          toast.error(`Create failed: ${errorData.detail}`);
+        }
+      } else {
+        console.log("Resource already exists. Attempting to update.");
+        const updatedCuratedMineralSite = curatedMineralSite.update(property, property_value, reference);
+        const updResourceId = updatedCuratedMineralSite.uri.split("resource/")[1];
+        console.log("Resource already exists. Attempting to update.", updatedCuratedMineralSite.uri, updResourceId);
+        const updateResponse = await fetch(`/test/api/v1/mineral-sites/${updResourceId}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Cookie: `session=${sessionId}`,
+          },
+          body: JSON.stringify(updatedCuratedMineralSite.serialize()),
           credentials: "include",
         });
 
         if (updateResponse.ok) {
           toast.success("Data updated successfully");
-
-          setDetailedData((prevData) =>
-            prevData.map((item) =>
-              item.uri === createdRecordUri
-                ? ({
-                    ...curatedMineralSite,
-                    id: createdRecordUri,
-                  } as unknown as MineralSite)
-                : item
-            )
-          );
+          setDetailedData((prevData) => prevData.map((item) => (item.uri === updatedCuratedMineralSite.uri ? updatedCuratedMineralSite : item)));
         } else {
           const errorData = await updateResponse.json();
           toast.error(`Update failed: ${errorData.detail}`);
         }
-      } else {
-        const errorData = await createResponse.json();
-        toast.error(`Error: ${errorData.detail}`);
       }
     } catch (error) {
       toast.error("Failed to submit data.");
@@ -308,6 +298,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({ siteIds, username, onClose,
         </table>
       )}
       <EditModal
+        key={property || "name"}
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
         mineralSites={detailedData}

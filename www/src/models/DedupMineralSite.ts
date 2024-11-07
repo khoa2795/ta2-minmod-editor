@@ -119,6 +119,12 @@ export class DedupMineralSite {
   }
 
   public getName(): string {
+    // TODO: hack, fix me!
+    const curatedSite = this.sites.filter((site) => site.uri.indexOf("-username-") !== -1);
+    if (curatedSite.length > 0) {
+      return curatedSite[0].name;
+    }
+
     const names = Array.from(new Set(this.sites.map((site) => site.name)));
     if (names.length === 1) {
       return names[0];
@@ -127,6 +133,12 @@ export class DedupMineralSite {
   }
 
   public getSiteType(): string {
+    // TODO: fix me!
+    const curatedSite = this.sites.filter((site) => site.uri.indexOf("-username-") !== -1);
+    if (curatedSite.length > 0) {
+      return curatedSite[0].type;
+    }
+
     const types = Array.from(new Set(this.sites.map((site) => site.type)));
     if (types.length === 1) {
       return types[0];
@@ -135,6 +147,11 @@ export class DedupMineralSite {
   }
 
   public getSiteRank(): string {
+    // TODO: fix me!
+    const curatedSite = this.sites.filter((site) => site.uri.indexOf("-username-") !== -1);
+    if (curatedSite.length > 0) {
+      return curatedSite[0].rank;
+    }
     const ranks = Array.from(new Set(this.sites.map((site) => site.rank)));
     if (ranks.length === 1) {
       return ranks[0];
@@ -143,6 +160,11 @@ export class DedupMineralSite {
   }
 
   public getCountry(): string {
+    // TODO: fix me!
+    const curatedSite = this.sites.filter((site) => site.uri.indexOf("-username-") !== -1);
+    if (curatedSite.length > 0) {
+      return curatedSite[0].country[0];
+    }
     const countries = Array.from(new Set(this.sites.flatMap((site) => site.country)));
     if (countries.length === 1) {
       return countries[0];
@@ -151,6 +173,11 @@ export class DedupMineralSite {
   }
 
   public getStateOrProvince(): string {
+    // TODO: fix me!
+    const curatedSite = this.sites.filter((site) => site.uri.indexOf("-username-") !== -1);
+    if (curatedSite.length > 0) {
+      return curatedSite[0].stateOrProvince[0];
+    }
     const stateOrProvinces = Array.from(new Set(this.sites.flatMap((site) => site.stateOrProvince)));
     if (stateOrProvinces.length === 1) {
       return stateOrProvinces[0];

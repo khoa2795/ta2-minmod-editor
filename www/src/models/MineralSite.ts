@@ -119,7 +119,8 @@ export class MineralSite {
   }
 
   public static findMineralSiteByUsername(mineralSites: MineralSite[], username: string): MineralSite | undefined {
-    const fullUsername = `/user/${username}`;
+    const fullUsername = `/users/${username}`;
+    console.log("findMineralSiteByUsername", mineralSites, fullUsername);
     return mineralSites.find((mineralSite) => mineralSite.createdBy[0].endsWith(fullUsername));
   }
 
@@ -145,19 +146,19 @@ export class MineralSite {
         category: ["Inferred", "Indicated", "Measured"].map((cat) => ({
           source: "https://minmod.isi.edu/user/tester",
           confidence: 1.0,
-          normalizedURI: `https://minmod.isi.edu/resource/${cat}`,
+          normalized_uri: `https://minmod.isi.edu/resource/${cat}`,
         })),
         commodity: {
           source: "https://minmod.isi.edu/user/tester",
           confidence: 1.0,
-          normalizedURI: gt.commodity,
+          normalized_uri: gt.commodity,
         },
         ore: {
           value: gt.totalTonnage,
           unit: {
             source: "https://minmod.isi.edu/user/tester",
             confidence: 1.0,
-            normalizedURI: "https://minmod.isi.edu/resource/Q202",
+            normalized_uri: "https://minmod.isi.edu/resource/Q202",
           },
         },
         grade: {
@@ -165,7 +166,7 @@ export class MineralSite {
           unit: {
             source: "https://minmod.isi.edu/user/tester",
             confidence: 1.0,
-            normalizedURI: "https://minmod.isi.edu/resource/Q201",
+            normalized_uri: "https://minmod.isi.edu/resource/Q201",
           },
         },
         reference: reference[0],

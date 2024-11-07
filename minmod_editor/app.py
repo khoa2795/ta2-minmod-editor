@@ -242,9 +242,9 @@ async def update_mineral_site(
     update_data: dict = Body(..., description="Data for updating the mineral site"),
 ):
     # Retrieve session ID from cookies
-
+    print(">>>", site_id)
     # Send PUT request to external API
-    url = URI_MINMOD_APP + "mineral-sites/{site_id}"
+    url = URI_MINMOD_APP + f"mineral-sites/{site_id}"
     response = requests.post(url, headers=minmod_header, json=update_data, verify=False)
 
     # Check response and handle errors if any

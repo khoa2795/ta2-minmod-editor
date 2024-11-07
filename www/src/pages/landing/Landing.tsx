@@ -152,7 +152,11 @@ const TableData: React.FC = () => {
       width: 150,
       className: "site-name",
       render: (_: any, site: DedupMineralSite) => {
-        return <div style={{ whiteSpace: "normal", wordWrap: "break-word" }}>{site.getName()}</div>;
+        return (
+          <div style={{ whiteSpace: "normal", wordWrap: "break-word" }}>
+            <a href={site.uri}>{site.getName()}</a>
+          </div>
+        );
       },
       sorter: true,
       sortIcons: true,
