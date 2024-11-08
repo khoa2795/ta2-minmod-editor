@@ -16,11 +16,10 @@ Ensure you have the following installed on your system:
 
 First, clone the repository to your local machine:
 
-```bash
 git clone https://github.com/your-username/minmod_editor.git
 cd minmod_editor
 
-2. Backend Setup
+### 2. Backend Setup
 Navigate to the Backend Directory
 Move into the minmod_editor folder where the backend code is located:
 cd minmod_editor
@@ -38,7 +37,7 @@ Start the Backend Server
 Run the FastAPI backend server:
 python app.py
 
-3. Frontend Setup
+### 3. Frontend Setup
 Navigate to the Frontend Directory
 In another terminal window, move to the frontend folder:
 cd minmod_editor/www
