@@ -16,7 +16,7 @@ Ensure you have the following installed on your system:
 
 First, clone the repository to your local machine:
 
-git clone https://github.com/your-username/minmod_editor.git
+git clone https://github.com/DARPA-CRITICALMAAS/ta2-minmod-editor.git
 cd minmod_editor
 
 ### 2. Backend Setup
