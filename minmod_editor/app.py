@@ -20,6 +20,8 @@ from jose import jwt
 from pydantic import BaseModel, validator
 
 from minmod_editor.routers import mineral_site
+from minmod_editor.routers.login import Token
+from minmod_editor.routers.login import router as login_router
 
 from .config import URI_MINMOD_APP
 
@@ -35,12 +37,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 app = FastAPI()
 
 app.include_router(mineral_site.router)
-
-
-# JWT Token Response Model
-class Token(BaseModel):
-    access_token: str
-    token_type: str
+app.include_router(login_router)
 
 
 async def get_minmod_headers(request: Request):
