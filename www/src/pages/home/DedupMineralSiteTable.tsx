@@ -5,7 +5,7 @@ import { Commodity } from "models/commodity";
 import { Alert, Button, Checkbox, Flex, Space, Spin, Table, Typography } from "antd";
 import { FetchResult } from "gena-app";
 import { EditOutlined, UngroupOutlined } from "@ant-design/icons";
-import { EditDedupMineralSite } from "./EditDedupMineralSite";
+import { EditDedupMineralSite } from "./editDedupSite/EditDedupMineralSite";
 
 interface DedupMineralSiteTableProps {
   commodity: Commodity | undefined;
@@ -23,7 +23,11 @@ const columns = [
     title: "Name",
     key: "name",
     render: (_: any, site: DedupMineralSite) => {
-      return <a href={site.id}>{site.getName()}</a>;
+      return (
+        <Typography.Link href={site.uri} target="_blank">
+          {site.getName()}
+        </Typography.Link>
+      );
     },
     sorter: (a: DedupMineralSite, b: DedupMineralSite) => a.getName().localeCompare(b.getName()),
   },
@@ -48,7 +52,7 @@ const columns = [
       if (dedupSite.latitude !== undefined && dedupSite.longitude !== undefined) {
         return `${dedupSite.latitude.toFixed(5)}, ${dedupSite.longitude.toFixed(5)}`;
       }
-      return "";
+      return "-";
     },
   },
   {
@@ -71,10 +75,11 @@ const columns = [
     render: (_: any, site: DedupMineralSite) => {
       const dt = site.getTop1DepositType();
       if (dt === undefined) {
-        return "";
+        return "-";
       }
       return dt.name;
     },
+    sorter: (a: DedupMineralSite, b: DedupMineralSite) => (a.getTop1DepositType()?.name || "").localeCompare(b.getTop1DepositType()?.name || ""),
   },
   {
     title: "Dep. Score",
@@ -82,7 +87,7 @@ const columns = [
     render: (_: any, site: DedupMineralSite) => {
       const dt = site.getTop1DepositType();
       if (dt === undefined) {
-        return "";
+        return "-";
       }
       return dt.confidence.toFixed(4);
     },
@@ -92,9 +97,9 @@ const columns = [
     dataIndex: "totalTonnage",
     render: (value: number | undefined) => {
       if (value !== undefined) {
-        return value.toFixed(5);
+        return value.toFixed(2);
       }
-      return value;
+      return "-";
     },
   },
   {
@@ -102,9 +107,9 @@ const columns = [
     dataIndex: "totalGrade",
     render: (value: number | undefined) => {
       if (value !== undefined) {
-        return value.toFixed(5);
+        return value.toFixed(2);
       }
-      return value;
+      return "-";
     },
   },
   {
@@ -132,7 +137,19 @@ export const DedupMineralSiteTable: React.FC<DedupMineralSiteTableProps> = obser
   columns[columns.length - 1].render = (_: any, site: DedupMineralSite) => {
     return (
       <Space>
-        <Button color="primary" size="middle" icon={<EditOutlined />} variant="filled" onClick={() => setEditingDedupSite(site.id)}>
+        <Button
+          color="primary"
+          size="middle"
+          icon={<EditOutlined />}
+          variant="filled"
+          onClick={() => {
+            if (site.uri === editingDedupSite) {
+              setEditingDedupSite(undefined);
+            } else {
+              setEditingDedupSite(site.uri);
+            }
+          }}
+        >
           Edit
         </Button>
         <Button color="default" size="middle" icon={<UngroupOutlined />} variant="filled">
@@ -151,7 +168,7 @@ export const DedupMineralSiteTable: React.FC<DedupMineralSiteTableProps> = obser
       dataSource={dedupMineralSites.records}
       loading={isLoading ? { size: "large" } : false}
       expandable={{
-        expandedRowRender: (site) => <EditDedupMineralSite dedupSite={site} />,
+        expandedRowRender: (site) => <EditDedupMineralSite commodity={commodity!} dedupSite={site} />,
         showExpandColumn: false,
         expandedRowKeys: editingDedupSite === undefined ? [] : [editingDedupSite],
       }}

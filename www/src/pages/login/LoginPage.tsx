@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "./login.css";
 import { routes } from "routes";
 import { useStores } from "../../models";
@@ -9,6 +9,12 @@ export const LoginPage = () => {
   const [username, setUsername] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [error, setError] = useState<string>("");
+
+  useEffect(() => {
+    userStore.isLoggedIn().then((isLoggedIn) => {
+      if (isLoggedIn) routes.home.path().open();
+    });
+  }, [userStore]);
 
   const handleLogin = async (event: React.FormEvent) => {
     event.preventDefault();

@@ -5,14 +5,16 @@ import { registerDefaultAxiosErrorHandler } from "gena-app";
 import { toJS } from "mobx";
 import { User, UserStore } from "./user";
 import { Commodity, CommodityStore } from "./commodity";
+import { DepositType, DepositTypeStore } from "./depositType";
 import { DedupMineralSite, DedupMineralSiteStore } from "./dedupMineralSite";
-import { MineralSite, MineralSiteStore } from "./mineralSite";
+import { Reference, Document, GradeTonnage, CandidateEntity, DraftCreateMineralSite, DraftUpdateMineralSite, MineralSite, MineralSiteStore } from "./mineralSite";
 
 export const stores = {
   userStore: new UserStore(),
   commodityStore: new CommodityStore(),
   dedupMineralSiteStore: new DedupMineralSiteStore(),
   mineralSiteStore: new MineralSiteStore(),
+  depositTypeStore: new DepositTypeStore(),
 };
 
 registerDefaultAxiosErrorHandler((error) => {
@@ -24,9 +26,12 @@ registerDefaultAxiosErrorHandler((error) => {
 export type IStore = Readonly<typeof stores>;
 
 /** Init the stores with essential information (e.g., loading the ui settings) needed to run the app */
-export function initStores(): Promise<void> {
+export function initStores(): Promise<any> {
   return Promise.resolve();
-  // return stores.uiSettings.fetchSettings();
+}
+
+export function initNonCriticalStores(): Promise<any> {
+  return stores.depositTypeStore.fetchAll();
 }
 
 export const StoreContext = createContext<IStore>(stores);
@@ -35,4 +40,5 @@ export function useStores(): IStore {
   return React.useContext(StoreContext);
 }
 
-export type { Commodity, DedupMineralSite, User, MineralSite };
+export { Document, DedupMineralSite, MineralSite, Reference, GradeTonnage, CandidateEntity, DraftCreateMineralSite, DraftUpdateMineralSite };
+export type { Commodity, User };

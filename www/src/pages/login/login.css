@@ -12,28 +12,28 @@
   margin-top: 200px;
 }
 
-h2 {
+.login-container h2 {
   text-align: center;
   margin-bottom: 1.5rem;
   margin-top: -10px;
 }
 
-.login-form {
+.login-container .login-form {
   display: flex;
   flex-direction: column;
 }
 
-.form-group {
+.login-container .form-group {
   margin-bottom: 1rem;
 }
 
-label {
+.login-container label {
   font-weight: bold;
   margin-bottom: 0.5rem;
   display: block;
 }
 
-input {
+.login-container input {
   width: 80%;
   padding: 0.5rem;
   border: 1px solid #ccc;
@@ -41,7 +41,7 @@ input {
   margin-left: -10px;
 }
 
-.login-button {
+.login-container .login-button {
   padding: 0.75rem;
   border: none;
   background-color: #005b84;
@@ -54,11 +54,11 @@ input {
   margin-left: 150px;
 }
 
-.login-button:hover {
+.login-container .login-button:hover {
   background-color: #005b84;
 }
 
-.error-message {
+.login-container .error-message {
   color: red;
   font-weight: bold;
   margin-top: 1rem;

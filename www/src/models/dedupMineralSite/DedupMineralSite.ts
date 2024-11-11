@@ -1,13 +1,13 @@
 export class MineralSiteResp {
-  id: string;
+  uri: string;
   name?: string;
   type: string;
   rank: string;
   country: string[];
   stateOrProvince: string[];
 
-  public constructor({ id, name, type, rank, country, stateOrProvince }: { id: string; name?: string; type: string; rank: string; country: string[]; stateOrProvince: string[] }) {
-    this.id = id;
+  public constructor({ uri, name, type, rank, country, stateOrProvince }: { uri: string; name?: string; type: string; rank: string; country: string[]; stateOrProvince: string[] }) {
+    this.uri = uri;
     this.name = name;
     this.type = type;
     this.rank = rank;
@@ -17,7 +17,7 @@ export class MineralSiteResp {
 
   public static deserialize(obj: any): MineralSiteResp {
     return new MineralSiteResp({
-      id: obj.id,
+      uri: obj.id,
       name: obj.name === null ? undefined : obj.name,
       type: obj.type,
       rank: obj.rank,
@@ -44,7 +44,7 @@ export class DepositTypeResp {
 }
 
 export class DedupMineralSite {
-  id: string;
+  uri: string;
   commodity: string;
   sites: MineralSiteResp[];
   depositTypes: DepositTypeResp[];
@@ -56,7 +56,7 @@ export class DedupMineralSite {
   totalGrade?: Number;
 
   public constructor({
-    id,
+    uri,
     commodity,
     sites,
     depositTypes,
@@ -67,7 +67,7 @@ export class DedupMineralSite {
     latitude,
     longitude,
   }: {
-    id: string;
+    uri: string;
     commodity: string;
     sites: MineralSiteResp[];
     depositTypes: DepositTypeResp[];
@@ -78,7 +78,7 @@ export class DedupMineralSite {
     latitude?: number;
     longitude?: number;
   }) {
-    this.id = id;
+    this.uri = uri;
     this.commodity = commodity;
     this.sites = sites;
     this.latitude = latitude;
@@ -88,6 +88,10 @@ export class DedupMineralSite {
     this.totalContainedMetal = totalContainedMetal;
     this.totalTonnage = totalTonnage;
     this.totalGrade = totalGrade;
+  }
+
+  get id(): string {
+    return this.uri;
   }
 
   public static deserialize(record: any): DedupMineralSite {
@@ -103,7 +107,7 @@ export class DedupMineralSite {
     }
 
     return new DedupMineralSite({
-      id: record.id,
+      uri: record.id,
       commodity: record.commodity,
       latitude: latitude,
       longitude: longitude,
@@ -118,7 +122,7 @@ export class DedupMineralSite {
 
   public getName(): string {
     // TODO: hack, fix me!
-    const curatedSite = this.sites.filter((site) => site.id.indexOf("-username-") !== -1);
+    const curatedSite = this.sites.filter((site) => site.uri.indexOf("-username-") !== -1);
     if (curatedSite.length > 0) {
       return curatedSite[0].name || "";
     }
@@ -132,7 +136,7 @@ export class DedupMineralSite {
 
   public getSiteType(): string {
     // TODO: fix me!
-    const curatedSite = this.sites.filter((site) => site.id.indexOf("-username-") !== -1);
+    const curatedSite = this.sites.filter((site) => site.uri.indexOf("-username-") !== -1);
     if (curatedSite.length > 0) {
       return curatedSite[0].type;
     }
@@ -146,7 +150,7 @@ export class DedupMineralSite {
 
   public getSiteRank(): string {
     // TODO: fix me!
-    const curatedSite = this.sites.filter((site) => site.id.indexOf("-username-") !== -1);
+    const curatedSite = this.sites.filter((site) => site.uri.indexOf("-username-") !== -1);
     if (curatedSite.length > 0) {
       return curatedSite[0].rank;
     }
@@ -159,7 +163,7 @@ export class DedupMineralSite {
 
   public getCountry(): string {
     // TODO: fix me!
-    const curatedSite = this.sites.filter((site) => site.id.indexOf("-username-") !== -1);
+    const curatedSite = this.sites.filter((site) => site.uri.indexOf("-username-") !== -1);
     if (curatedSite.length > 0) {
       return curatedSite[0].country[0];
     }
@@ -172,7 +176,7 @@ export class DedupMineralSite {
 
   public getStateOrProvince(): string {
     // TODO: fix me!
-    const curatedSite = this.sites.filter((site) => site.id.indexOf("-username-") !== -1);
+    const curatedSite = this.sites.filter((site) => site.uri.indexOf("-username-") !== -1);
     if (curatedSite.length > 0) {
       return curatedSite[0].stateOrProvince[0];
     }

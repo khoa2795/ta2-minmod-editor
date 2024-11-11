@@ -6,12 +6,15 @@ import { stores, initStores, StoreContext } from "./models";
 import { routes } from "./routes";
 import enUSIntl from "antd/lib/locale/en_US";
 import { ConfigProvider } from "antd";
+import { InitNonCriticalStores } from "components/StoreInit";
 
 initStores().then(() => {
   ReactDOM.render(
     <StoreContext.Provider value={stores}>
       <ConfigProvider locale={enUSIntl}>
-        <App enUSLocale={true} routes={routes} />
+        <InitNonCriticalStores>
+          <App enUSLocale={true} routes={routes} />
+        </InitNonCriticalStores>
       </ConfigProvider>
     </StoreContext.Provider>,
     document.getElementById("root")
