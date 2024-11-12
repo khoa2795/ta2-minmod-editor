@@ -36,4 +36,9 @@ export class UserStore extends RStore<string, User> {
       return false;
     }
   }
+
+  public getCurrentUser(): User | undefined {
+    if (this.records.size === 0) return undefined;
+    return this.records.values().next().value || undefined;
+  }
 }

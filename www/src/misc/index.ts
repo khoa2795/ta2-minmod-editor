@@ -1,4 +1,4 @@
-export function join<T>(arr: T[], separator: (index: Number) => T): T[] {
+export function join<T>(arr: T[], separator: (index: number) => T): T[] {
   if (arr.length === 0) {
     return [];
   }

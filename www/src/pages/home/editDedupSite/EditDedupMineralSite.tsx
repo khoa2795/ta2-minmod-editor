@@ -1,7 +1,7 @@
 import { Button, Col, Flex, Row, Select, Space, Table, Typography } from "antd";
 import { toJS } from "mobx";
 import { observer } from "mobx-react";
-import { useStores, Commodity, DedupMineralSite, MineralSite, CandidateEntity, Reference } from "models";
+import { useStores, Commodity, DedupMineralSite, MineralSite, CandidateEntity, Reference, DraftCreateMineralSite } from "models";
 import { useEffect, useMemo, useState } from "react";
 import { WithStyles, withStyles } from "@material-ui/styles";
 import { CanEntComponent, ListCanEntComponent } from "./CandidateEntity";
@@ -28,7 +28,8 @@ interface EditDedupMineralSiteProps {
 
 export const EditDedupMineralSite = withStyles(css)(
   observer(({ dedupSite, commodity, classes }: EditDedupMineralSiteProps & WithStyles<typeof css>) => {
-    const { mineralSiteStore } = useStores();
+    const stores = useStores();
+    const { mineralSiteStore } = stores;
     const [editField, setEditField] = useState<EditableField | undefined>(undefined);
 
     const columns = useMemo(() => {
@@ -141,16 +142,22 @@ export const EditDedupMineralSite = withStyles(css)(
     }, [commodity.id]);
 
     useEffect(() => {
-      mineralSiteStore.fetchByIds(dedupSite.sites.map((site) => site.uri));
+      mineralSiteStore.fetchByIds(dedupSite.sites);
     }, [mineralSiteStore]);
 
-    const fetchedSites = dedupSite.sites.map((site) => mineralSiteStore.get(site.uri)).filter((site) => site !== undefined);
-    const sites = fetchedSites.filter((site) => site !== null);
+    const tmpLst: (MineralSite | null | undefined)[] = dedupSite.sites.map((id) => mineralSiteStore.get(id));
+    // no idea why typescript compiler incorrectly complains about the incorrect type
+    const fetchedSites = tmpLst.filter((site) => site !== undefined) as (MineralSite | null)[];
+    const sites = fetchedSites.filter((site) => site !== null) as MineralSite[];
     const isLoading = mineralSiteStore.state.value === "updating" || fetchedSites.length !== dedupSite.sites.length;
 
     const onEditFinish = (change?: { field: EditableField; value: string; reference: Reference }) => {
-      console.log("onEditFinish", change);
-      setEditField(undefined);
+      if (change === undefined) {
+        return;
+      }
+      mineralSiteStore.create(DraftCreateMineralSite.fromMineralSite(stores, dedupSite, sites, stores.userStore.getCurrentUser()!.id, change.reference)).then(() => {
+        setEditField(undefined);
+      });
     };
 
     return (

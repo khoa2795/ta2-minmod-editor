@@ -2,10 +2,11 @@ import { DedupMineralSite, useStores } from "models";
 import { useEffect, useState } from "react";
 import { observer } from "mobx-react";
 import { Commodity } from "models/commodity";
-import { Alert, Button, Checkbox, Flex, Space, Spin, Table, Typography } from "antd";
+import { Alert, Button, Checkbox, Divider, Flex, Space, Spin, Table, Typography } from "antd";
 import { FetchResult } from "gena-app";
 import { EditOutlined, UngroupOutlined } from "@ant-design/icons";
 import { EditDedupMineralSite } from "./editDedupSite/EditDedupMineralSite";
+import { Entity } from "components/Entity";
 
 interface DedupMineralSiteTableProps {
   commodity: Commodity | undefined;
@@ -21,36 +22,37 @@ const columns = [
   },
   {
     title: "Name",
+    dataIndex: "name",
     key: "name",
     render: (_: any, site: DedupMineralSite) => {
       return (
         <Typography.Link href={site.uri} target="_blank">
-          {site.getName()}
+          {site.name}
         </Typography.Link>
       );
     },
-    sorter: (a: DedupMineralSite, b: DedupMineralSite) => a.getName().localeCompare(b.getName()),
+    sorter: true,
   },
   {
     title: "Type",
     key: "type",
     render: (_: any, site: DedupMineralSite) => {
-      return <span className="font-small">{site.getSiteType()}</span>;
+      return <span className="font-small">{site.type}</span>;
     },
   },
   {
     title: "Rank",
     key: "rank",
     render: (_: any, site: DedupMineralSite) => {
-      return <span className="font-small">{site.getSiteRank()}</span>;
+      return <span className="font-small">{site.rank}</span>;
     },
   },
   {
     title: "Location",
     key: "location",
     render: (value: any, dedupSite: DedupMineralSite) => {
-      if (dedupSite.latitude !== undefined && dedupSite.longitude !== undefined) {
-        return `${dedupSite.latitude.toFixed(5)}, ${dedupSite.longitude.toFixed(5)}`;
+      if (dedupSite.location !== undefined && dedupSite.location.lat !== undefined && dedupSite.location.lon !== undefined) {
+        return `${dedupSite.location.lat.toFixed(5)}, ${dedupSite.location.lon.toFixed(5)}`;
       }
       return "-";
     },
@@ -59,14 +61,34 @@ const columns = [
     title: "Country",
     key: "country",
     render: (_: any, site: DedupMineralSite) => {
-      return site.getCountry();
+      if (site.location === undefined) {
+        return "-";
+      }
+
+      return (
+        <Space split={<Divider type="vertical" />}>
+          {site.location.country.map((country) => (
+            <Entity key={country} uri={country} store="countryStore" />
+          ))}
+        </Space>
+      );
     },
   },
   {
     title: "State/Province",
     key: "state",
     render: (_: any, site: DedupMineralSite) => {
-      return site.getStateOrProvince();
+      if (site.location === undefined) {
+        return "-";
+      }
+
+      return (
+        <Space split={<Divider type="vertical" />}>
+          {site.location.stateOrProvince.map((province) => (
+            <Entity key={province} uri={province} store="stateOrProvinceStore" />
+          ))}
+        </Space>
+      );
     },
   },
   {
@@ -77,9 +99,9 @@ const columns = [
       if (dt === undefined) {
         return "-";
       }
-      return dt.name;
+      return <Entity uri={dt.uri} store="depositTypeStore" />;
     },
-    sorter: (a: DedupMineralSite, b: DedupMineralSite) => (a.getTop1DepositType()?.name || "").localeCompare(b.getTop1DepositType()?.name || ""),
+    // sorter: (a: DedupMineralSite, b: DedupMineralSite) => (a.getTop1DepositType()?.name || "").localeCompare(b.getTop1DepositType()?.name || ""),
   },
   {
     title: "Dep. Score",
@@ -143,10 +165,10 @@ export const DedupMineralSiteTable: React.FC<DedupMineralSiteTableProps> = obser
           icon={<EditOutlined />}
           variant="filled"
           onClick={() => {
-            if (site.uri === editingDedupSite) {
+            if (site.id === editingDedupSite) {
               setEditingDedupSite(undefined);
             } else {
-              setEditingDedupSite(site.uri);
+              setEditingDedupSite(site.id);
             }
           }}
         >

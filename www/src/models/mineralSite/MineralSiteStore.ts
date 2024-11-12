@@ -5,10 +5,20 @@ import { LocationInfo } from "./LocationInfo";
 import { CandidateEntity } from "./CandidateEntity";
 import { Reference } from "./Reference";
 import { GradeTonnage } from "./GradeTonnage";
+import { DedupMineralSite, DedupMineralSiteStore } from "models/dedupMineralSite";
 
 export class MineralSiteStore extends CRUDStore<string, DraftCreateMineralSite, DraftUpdateMineralSite, MineralSite> {
-  constructor() {
+  dedupMineralSiteStore: DedupMineralSiteStore;
+
+  constructor(dedupMineralSiteStore: DedupMineralSiteStore) {
     super(`${SERVER}/api/v1/mineral-sites`, undefined, false);
+    this.dedupMineralSiteStore = dedupMineralSiteStore;
+  }
+
+  async create(draft: DraftCreateMineralSite, discardDraft: boolean = true): Promise<MineralSite> {
+    const record = await super.create(draft, discardDraft);
+    await this.dedupMineralSiteStore.forceFetchByURI(record.dedupSiteURI);
+    return record;
   }
 
   public deserialize(record: any): MineralSite {

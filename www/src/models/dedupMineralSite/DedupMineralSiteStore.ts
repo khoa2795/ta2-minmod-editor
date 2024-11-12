@@ -1,8 +1,7 @@
 import { RStore, FetchResponse, FetchResult, SingleKeyIndex } from "gena-app";
 import { SERVER } from "../../env";
-import { runInAction } from "mobx";
 import { Commodity } from "models/commodity";
-import { DedupMineralSite, DepositTypeResp, MineralSiteResp } from "./DedupMineralSite";
+import { DedupMineralSite } from "./DedupMineralSite";
 
 export class DedupMineralSiteStore extends RStore<string, DedupMineralSite> {
   constructor() {
@@ -11,6 +10,10 @@ export class DedupMineralSiteStore extends RStore<string, DedupMineralSite> {
 
   get commodity2ids() {
     return this.indices[0] as SingleKeyIndex<string, string, DedupMineralSite>;
+  }
+
+  forceFetchByURI(uri: string): Promise<DedupMineralSite | undefined> {
+    return this.fetchById(DedupMineralSite.getId(uri), true);
   }
 
   async fetchByCommodity(commodity: Commodity): Promise<FetchResult<DedupMineralSite>> {

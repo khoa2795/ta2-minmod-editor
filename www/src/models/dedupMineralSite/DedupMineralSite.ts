@@ -1,193 +1,149 @@
-export class MineralSiteResp {
+import { CountryStore } from "models/country";
+import { DepositTypeStore } from "models/depositType";
+import { CandidateEntity, GradeTonnage, LocationInfo } from "models/mineralSite";
+import { StateOrProvinceStore } from "models/stateOrProvince";
+
+export class DedupMineralSiteDepositType {
   uri: string;
-  name?: string;
-  type: string;
-  rank: string;
+  source: string;
+  confidence: number;
+
+  public constructor({ uri, source, confidence }: { uri: string; source: string; confidence: number }) {
+    this.uri = uri;
+    this.source = source;
+    this.confidence = confidence;
+  }
+
+  public toCandidateEntity(stores: { depositTypeStore: DepositTypeStore }): CandidateEntity {
+    return new CandidateEntity({
+      source: this.source,
+      confidence: this.confidence,
+      normalizedURI: this.uri,
+      observedName: stores.depositTypeStore.get(this.uri)?.name,
+    });
+  }
+}
+
+export class DedupMineralSiteLocation {
+  lat?: number;
+  lon?: number;
   country: string[];
   stateOrProvince: string[];
 
-  public constructor({ uri, name, type, rank, country, stateOrProvince }: { uri: string; name?: string; type: string; rank: string; country: string[]; stateOrProvince: string[] }) {
-    this.uri = uri;
-    this.name = name;
-    this.type = type;
-    this.rank = rank;
+  public constructor({ lat, lon, country, stateOrProvince }: { lat?: number; lon?: number; country: string[]; stateOrProvince: string[] }) {
+    this.lat = lat;
+    this.lon = lon;
     this.country = country;
     this.stateOrProvince = stateOrProvince;
   }
 
-  public static deserialize(obj: any): MineralSiteResp {
-    return new MineralSiteResp({
-      uri: obj.id,
-      name: obj.name === null ? undefined : obj.name,
-      type: obj.type,
-      rank: obj.rank,
-      country: obj.country,
-      stateOrProvince: obj.state_or_province,
+  public toLocationInfo(
+    stores: {
+      stateOrProvinceStore: StateOrProvinceStore;
+      countryStore: CountryStore;
+    },
+    source: string,
+    confidence: number = 1.0
+  ) {
+    let loc = undefined;
+    if (this.lat !== undefined && this.lon !== undefined) {
+      loc = `POINT (${this.lon} ${this.lat})`;
+    }
+
+    return new LocationInfo({
+      location: loc,
+      crs: new CandidateEntity({
+        source,
+        confidence,
+        normalizedURI: "https://minmod.isi.edu/resource/Q701",
+        observedName: "EPSG:4326",
+      }),
+      country: this.country.map((country) => {
+        return new CandidateEntity({
+          source,
+          confidence,
+          normalizedURI: country,
+          observedName: stores.countryStore.get(country)?.name,
+        });
+      }),
+      stateOrProvince: this.stateOrProvince.map((stateOrProvince) => {
+        return new CandidateEntity({
+          source,
+          confidence,
+          normalizedURI: stateOrProvince,
+          observedName: stores.stateOrProvinceStore.get(stateOrProvince)?.name,
+        });
+      }),
     });
-  }
-}
-
-export class DepositTypeResp {
-  name: string;
-  source: string;
-  confidence: Number;
-  group: string;
-  environment: string;
-
-  public constructor({ name, source, confidence, group, environment }: { name: string; source: string; confidence: Number; group: string; environment: string }) {
-    this.name = name;
-    this.source = source;
-    this.confidence = confidence;
-    this.group = group;
-    this.environment = environment;
   }
 }
 
 export class DedupMineralSite {
+  id: string;
   uri: string;
-  commodity: string;
-  sites: MineralSiteResp[];
-  depositTypes: DepositTypeResp[];
-  bestLocCentroidEpsg4326: string;
-  latitude?: number;
-  longitude?: number;
-  totalContainedMetal?: Number;
-  totalTonnage?: Number;
-  totalGrade?: Number;
+  name: string;
+  type: string;
+  rank: string;
+  sites: string[];
+  depositTypes: DedupMineralSiteDepositType[];
+  location?: DedupMineralSiteLocation;
+  gradeTonnage: GradeTonnage;
 
   public constructor({
+    id,
     uri,
-    commodity,
+    name,
+    type,
+    rank,
     sites,
     depositTypes,
-    bestLocCentroidEpsg4326,
-    totalContainedMetal,
-    totalTonnage,
-    totalGrade,
-    latitude,
-    longitude,
+    location,
+    gradeTonnage,
   }: {
+    id: string;
     uri: string;
-    commodity: string;
-    sites: MineralSiteResp[];
-    depositTypes: DepositTypeResp[];
-    bestLocCentroidEpsg4326: string;
-    totalContainedMetal?: Number;
-    totalTonnage?: Number;
-    totalGrade?: Number;
-    latitude?: number;
-    longitude?: number;
+    name: string;
+    type: string;
+    rank: string;
+    sites: string[];
+    depositTypes: DedupMineralSiteDepositType[];
+    location?: DedupMineralSiteLocation;
+    gradeTonnage: GradeTonnage;
   }) {
+    this.id = id;
     this.uri = uri;
-    this.commodity = commodity;
+    this.name = name;
+    this.type = type;
+    this.rank = rank;
     this.sites = sites;
-    this.latitude = latitude;
-    this.longitude = longitude;
     this.depositTypes = depositTypes;
-    this.bestLocCentroidEpsg4326 = bestLocCentroidEpsg4326;
-    this.totalContainedMetal = totalContainedMetal;
-    this.totalTonnage = totalTonnage;
-    this.totalGrade = totalGrade;
+    this.location = location;
+    this.gradeTonnage = gradeTonnage;
   }
 
-  get id(): string {
-    return this.uri;
+  get commodity(): string {
+    return this.gradeTonnage.commodity;
+  }
+
+  public static getId(uri: string): string {
+    return uri.substring(uri.lastIndexOf("/") + 1);
   }
 
   public static deserialize(record: any): DedupMineralSite {
-    const centroid = record.best_loc_centroid_epsg_4326;
-    let latitude: number | undefined;
-    let longitude: number | undefined;
-    if (centroid !== null && centroid !== undefined) {
-      const coords = centroid.match(/POINT\s*\(([-\d.]+)\s+([-\d.]+)\)/);
-      if (coords && coords.length === 3) {
-        latitude = parseFloat(coords[2]);
-        longitude = parseFloat(coords[1]);
-      }
-    }
-
     return new DedupMineralSite({
-      uri: record.id,
-      commodity: record.commodity,
-      latitude: latitude,
-      longitude: longitude,
-      sites: record.sites.map((site: any) => MineralSiteResp.deserialize(site)),
-      depositTypes: record.deposit_types.map((depositType: any) => new DepositTypeResp(depositType)),
-      bestLocCentroidEpsg4326: record.best_loc_centroid_epsg_4326,
-      totalContainedMetal: record.total_contained_metal === null ? undefined : record.total_contained_metal,
-      totalTonnage: record.total_tonnage === null ? undefined : record.total_tonnage,
-      totalGrade: record.total_grade === null ? undefined : record.total_grade,
+      id: DedupMineralSite.getId(record.uri),
+      uri: record.uri,
+      name: record.name,
+      type: record.type,
+      rank: record.rank,
+      sites: record.sites,
+      depositTypes: record.deposit_types.map((depositType: any) => new DedupMineralSiteDepositType(depositType)),
+      location: record.location !== undefined ? new DedupMineralSiteLocation(record.location) : undefined,
+      gradeTonnage: GradeTonnage.deserialize(record.grade_tonnage),
     });
   }
 
-  public getName(): string {
-    // TODO: hack, fix me!
-    const curatedSite = this.sites.filter((site) => site.uri.indexOf("-username-") !== -1);
-    if (curatedSite.length > 0) {
-      return curatedSite[0].name || "";
-    }
-
-    const names = Array.from(new Set(this.sites.map((site) => site.name)));
-    if (names.length === 1) {
-      return names[0] || "";
-    }
-    return JSON.stringify(names.sort());
-  }
-
-  public getSiteType(): string {
-    // TODO: fix me!
-    const curatedSite = this.sites.filter((site) => site.uri.indexOf("-username-") !== -1);
-    if (curatedSite.length > 0) {
-      return curatedSite[0].type;
-    }
-
-    const types = Array.from(new Set(this.sites.map((site) => site.type)));
-    if (types.length === 1) {
-      return types[0];
-    }
-    return JSON.stringify(types.sort());
-  }
-
-  public getSiteRank(): string {
-    // TODO: fix me!
-    const curatedSite = this.sites.filter((site) => site.uri.indexOf("-username-") !== -1);
-    if (curatedSite.length > 0) {
-      return curatedSite[0].rank;
-    }
-    const ranks = Array.from(new Set(this.sites.map((site) => site.rank)));
-    if (ranks.length === 1) {
-      return ranks[0];
-    }
-    return JSON.stringify(ranks.sort());
-  }
-
-  public getCountry(): string {
-    // TODO: fix me!
-    const curatedSite = this.sites.filter((site) => site.uri.indexOf("-username-") !== -1);
-    if (curatedSite.length > 0) {
-      return curatedSite[0].country[0];
-    }
-    const countries = Array.from(new Set(this.sites.flatMap((site) => site.country)));
-    if (countries.length === 1) {
-      return countries[0];
-    }
-    return JSON.stringify(countries.sort());
-  }
-
-  public getStateOrProvince(): string {
-    // TODO: fix me!
-    const curatedSite = this.sites.filter((site) => site.uri.indexOf("-username-") !== -1);
-    if (curatedSite.length > 0) {
-      return curatedSite[0].stateOrProvince[0];
-    }
-    const stateOrProvinces = Array.from(new Set(this.sites.flatMap((site) => site.stateOrProvince)));
-    if (stateOrProvinces.length === 1) {
-      return stateOrProvinces[0];
-    }
-    return JSON.stringify(stateOrProvinces.sort());
-  }
-
-  public getTop1DepositType(): DepositTypeResp | undefined {
+  public getTop1DepositType(): DedupMineralSiteDepositType | undefined {
     return this.depositTypes[0];
   }
 }
