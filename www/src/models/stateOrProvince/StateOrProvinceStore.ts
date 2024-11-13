@@ -8,7 +8,7 @@ export interface StateOrProvince {
 
 export class StateOrProvinceStore extends RStore<string, StateOrProvince> {
   constructor() {
-    super(`${SERVER}/api/v1/countries`, undefined, false);
+    super(`${SERVER}/api/v1/states-or-provinces`, undefined, false);
   }
 
   public getByURI(uri: string): StateOrProvince | undefined {
