@@ -1,7 +1,7 @@
 import { Button, Col, Flex, Row, Select, Space, Table, Typography } from "antd";
 import { toJS } from "mobx";
 import { observer } from "mobx-react";
-import { useStores, Commodity, DedupMineralSite, MineralSite, CandidateEntity, Reference, DraftCreateMineralSite, FieldEdit, EditableField } from "models";
+import { useStores, Commodity, DedupMineralSite, MineralSite, CandidateEntity, Reference, DraftCreateMineralSite, FieldEdit, EditableField, DraftUpdateMineralSite } from "models";
 import { useEffect, useMemo, useState } from "react";
 import { WithStyles, withStyles } from "@material-ui/styles";
 import { CanEntComponent, ListCanEntComponent } from "./CandidateEntity";
@@ -157,16 +157,18 @@ export const EditDedupMineralSite = withStyles(css)(
         return;
       }
 
-      const currentUserURL = userStore.getCurrentUser()!.url;
-      const existingSite = sites.find((site) => site.createdBy.includes(currentUserURL));
-
+      const currentUser = userStore.getCurrentUser()!;
+      const existingSite = sites.find((site) => site.createdBy.includes(currentUser.url));
+      console.log({ existingSite, createdBY: sites.map((site) => site.createdBy), url: currentUser.url });
       let cb;
       if (existingSite === undefined) {
-        const draftSite = DraftCreateMineralSite.fromMineralSite(stores, dedupSite, sites, stores.userStore.getCurrentUser()!.id, change.reference);
+        const draftSite = DraftCreateMineralSite.fromMineralSite(stores, dedupSite, sites, currentUser.id, change.reference);
         draftSite.updateField(change.edit, change.reference);
         cb = mineralSiteStore.createAndUpdateDedup(dedupSite.commodity, draftSite);
       } else {
-        cb = Promise.resolve();
+        const draftSite = new DraftUpdateMineralSite(existingSite);
+        draftSite.updateField(change.edit, change.reference);
+        cb = mineralSiteStore.updateAndUpdateDedup(dedupSite.commodity, draftSite);
       }
 
       cb.then(() => {

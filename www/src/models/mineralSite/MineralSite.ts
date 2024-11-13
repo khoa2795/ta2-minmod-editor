@@ -149,6 +149,11 @@ export class DraftCreateMineralSite extends MineralSite {
 export class DraftUpdateMineralSite extends MineralSite {
   isSaved: boolean = true;
 
+  updateField(edit: FieldEdit, reference: Reference) {
+    super.updateField(edit, reference);
+    this.isSaved = false;
+  }
+
   markSaved() {
     this.isSaved = true;
   }

@@ -21,6 +21,12 @@ export class MineralSiteStore extends CRUDStore<string, DraftCreateMineralSite, 
     return record;
   }
 
+  async updateAndUpdateDedup(commodity: string, draft: DraftUpdateMineralSite, discardDraft: boolean = true): Promise<MineralSite> {
+    const record = await this.update(draft, discardDraft);
+    await this.dedupMineralSiteStore.forceFetchByURI(record.dedupSiteURI, commodity);
+    return record;
+  }
+
   public deserialize(record: any): MineralSite {
     return new MineralSite({
       uri: record.uri,
