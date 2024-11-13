@@ -37,6 +37,15 @@ export class DedupMineralSiteLocation {
     this.stateOrProvince = stateOrProvince;
   }
 
+  public static deserialize(record: any): DedupMineralSiteLocation {
+    return new DedupMineralSiteLocation({
+      lat: record.lat,
+      lon: record.lon,
+      country: record.country || [],
+      stateOrProvince: record.state_or_province || [],
+    });
+  }
+
   public toLocationInfo(
     stores: {
       stateOrProvinceStore: StateOrProvinceStore;
@@ -138,7 +147,7 @@ export class DedupMineralSite {
       rank: record.rank,
       sites: record.sites,
       depositTypes: record.deposit_types.map((depositType: any) => new DedupMineralSiteDepositType(depositType)),
-      location: record.location !== undefined ? new DedupMineralSiteLocation(record.location) : undefined,
+      location: record.location !== undefined ? DedupMineralSiteLocation.deserialize(record.location) : undefined,
       gradeTonnage: GradeTonnage.deserialize(record.grade_tonnage),
     });
   }
