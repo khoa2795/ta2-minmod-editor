@@ -153,6 +153,7 @@ export const EditDedupMineralSite = withStyles(css)(
 
     const onEditFinish = (change?: { edit: FieldEdit; reference: Reference }) => {
       if (change === undefined) {
+        setEditField(undefined);
         return;
       }
       const draftSite = DraftCreateMineralSite.fromMineralSite(stores, dedupSite, sites, stores.userStore.getCurrentUser()!.id, change.reference);
