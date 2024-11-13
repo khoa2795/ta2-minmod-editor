@@ -15,9 +15,9 @@ export class MineralSiteStore extends CRUDStore<string, DraftCreateMineralSite, 
     this.dedupMineralSiteStore = dedupMineralSiteStore;
   }
 
-  async create(draft: DraftCreateMineralSite, discardDraft: boolean = true): Promise<MineralSite> {
-    const record = await super.create(draft, discardDraft);
-    await this.dedupMineralSiteStore.forceFetchByURI(record.dedupSiteURI);
+  async createAndUpdateDedup(commodity: string, draft: DraftCreateMineralSite, discardDraft: boolean = true): Promise<MineralSite> {
+    const record = await this.create(draft, discardDraft);
+    await this.dedupMineralSiteStore.forceFetchByURI(record.dedupSiteURI, commodity);
     return record;
   }
 

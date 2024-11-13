@@ -8,6 +8,8 @@ import { DepositTypeStore } from "models/depositType";
 import { StateOrProvinceStore } from "models/stateOrProvince";
 import { CountryStore } from "models/country";
 
+export type EditableField = "name" | "location" | "depositType";
+
 export type MineralSiteConstructorArgs = {
   uri: string;
   recordId: string;
@@ -64,6 +66,12 @@ export class MineralSite {
   getFirstReferencedDocument(): Document {
     return this.reference[0].document;
   }
+
+  // updateField(field: EditableField, value: string, reference: Reference) {
+  //   switch (field) {
+
+  //   }
+  // }
 }
 
 export class DraftCreateMineralSite extends MineralSite {

@@ -1,10 +1,8 @@
-import { Button, Checkbox, Form, Input, Modal, Space, Typography } from "antd";
+import { Button, Checkbox, Form, Input, Modal, Space } from "antd";
 import { EditableSelect, EditableSelectOption } from "components/EditableSelect";
 import _ from "lodash";
-import { MineralSite, Reference, Document } from "models";
-import { useMemo, useState } from "react";
-
-export type EditableField = "name" | "location" | "depositType";
+import { MineralSite, Reference, Document, EditableField } from "models";
+import { useMemo } from "react";
 
 interface EditSiteFieldProps {
   sites: MineralSite[];

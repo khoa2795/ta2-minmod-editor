@@ -155,7 +155,8 @@ export const EditDedupMineralSite = withStyles(css)(
       if (change === undefined) {
         return;
       }
-      mineralSiteStore.create(DraftCreateMineralSite.fromMineralSite(stores, dedupSite, sites, stores.userStore.getCurrentUser()!.id, change.reference)).then(() => {
+      const draftSite = DraftCreateMineralSite.fromMineralSite(stores, dedupSite, sites, stores.userStore.getCurrentUser()!.id, change.reference);
+      mineralSiteStore.createAndUpdateDedup(dedupSite.commodity, draftSite).then(() => {
         setEditField(undefined);
       });
     };
