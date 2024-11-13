@@ -9,6 +9,7 @@ import { StateOrProvinceStore } from "models/stateOrProvince";
 import { CountryStore } from "models/country";
 
 export type EditableField = "name" | "location" | "depositType";
+export type FieldEdit = { field: "name"; value: string } | { field: "location"; value: string } | { field: "depositType"; observedName: string; normalizedURI: string };
 
 export type MineralSiteConstructorArgs = {
   uri: string;
@@ -67,11 +68,31 @@ export class MineralSite {
     return this.reference[0].document;
   }
 
-  // updateField(field: EditableField, value: string, reference: Reference) {
-  //   switch (field) {
+  updateField(edit: FieldEdit, reference: Reference) {
+    switch (edit.field) {
+      case "name":
+        this.name = edit.value;
+        break;
+      case "location":
+        this.locationInfo.location = edit.value;
+        break;
+      case "depositType":
+        this.depositTypeCandidate = [
+          new CandidateEntity({
+            source: this.createdBy[0], // this works because createdBy is a single item array for experts
+            confidence: 1.0,
+            normalizedURI: edit.normalizedURI,
+            observedName: edit.observedName,
+          }),
+        ];
+        break;
+      default:
+        throw new Error(`Unknown edit: ${edit}`);
+    }
 
-  //   }
-  // }
+    // TODO: fix me, we need to avoid duplicated reference
+    this.reference.push(reference);
+  }
 }
 
 export class DraftCreateMineralSite extends MineralSite {

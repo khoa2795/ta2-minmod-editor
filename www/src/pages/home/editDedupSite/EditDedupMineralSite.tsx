@@ -1,13 +1,13 @@
 import { Button, Col, Flex, Row, Select, Space, Table, Typography } from "antd";
 import { toJS } from "mobx";
 import { observer } from "mobx-react";
-import { useStores, Commodity, DedupMineralSite, MineralSite, CandidateEntity, Reference, DraftCreateMineralSite } from "models";
+import { useStores, Commodity, DedupMineralSite, MineralSite, CandidateEntity, Reference, DraftCreateMineralSite, FieldEdit, EditableField } from "models";
 import { useEffect, useMemo, useState } from "react";
 import { WithStyles, withStyles } from "@material-ui/styles";
 import { CanEntComponent, ListCanEntComponent } from "./CandidateEntity";
 import { join } from "misc";
 import { EditOutlined } from "@ant-design/icons";
-import { EditableField, EditSiteField } from "./EditSiteField";
+import { EditSiteField } from "./EditSiteField";
 
 const css = {
   table: {
@@ -151,11 +151,12 @@ export const EditDedupMineralSite = withStyles(css)(
     const sites = fetchedSites.filter((site) => site !== null) as MineralSite[];
     const isLoading = mineralSiteStore.state.value === "updating" || fetchedSites.length !== dedupSite.sites.length;
 
-    const onEditFinish = (change?: { field: EditableField; value: string; reference: Reference }) => {
+    const onEditFinish = (change?: { edit: FieldEdit; reference: Reference }) => {
       if (change === undefined) {
         return;
       }
       const draftSite = DraftCreateMineralSite.fromMineralSite(stores, dedupSite, sites, stores.userStore.getCurrentUser()!.id, change.reference);
+      draftSite.updateField(change.edit, change.reference);
       mineralSiteStore.createAndUpdateDedup(dedupSite.commodity, draftSite).then(() => {
         setEditField(undefined);
       });
@@ -164,7 +165,7 @@ export const EditDedupMineralSite = withStyles(css)(
     return (
       <>
         <Table<MineralSite> className={classes.table} bordered={true} pagination={false} size="small" rowKey="id" columns={columns} dataSource={sites} loading={isLoading} />
-        <EditSiteField key={editField} sites={sites} field={editField} onFinish={onEditFinish} />
+        <EditSiteField key={editField} sites={sites} editField={editField} onFinish={onEditFinish} />
       </>
     );
   })

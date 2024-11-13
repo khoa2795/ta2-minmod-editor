@@ -1,13 +1,13 @@
 import { Button, Checkbox, Form, Input, Modal, Space } from "antd";
 import { EditableSelect, EditableSelectOption } from "components/EditableSelect";
 import _ from "lodash";
-import { MineralSite, Reference, Document, EditableField } from "models";
+import { MineralSite, Reference, Document, FieldEdit, EditableField } from "models";
 import { useMemo } from "react";
 
 interface EditSiteFieldProps {
   sites: MineralSite[];
-  field?: EditableField;
-  onFinish: (change?: { field: EditableField; value: string; reference: Reference }) => void;
+  editField?: EditableField;
+  onFinish: (change?: { edit: FieldEdit; reference: Reference }) => void;
 }
 
 type FormFields = {
@@ -17,11 +17,11 @@ type FormFields = {
   refAppliedToAll: boolean;
 };
 
-export const EditSiteField: React.FC<EditSiteFieldProps> = ({ sites, field, onFinish }) => {
+export const EditSiteField: React.FC<EditSiteFieldProps> = ({ sites, editField, onFinish }) => {
   const [form] = Form.useForm<FormFields>();
 
   const title = useMemo(() => {
-    switch (field) {
+    switch (editField) {
       case "name":
         return "Name";
       case "location":
@@ -31,7 +31,7 @@ export const EditSiteField: React.FC<EditSiteFieldProps> = ({ sites, field, onFi
       default:
         return "";
     }
-  }, [field]);
+  }, [editField]);
 
   const setFieldProvenance = (key: string | undefined) => {
     if (key !== undefined) {
@@ -45,11 +45,11 @@ export const EditSiteField: React.FC<EditSiteFieldProps> = ({ sites, field, onFi
   };
 
   let fieldValueOptions: EditableSelectOption[] = [];
-  if (field === "name") {
+  if (editField === "name") {
     fieldValueOptions = sites.map((site) => ({ key: site.id, label: site.name }));
-  } else if (field === "location") {
+  } else if (editField === "location") {
     fieldValueOptions = sites.filter((site) => site.locationInfo.location !== undefined).map((site) => ({ key: site.id, label: site.locationInfo.location! }));
-  } else if (field === "depositType") {
+  } else if (editField === "depositType") {
   }
 
   const docs = _.uniqBy(
@@ -58,21 +58,29 @@ export const EditSiteField: React.FC<EditSiteFieldProps> = ({ sites, field, onFi
   );
 
   const onSave = (values: any) => {
-    if (field === undefined) return;
+    if (editField === undefined) return;
     const val = form.getFieldsValue();
+    let edit;
+    if (editField === "name" || editField === "location") {
+      edit = { field: editField, value: val.fieldValue };
+    } else if (editField === "depositType") {
+      edit = { field: editField, observedName: val.fieldValue, normalizedURI: "" };
+    } else {
+      throw new Error(`Unknown field ${editField}`);
+    }
+
     onFinish({
-      field,
-      value: val.fieldValue,
+      edit,
       reference: new Reference({
         document: new Document({ uri: val.refDocURI }),
         comment: val.refComment,
-        property: val.refAppliedToAll ? undefined : Reference.normalizeProperty(field),
+        property: val.refAppliedToAll ? undefined : Reference.normalizeProperty(editField.field),
       }),
     });
   };
 
   return (
-    <Modal title="Edit Mineral Site" width="70%" open={field !== undefined} onCancel={() => onFinish()} footer={null}>
+    <Modal title="Edit Mineral Site" width="70%" open={editField !== undefined} onCancel={() => onFinish()} footer={null}>
       <Form
         form={form}
         onFinish={onSave}
