@@ -29,7 +29,7 @@ interface EditDedupMineralSiteProps {
 export const EditDedupMineralSite = withStyles(css)(
   observer(({ dedupSite, commodity, classes }: EditDedupMineralSiteProps & WithStyles<typeof css>) => {
     const stores = useStores();
-    const { mineralSiteStore } = stores;
+    const { mineralSiteStore, userStore } = stores;
     const [editField, setEditField] = useState<EditableField | undefined>(undefined);
 
     const columns = useMemo(() => {
@@ -156,9 +156,20 @@ export const EditDedupMineralSite = withStyles(css)(
         setEditField(undefined);
         return;
       }
-      const draftSite = DraftCreateMineralSite.fromMineralSite(stores, dedupSite, sites, stores.userStore.getCurrentUser()!.id, change.reference);
-      draftSite.updateField(change.edit, change.reference);
-      mineralSiteStore.createAndUpdateDedup(dedupSite.commodity, draftSite).then(() => {
+
+      const currentUserURL = userStore.getCurrentUser()!.url;
+      const existingSite = sites.find((site) => site.createdBy.includes(currentUserURL));
+
+      let cb;
+      if (existingSite === undefined) {
+        const draftSite = DraftCreateMineralSite.fromMineralSite(stores, dedupSite, sites, stores.userStore.getCurrentUser()!.id, change.reference);
+        draftSite.updateField(change.edit, change.reference);
+        cb = mineralSiteStore.createAndUpdateDedup(dedupSite.commodity, draftSite);
+      } else {
+        cb = Promise.resolve();
+      }
+
+      cb.then(() => {
         setEditField(undefined);
       });
     };

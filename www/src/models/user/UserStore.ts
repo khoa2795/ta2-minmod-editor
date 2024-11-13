@@ -5,6 +5,7 @@ import axios from "axios";
 
 export interface User {
   id: string;
+  url: string;
   email: string;
   name: string;
 }
@@ -40,5 +41,14 @@ export class UserStore extends RStore<string, User> {
   public getCurrentUser(): User | undefined {
     if (this.records.size === 0) return undefined;
     return this.records.values().next().value || undefined;
+  }
+
+  public deserialize(obj: any): User {
+    return {
+      id: obj.username,
+      email: obj.email,
+      name: obj.name,
+      url: `https://minmod.isi.edu/users/${obj.id}`,
+    };
   }
 }
