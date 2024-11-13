@@ -74,7 +74,7 @@ export const EditSiteField: React.FC<EditSiteFieldProps> = ({ sites, editField, 
       reference: new Reference({
         document: new Document({ uri: val.refDocURI }),
         comment: val.refComment,
-        property: val.refAppliedToAll ? undefined : Reference.normalizeProperty(editField.field),
+        property: val.refAppliedToAll ? undefined : Reference.normalizeProperty(editField),
       }),
     });
   };
