@@ -6,6 +6,7 @@ import { useMemo } from "react";
 
 interface EditSiteFieldProps {
   sites: MineralSite[];
+  commodity: string;
   editField?: EditableField;
   onFinish: (change?: { edit: FieldEdit; reference: Reference }) => void;
 }
@@ -17,7 +18,7 @@ type FormFields = {
   refAppliedToAll: boolean;
 };
 
-export const EditSiteField: React.FC<EditSiteFieldProps> = ({ sites, editField, onFinish }) => {
+export const EditSiteField: React.FC<EditSiteFieldProps> = ({ sites, editField, commodity, onFinish }) => {
   const [form] = Form.useForm<FormFields>();
 
   const title = useMemo(() => {
@@ -28,6 +29,10 @@ export const EditSiteField: React.FC<EditSiteFieldProps> = ({ sites, editField, 
         return "Location";
       case "depositType":
         return "Deposit Type";
+      case "grade":
+        return "Grade (%)";
+      case "tonnage":
+        return "Tonnage (Mt)";
       default:
         return "";
     }
@@ -65,6 +70,8 @@ export const EditSiteField: React.FC<EditSiteFieldProps> = ({ sites, editField, 
       edit = { field: editField, value: val.fieldValue };
     } else if (editField === "depositType") {
       edit = { field: editField, observedName: val.fieldValue, normalizedURI: "" };
+    } else if (editField === "grade" || editField === "tonnage") {
+      edit = { field: editField, value: parseFloat(val.fieldValue), commodity };
     } else {
       throw new Error(`Unknown field ${editField}`);
     }
@@ -111,7 +118,9 @@ export const EditSiteField: React.FC<EditSiteFieldProps> = ({ sites, editField, 
             <Button type="primary" htmlType="submit">
               Save
             </Button>
-            <Button htmlType="button">Cancel</Button>
+            <Button htmlType="button" onClick={() => onFinish()}>
+              Cancel
+            </Button>
           </Space>
         </Form.Item>
       </Form>

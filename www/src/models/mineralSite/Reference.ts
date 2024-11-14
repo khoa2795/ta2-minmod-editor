@@ -46,7 +46,7 @@ export class Reference {
     };
   }
 
-  public static normalizeProperty(property: "name" | "location" | "depositType") {
+  public static normalizeProperty(property: "name" | "location" | "depositType" | "grade" | "tonnage"): string {
     switch (property) {
       case "name":
         return "http://www.w3.org/2000/01/rdf-schema#label";
@@ -54,6 +54,10 @@ export class Reference {
         return "https://minmod.isi.edu/ontology/location";
       case "depositType":
         return "https://minmod.isi.edu/ontology/deposit_type";
+      case "grade":
+        return "https://minmod.isi.edu/ontology/grade";
+      case "tonnage":
+        return "https://minmod.isi.edu/ontology/ore";
       default:
         return "";
     }

@@ -110,7 +110,12 @@ export const EditDedupMineralSite = withStyles(css)(
           },
         },
         {
-          title: "Tonnage (Mt)",
+          title: (
+            <Flex justify="space-between">
+              <span>Tonnage (Mt)</span>
+              <EditOutlined className={classes.editButton} onClick={() => setEditField("tonnage")} />
+            </Flex>
+          ),
           key: "tonnage",
           render: (_: any, site: MineralSite) => {
             const gradeTonnage = site.gradeTonnage[commodity.uri];
@@ -121,7 +126,12 @@ export const EditDedupMineralSite = withStyles(css)(
           },
         },
         {
-          title: "Grade (%)",
+          title: (
+            <Flex justify="space-between">
+              <span>Grade (%)</span>
+              <EditOutlined className={classes.editButton} onClick={() => setEditField("grade")} />
+            </Flex>
+          ),
           key: "grade",
           render: (_: any, site: MineralSite) => {
             const gradeTonnage = site.gradeTonnage[commodity.uri];
@@ -179,7 +189,7 @@ export const EditDedupMineralSite = withStyles(css)(
     return (
       <>
         <Table<MineralSite> className={classes.table} bordered={true} pagination={false} size="small" rowKey="id" columns={columns} dataSource={sites} loading={isLoading} />
-        <EditSiteField key={editField} sites={sites} editField={editField} onFinish={onEditFinish} />
+        <EditSiteField key={editField} sites={sites} editField={editField} onFinish={onEditFinish} commodity={commodity.id} />
       </>
     );
   })

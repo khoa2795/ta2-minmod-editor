@@ -1,4 +1,3 @@
-import { makeObservable, observable } from "mobx";
 import { CandidateEntity } from "./CandidateEntity";
 import { GradeTonnage } from "./GradeTonnage";
 import { LocationInfo } from "./LocationInfo";
@@ -8,8 +7,17 @@ import { DepositTypeStore } from "models/depositType";
 import { StateOrProvinceStore } from "models/stateOrProvince";
 import { CountryStore } from "models/country";
 
-export type EditableField = "name" | "location" | "depositType";
-export type FieldEdit = { field: "name"; value: string } | { field: "location"; value: string } | { field: "depositType"; observedName: string; normalizedURI: string };
+export type EditableField = "name" | "location" | "depositType" | "grade" | "tonnage";
+export type FieldEdit =
+  | { field: "name"; value: string }
+  | { field: "location"; value: string }
+  | { field: "depositType"; observedName: string; normalizedURI: string }
+  | {
+      field: "grade";
+      value: number;
+      commodity: string;
+    }
+  | { field: "tonnage"; value: number; commodity: string };
 
 export type MineralSiteConstructorArgs = {
   uri: string;
@@ -23,6 +31,7 @@ export type MineralSiteConstructorArgs = {
   reference: Reference[];
   sameAs: string[];
   gradeTonnage: { [commodity: string]: GradeTonnage };
+  // mineralInventory: MineralInventory[];
 };
 
 export class MineralSite {
@@ -86,6 +95,28 @@ export class MineralSite {
           }),
         ];
         break;
+      case "grade":
+        if (this.gradeTonnage[edit.commodity] === undefined) {
+          this.gradeTonnage[edit.commodity] = new GradeTonnage({
+            commodity: edit.commodity,
+            totalGrade: edit.value,
+            totalTonnage: undefined,
+          });
+        } else {
+          this.gradeTonnage[edit.commodity].totalGrade = edit.value;
+        }
+        break;
+      case "tonnage":
+        if (this.gradeTonnage[edit.commodity] === undefined) {
+          this.gradeTonnage[edit.commodity] = new GradeTonnage({
+            commodity: edit.commodity,
+            totalTonnage: edit.value,
+            totalGrade: undefined,
+          });
+        } else {
+          this.gradeTonnage[edit.commodity].totalTonnage = edit.value;
+        }
+        break;
       default:
         throw new Error(`Unknown edit: ${edit}`);
     }
@@ -148,6 +179,11 @@ export class DraftCreateMineralSite extends MineralSite {
 
 export class DraftUpdateMineralSite extends MineralSite {
   isSaved: boolean = true;
+
+  // TODO: fix me!!
+  get id() {
+    return DedupMineralSite.getId(this.uri);
+  }
 
   updateField(edit: FieldEdit, reference: Reference) {
     super.updateField(edit, reference);
