@@ -6,6 +6,7 @@ import { CandidateEntity } from "./CandidateEntity";
 import { Reference } from "./Reference";
 import { GradeTonnage } from "./GradeTonnage";
 import { DedupMineralSite, DedupMineralSiteStore } from "models/dedupMineralSite";
+import { MineralInventory } from "./MineralInventory";
 
 export class MineralSiteStore extends CRUDStore<string, DraftCreateMineralSite, DraftUpdateMineralSite, MineralSite> {
   dedupMineralSiteStore: DedupMineralSiteStore;
@@ -51,6 +52,7 @@ export class MineralSiteStore extends CRUDStore<string, DraftCreateMineralSite, 
           return [gt.commodity, gt];
         })
       ),
+      mineralInventory: record.mineral_inventory.map(MineralInventory.deserialize),
     });
   }
 
@@ -61,6 +63,7 @@ export class MineralSiteStore extends CRUDStore<string, DraftCreateMineralSite, 
     let mineralInventory = [];
 
     for (const gt of Object.values(record.gradeTonnage)) {
+      console.log("@@@", gt);
       mineralInventory.push({
         // TODO: fix me! find correct source
         // TODO: get correct users
@@ -72,7 +75,7 @@ export class MineralSiteStore extends CRUDStore<string, DraftCreateMineralSite, 
         commodity: {
           source: record.createdBy[0],
           confidence: 1.0,
-          normalized_uri: gt.commodity,
+          normalized_uri: `https://minmod.isi.edu/resource/${gt.commodity}`,
         },
         ore: {
           value: gt.totalTonnage,

@@ -8,6 +8,7 @@ import { CanEntComponent, ListCanEntComponent } from "./CandidateEntity";
 import { join } from "misc";
 import { EditOutlined } from "@ant-design/icons";
 import { EditSiteField } from "./EditSiteField";
+import { green } from "@ant-design/colors";
 
 const css = {
   table: {
@@ -18,6 +19,12 @@ const css = {
   },
   editButton: {
     cursor: "pointer",
+  },
+  myEditedRow: {
+    backgroundColor: `${green[2]} !important`,
+    "& > td": {
+      backgroundColor: `${green[2]} !important`,
+    },
   },
 };
 
@@ -118,11 +125,11 @@ export const EditDedupMineralSite = withStyles(css)(
           ),
           key: "tonnage",
           render: (_: any, site: MineralSite) => {
-            const gradeTonnage = site.gradeTonnage[commodity.uri];
+            const gradeTonnage = site.gradeTonnage[commodity.id];
             if (gradeTonnage === undefined || gradeTonnage.totalTonnage === undefined) {
               return "-";
             }
-            return gradeTonnage.totalTonnage.toFixed(2);
+            return gradeTonnage.totalTonnage.toFixed(4);
           },
         },
         {
@@ -134,7 +141,7 @@ export const EditDedupMineralSite = withStyles(css)(
           ),
           key: "grade",
           render: (_: any, site: MineralSite) => {
-            const gradeTonnage = site.gradeTonnage[commodity.uri];
+            const gradeTonnage = site.gradeTonnage[commodity.id];
             if (gradeTonnage === undefined || gradeTonnage.totalGrade === undefined) {
               return "-";
             }
@@ -169,15 +176,14 @@ export const EditDedupMineralSite = withStyles(css)(
 
       const currentUser = userStore.getCurrentUser()!;
       const existingSite = sites.find((site) => site.createdBy.includes(currentUser.url));
-      console.log({ existingSite, createdBY: sites.map((site) => site.createdBy), url: currentUser.url });
       let cb;
       if (existingSite === undefined) {
         const draftSite = DraftCreateMineralSite.fromMineralSite(stores, dedupSite, sites, currentUser.id, change.reference);
-        draftSite.updateField(change.edit, change.reference);
+        draftSite.updateField(stores, change.edit, change.reference);
         cb = mineralSiteStore.createAndUpdateDedup(dedupSite.commodity, draftSite);
       } else {
         const draftSite = new DraftUpdateMineralSite(existingSite);
-        draftSite.updateField(change.edit, change.reference);
+        draftSite.updateField(stores, change.edit, change.reference);
         cb = mineralSiteStore.updateAndUpdateDedup(dedupSite.commodity, draftSite);
       }
 
@@ -186,10 +192,24 @@ export const EditDedupMineralSite = withStyles(css)(
       });
     };
 
+    const currentSite = sites.find((site) => site.createdBy.includes(userStore.getCurrentUser()!.url));
+
     return (
       <>
-        <Table<MineralSite> className={classes.table} bordered={true} pagination={false} size="small" rowKey="id" columns={columns} dataSource={sites} loading={isLoading} />
-        <EditSiteField key={editField} sites={sites} editField={editField} onFinish={onEditFinish} commodity={commodity.id} />
+        <Table<MineralSite>
+          className={classes.table}
+          bordered={true}
+          pagination={false}
+          size="small"
+          rowKey="id"
+          columns={columns}
+          dataSource={sites}
+          loading={isLoading}
+          rowClassName={(site) => {
+            return site.createdBy.includes(userStore.getCurrentUser()!.url) ? classes.myEditedRow : "";
+          }}
+        />
+        <EditSiteField key={editField} sites={sites} currentSite={currentSite} editField={editField} onFinish={onEditFinish} commodity={commodity.id} />
       </>
     );
   })

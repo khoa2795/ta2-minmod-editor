@@ -6,6 +6,8 @@ import { DedupMineralSite, DedupMineralSiteLocation } from "models/dedupMineralS
 import { DepositTypeStore } from "models/depositType";
 import { StateOrProvinceStore } from "models/stateOrProvince";
 import { CountryStore } from "models/country";
+import { MineralInventory } from "./MineralInventory";
+import { IStore } from "models";
 
 export type EditableField = "name" | "location" | "depositType" | "grade" | "tonnage";
 export type FieldEdit =
@@ -31,7 +33,7 @@ export type MineralSiteConstructorArgs = {
   reference: Reference[];
   sameAs: string[];
   gradeTonnage: { [commodity: string]: GradeTonnage };
-  // mineralInventory: MineralInventory[];
+  mineralInventory: MineralInventory[];
 };
 
 export class MineralSite {
@@ -46,8 +48,9 @@ export class MineralSite {
   reference: Reference[];
   sameAs: string[];
   gradeTonnage: { [commodity: string]: GradeTonnage };
+  mineralInventory: MineralInventory[];
 
-  public constructor({ uri, recordId, sourceId, createdBy, name, locationInfo, depositTypeCandidate, reference, sameAs, gradeTonnage, dedupSiteURI }: MineralSiteConstructorArgs) {
+  public constructor({ uri, recordId, sourceId, createdBy, name, locationInfo, depositTypeCandidate, reference, sameAs, gradeTonnage, dedupSiteURI, mineralInventory }: MineralSiteConstructorArgs) {
     this.uri = uri;
     this.recordId = recordId;
     this.sourceId = sourceId;
@@ -59,6 +62,7 @@ export class MineralSite {
     this.reference = reference;
     this.sameAs = sameAs;
     this.gradeTonnage = gradeTonnage;
+    this.mineralInventory = mineralInventory;
   }
 
   get id() {
@@ -77,7 +81,7 @@ export class MineralSite {
     return this.reference[0].document;
   }
 
-  updateField(edit: FieldEdit, reference: Reference) {
+  updateField(stores: IStore, edit: FieldEdit, reference: Reference) {
     switch (edit.field) {
       case "name":
         this.name = edit.value;
@@ -100,22 +104,26 @@ export class MineralSite {
           this.gradeTonnage[edit.commodity] = new GradeTonnage({
             commodity: edit.commodity,
             totalGrade: edit.value,
-            totalTonnage: undefined,
+            totalTonnage: 0.00001,
           });
         } else {
           this.gradeTonnage[edit.commodity].totalGrade = edit.value;
         }
+
+        this.mineralInventory = [MineralInventory.fromGradeTonnage(stores, this.createdBy[0], this.gradeTonnage[edit.commodity], reference)];
         break;
       case "tonnage":
         if (this.gradeTonnage[edit.commodity] === undefined) {
           this.gradeTonnage[edit.commodity] = new GradeTonnage({
             commodity: edit.commodity,
             totalTonnage: edit.value,
-            totalGrade: undefined,
+            totalGrade: 0.00001,
           });
         } else {
           this.gradeTonnage[edit.commodity].totalTonnage = edit.value;
         }
+
+        this.mineralInventory = [MineralInventory.fromGradeTonnage(stores, this.createdBy[0], this.gradeTonnage[edit.commodity], reference)];
         break;
       default:
         throw new Error(`Unknown edit: ${edit}`);
@@ -166,6 +174,7 @@ export class DraftCreateMineralSite extends MineralSite {
       gradeTonnage: {
         [dedupMineralSite.gradeTonnage.commodity]: dedupMineralSite.gradeTonnage,
       },
+      mineralInventory: [],
     });
   }
 
@@ -185,8 +194,8 @@ export class DraftUpdateMineralSite extends MineralSite {
     return DedupMineralSite.getId(this.uri);
   }
 
-  updateField(edit: FieldEdit, reference: Reference) {
-    super.updateField(edit, reference);
+  updateField(stores: IStore, edit: FieldEdit, reference: Reference) {
+    super.updateField(stores, edit, reference);
     this.isSaved = false;
   }
 

@@ -6,6 +6,7 @@ import { useMemo } from "react";
 
 interface EditSiteFieldProps {
   sites: MineralSite[];
+  currentSite?: MineralSite;
   commodity: string;
   editField?: EditableField;
   onFinish: (change?: { edit: FieldEdit; reference: Reference }) => void;
@@ -18,7 +19,7 @@ type FormFields = {
   refAppliedToAll: boolean;
 };
 
-export const EditSiteField: React.FC<EditSiteFieldProps> = ({ sites, editField, commodity, onFinish }) => {
+export const EditSiteField: React.FC<EditSiteFieldProps> = ({ currentSite, sites, editField, commodity, onFinish }) => {
   const [form] = Form.useForm<FormFields>();
 
   const title = useMemo(() => {
@@ -50,10 +51,27 @@ export const EditSiteField: React.FC<EditSiteFieldProps> = ({ sites, editField, 
   };
 
   let fieldValueOptions: EditableSelectOption[] = [];
+  let initialValues = {
+    fieldValue: "",
+    refDocURI: "",
+    refComment: "",
+    refAppliedToAll: true,
+  };
+
   if (editField === "name") {
     fieldValueOptions = sites.map((site) => ({ key: site.id, label: site.name }));
+    if (currentSite !== undefined) {
+      initialValues.fieldValue = currentSite.name;
+      initialValues.refDocURI = currentSite.getFirstReferencedDocument().uri;
+      initialValues.refComment = currentSite.reference[0].comment;
+    }
   } else if (editField === "location") {
     fieldValueOptions = sites.filter((site) => site.locationInfo.location !== undefined).map((site) => ({ key: site.id, label: site.locationInfo.location! }));
+    if (currentSite !== undefined) {
+      initialValues.fieldValue = currentSite.locationInfo.location || "";
+      initialValues.refDocURI = currentSite.getFirstReferencedDocument().uri;
+      initialValues.refComment = currentSite.reference[0].comment;
+    }
   } else if (editField === "depositType") {
   }
 
@@ -86,23 +104,18 @@ export const EditSiteField: React.FC<EditSiteFieldProps> = ({ sites, editField, 
     });
   };
 
+  let fieldValueComponent;
+  if (editField === "grade" || editField === "tonnage") {
+    fieldValueComponent = <Input type="number" />;
+  } else {
+    fieldValueComponent = <EditableSelect onProvenanceChange={setFieldProvenance} options={fieldValueOptions} />;
+  }
+
   return (
     <Modal title="Edit Mineral Site" width="70%" open={editField !== undefined} onCancel={() => onFinish()} footer={null}>
-      <Form
-        form={form}
-        onFinish={onSave}
-        layout="vertical"
-        style={{ marginTop: 24, marginBottom: 24 }}
-        requiredMark={true}
-        initialValues={{
-          fieldValue: "",
-          refDocURI: "",
-          refComment: "",
-          refAppliedToAll: true,
-        }}
-      >
+      <Form form={form} onFinish={onSave} layout="vertical" style={{ marginTop: 24, marginBottom: 24 }} requiredMark={true} initialValues={initialValues}>
         <Form.Item<FormFields> name="fieldValue" label={title} required={true} tooltip="This is a required field" rules={[{ required: true, message: "Value cannot be empty" }]}>
-          <EditableSelect onProvenanceChange={setFieldProvenance} options={fieldValueOptions} />
+          {fieldValueComponent}
         </Form.Item>
         <Form.Item<FormFields> name="refDocURI" label="Reference" required={true} tooltip="This is a required field" rules={[{ required: true, type: "url", message: "Document URL" }]}>
           <EditableSelect onProvenanceChange={() => {}} options={docs} />

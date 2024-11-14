@@ -1,5 +1,5 @@
 export class GradeTonnage {
-  commodity: string;
+  commodity: string; // ID not URI
   totalTonnage?: number;
   totalGrade?: number;
   totalContainedMetal?: number;

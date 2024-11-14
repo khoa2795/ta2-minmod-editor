@@ -117,9 +117,9 @@ const columns = [
   {
     title: "Tonnage (Mt)",
     dataIndex: "totalTonnage",
-    render: (value: number | undefined) => {
-      if (value !== undefined) {
-        return value.toFixed(2);
+    render: (_: any, site: DedupMineralSite) => {
+      if (site.gradeTonnage !== undefined && site.gradeTonnage.totalTonnage !== undefined) {
+        return site.gradeTonnage.totalTonnage.toFixed(4);
       }
       return "-";
     },
@@ -127,9 +127,9 @@ const columns = [
   {
     title: "Grade (%)",
     dataIndex: "totalGrade",
-    render: (value: number | undefined) => {
-      if (value !== undefined) {
-        return value.toFixed(2);
+    render: (_: any, site: DedupMineralSite) => {
+      if (site.gradeTonnage !== undefined && site.gradeTonnage.totalGrade !== undefined) {
+        return site.gradeTonnage.totalGrade.toFixed(2);
       }
       return "-";
     },
