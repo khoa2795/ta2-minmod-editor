@@ -8,7 +8,7 @@ import { CanEntComponent, ListCanEntComponent } from "./CandidateEntity";
 import { join } from "misc";
 import { EditOutlined } from "@ant-design/icons";
 import { EditSiteField } from "./EditSiteField";
-import { green } from "@ant-design/colors";
+import { orange } from "@ant-design/colors";
 
 const css = {
   table: {
@@ -21,9 +21,9 @@ const css = {
     cursor: "pointer",
   },
   myEditedRow: {
-    backgroundColor: `${green[2]} !important`,
+    backgroundColor: `${orange[1]} !important`,
     "& > td": {
-      backgroundColor: `${green[2]} !important`,
+      backgroundColor: `${orange[1]} !important`,
     },
   },
 };

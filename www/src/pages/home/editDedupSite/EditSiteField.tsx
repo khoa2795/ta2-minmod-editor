@@ -111,15 +111,6 @@ export const EditSiteField: React.FC<EditSiteFieldProps> = ({ currentSite, sites
       throw new Error(`Unknown field ${editField}`);
     }
 
-    console.log("onFinish", {
-      edit,
-      reference: new Reference({
-        document: new Document({ uri: val.refDocURI }),
-        comment: val.refComment,
-        property: val.refAppliedToAll ? undefined : Reference.normalizeProperty(editField),
-      }),
-    });
-
     onFinish({
       edit,
       reference: new Reference({
