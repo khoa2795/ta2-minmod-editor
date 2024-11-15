@@ -1,7 +1,7 @@
-import { Button, Checkbox, Form, Input, Modal, Space } from "antd";
+import { Button, Checkbox, Form, Input, Modal, Select, Space } from "antd";
 import { EditableSelect, EditableSelectOption } from "components/EditableSelect";
 import _ from "lodash";
-import { MineralSite, Reference, Document, FieldEdit, EditableField } from "models";
+import { MineralSite, Reference, Document, FieldEdit, EditableField, useStores } from "models";
 import { useMemo } from "react";
 
 interface EditSiteFieldProps {
@@ -20,6 +20,7 @@ type FormFields = {
 };
 
 export const EditSiteField: React.FC<EditSiteFieldProps> = ({ currentSite, sites, editField, commodity, onFinish }) => {
+  const { depositTypeStore } = useStores();
   const [form] = Form.useForm<FormFields>();
 
   const title = useMemo(() => {
@@ -51,6 +52,7 @@ export const EditSiteField: React.FC<EditSiteFieldProps> = ({ currentSite, sites
   };
 
   let fieldValueOptions: EditableSelectOption[] = [];
+  let fieldValueOptions2: { value: string; label: string }[] = [];
   let initialValues = {
     fieldValue: "",
     refDocURI: "",
@@ -73,6 +75,21 @@ export const EditSiteField: React.FC<EditSiteFieldProps> = ({ currentSite, sites
       initialValues.refComment = currentSite.reference[0].comment;
     }
   } else if (editField === "depositType") {
+    fieldValueOptions2 = _.uniqBy(
+      sites.flatMap((site) => site.depositTypeCandidate).filter((deptype) => deptype.normalizedURI !== undefined),
+      "normalizedURI"
+    )
+      .sort((a, b) => a.confidence - b.confidence)
+      .map((type) => ({ value: type.normalizedURI!, label: depositTypeStore.getByURI(type.normalizedURI!)!.name }));
+
+    const predictedDepTypes = new Set(fieldValueOptions2.map((type) => type.value));
+    fieldValueOptions2 = fieldValueOptions2.concat(depositTypeStore.filter((type) => !predictedDepTypes.has(type.uri)).map((type) => ({ value: type.uri, label: type.name })));
+
+    if (currentSite !== undefined && currentSite.depositTypeCandidate.length > 0) {
+      initialValues.fieldValue = currentSite.depositTypeCandidate[0].normalizedURI!;
+      initialValues.refDocURI = currentSite.getFirstReferencedDocument().uri;
+      initialValues.refComment = currentSite.reference[0].comment;
+    }
   }
 
   const docs = _.uniqBy(
@@ -87,12 +104,21 @@ export const EditSiteField: React.FC<EditSiteFieldProps> = ({ currentSite, sites
     if (editField === "name" || editField === "location") {
       edit = { field: editField, value: val.fieldValue };
     } else if (editField === "depositType") {
-      edit = { field: editField, observedName: val.fieldValue, normalizedURI: "" };
+      edit = { field: editField, observedName: depositTypeStore.getByURI(val.fieldValue)!.name, normalizedURI: val.fieldValue };
     } else if (editField === "grade" || editField === "tonnage") {
       edit = { field: editField, value: parseFloat(val.fieldValue), commodity };
     } else {
       throw new Error(`Unknown field ${editField}`);
     }
+
+    console.log("onFinish", {
+      edit,
+      reference: new Reference({
+        document: new Document({ uri: val.refDocURI }),
+        comment: val.refComment,
+        property: val.refAppliedToAll ? undefined : Reference.normalizeProperty(editField),
+      }),
+    });
 
     onFinish({
       edit,
@@ -107,6 +133,8 @@ export const EditSiteField: React.FC<EditSiteFieldProps> = ({ currentSite, sites
   let fieldValueComponent;
   if (editField === "grade" || editField === "tonnage") {
     fieldValueComponent = <Input type="number" />;
+  } else if (editField === "depositType") {
+    fieldValueComponent = <Select options={fieldValueOptions2} />;
   } else {
     fieldValueComponent = <EditableSelect onProvenanceChange={setFieldProvenance} options={fieldValueOptions} />;
   }
@@ -117,7 +145,7 @@ export const EditSiteField: React.FC<EditSiteFieldProps> = ({ currentSite, sites
         <Form.Item<FormFields> name="fieldValue" label={title} required={true} tooltip="This is a required field" rules={[{ required: true, message: "Value cannot be empty" }]}>
           {fieldValueComponent}
         </Form.Item>
-        <Form.Item<FormFields> name="refDocURI" label="Reference" required={true} tooltip="This is a required field" rules={[{ required: true, type: "url", message: "Document URL" }]}>
+        <Form.Item<FormFields> name="refDocURI" label="Reference" required={true} tooltip="This is a required field" rules={[{ required: true, message: "Document URL" }]}>
           <EditableSelect onProvenanceChange={() => {}} options={docs} />
         </Form.Item>
         <Form.Item<FormFields> name="refComment" label="Comment">
