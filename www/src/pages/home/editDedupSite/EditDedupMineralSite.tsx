@@ -51,7 +51,7 @@ export const EditDedupMineralSite = withStyles(css)(
           key: "name",
           render: (_: any, site: MineralSite) => {
             return (
-              <Typography.Link href={site.uri} target="_blank">
+              <Typography.Link href={site.id} target="_blank">
                 {site.name}
               </Typography.Link>
             );

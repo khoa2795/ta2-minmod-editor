@@ -8,6 +8,7 @@ import { StateOrProvinceStore } from "models/stateOrProvince";
 import { CountryStore } from "models/country";
 import { MineralInventory } from "./MineralInventory";
 import { IStore } from "models";
+import { InternalID } from "models/typing";
 
 export type EditableField = "name" | "location" | "depositType" | "grade" | "tonnage";
 export type FieldEdit =
@@ -22,7 +23,7 @@ export type FieldEdit =
   | { field: "tonnage"; value: number; commodity: string };
 
 export type MineralSiteConstructorArgs = {
-  uri: string;
+  id: InternalID;
   recordId: string;
   sourceId: string;
   dedupSiteURI: string;
@@ -37,7 +38,7 @@ export type MineralSiteConstructorArgs = {
 };
 
 export class MineralSite {
-  uri: string;
+  id: InternalID;
   sourceId: string;
   recordId: string;
   dedupSiteURI: string;
@@ -50,8 +51,8 @@ export class MineralSite {
   gradeTonnage: { [commodity: string]: GradeTonnage };
   mineralInventory: MineralInventory[];
 
-  public constructor({ uri, recordId, sourceId, createdBy, name, locationInfo, depositTypeCandidate, reference, sameAs, gradeTonnage, dedupSiteURI, mineralInventory }: MineralSiteConstructorArgs) {
-    this.uri = uri;
+  public constructor({ id, recordId, sourceId, createdBy, name, locationInfo, depositTypeCandidate, reference, sameAs, gradeTonnage, dedupSiteURI, mineralInventory }: MineralSiteConstructorArgs) {
+    this.id = id;
     this.recordId = recordId;
     this.sourceId = sourceId;
     this.dedupSiteURI = dedupSiteURI;
@@ -63,10 +64,6 @@ export class MineralSite {
     this.sameAs = sameAs;
     this.gradeTonnage = gradeTonnage;
     this.mineralInventory = mineralInventory;
-  }
-
-  get id() {
-    return this.uri;
   }
 
   getReferencedDocuments(): { [uri: string]: Document } {
@@ -149,13 +146,13 @@ export class DraftCreateMineralSite extends MineralSite {
     username: string,
     reference: Reference
   ): DraftCreateMineralSite {
-    const baseSite = sites[0].uri === dedupMineralSite.sites[0] ? sites[0] : sites.filter((site) => site.uri === dedupMineralSite.sites[0])[0];
+    const baseSite = sites[0].id === dedupMineralSite.sites[0] ? sites[0] : sites.filter((site) => site.id === dedupMineralSite.sites[0])[0];
     const createdBy = `https://minmod.isi.edu/users/${username}`;
     const confidence = 1.0;
 
     return new DraftCreateMineralSite({
       draftID: `draft-${dedupMineralSite.id}`,
-      uri: "", // backend does not care about uri as they will recalculate it
+      id: "", // backend does not care about uri as they will recalculate it
       sourceId: DraftCreateMineralSite.updateSourceId(baseSite.sourceId, username),
       recordId: baseSite.recordId,
       dedupSiteURI: dedupMineralSite.uri,
@@ -188,11 +185,6 @@ export class DraftCreateMineralSite extends MineralSite {
 
 export class DraftUpdateMineralSite extends MineralSite {
   isSaved: boolean = true;
-
-  // TODO: fix me!!
-  get id() {
-    return DedupMineralSite.getId(this.uri);
-  }
 
   updateField(stores: IStore, edit: FieldEdit, reference: Reference) {
     super.updateField(stores, edit, reference);

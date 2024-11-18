@@ -2,6 +2,7 @@ import { CountryStore } from "models/country";
 import { DepositTypeStore } from "models/depositType";
 import { CandidateEntity, GradeTonnage, LocationInfo } from "models/mineralSite";
 import { StateOrProvinceStore } from "models/stateOrProvince";
+import { InternalID, IRI } from "models/typing";
 
 export class DedupMineralSiteDepositType {
   uri: string;
@@ -88,8 +89,8 @@ export class DedupMineralSiteLocation {
 }
 
 export class DedupMineralSite {
-  id: string;
-  uri: string;
+  id: InternalID;
+  uri: IRI;
   name: string;
   type: string;
   rank: string;
@@ -109,8 +110,8 @@ export class DedupMineralSite {
     location,
     gradeTonnage,
   }: {
-    id: string;
-    uri: string;
+    id: InternalID;
+    uri: IRI;
     name: string;
     type: string;
     rank: string;
@@ -140,8 +141,8 @@ export class DedupMineralSite {
 
   public static deserialize(record: any): DedupMineralSite {
     return new DedupMineralSite({
-      id: DedupMineralSite.getId(record.uri),
-      uri: record.uri,
+      id: record.id,
+      uri: `https://minmod.isi.edu/resource/${record.id}`,
       name: record.name,
       type: record.type,
       rank: record.rank,
