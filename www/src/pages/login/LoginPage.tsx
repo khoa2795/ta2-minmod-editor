@@ -12,7 +12,7 @@ export const LoginPage = () => {
 
   useEffect(() => {
     userStore.isLoggedIn().then((isLoggedIn) => {
-      if (isLoggedIn) routes.home.path().open();
+      if (isLoggedIn) routes.home.path({ commodity: undefined }).open();
     });
   }, [userStore]);
 
@@ -20,7 +20,7 @@ export const LoginPage = () => {
     event.preventDefault();
     try {
       await userStore.login(username, password);
-      routes.home.path().open();
+      routes.home.path({ commodity: undefined }).open();
     } catch (err) {
       setError("An error occurred. Please try again later.");
     }

@@ -27,6 +27,19 @@ export class CommodityStore extends RStore<string, Commodity> {
     return records;
   }
 
+  public getByName(name: string): Commodity | undefined | null {
+    if (this.records.size === 0) {
+      return undefined;
+    }
+
+    for (const commodity of this.records.values()) {
+      if (commodity !== null && commodity.name === name) {
+        return commodity;
+      }
+    }
+    return null;
+  }
+
   public deserialize(obj: any): Commodity {
     return {
       id: obj.uri.substring(obj.uri.lastIndexOf("/") + 1),

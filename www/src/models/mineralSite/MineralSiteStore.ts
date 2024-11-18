@@ -117,6 +117,6 @@ export class MineralSiteStore extends CRUDStore<string, DraftCreateMineralSite, 
   }
 
   protected normRemoteSuccessfulResponse(resp: any): FetchResponse {
-    return { items: resp.data, total: resp.total };
+    return { items: Array.isArray(resp.data) ? resp.data : Object.values(resp.data), total: resp.total };
   }
 }

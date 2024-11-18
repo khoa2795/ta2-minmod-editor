@@ -6018,10 +6018,10 @@ fuse.js@^6.4.6:
   resolved "https://registry.yarnpkg.com/fuse.js/-/fuse.js-6.6.2.tgz#fe463fed4b98c0226ac3da2856a415576dc9a111"
   integrity sha512-cJaJkxCCxC8qIIcPBF9yGxY0W/tVZS3uEISDxhYIdtk8OL93pe+6Zj7LjCqVV4dzbqcriOZ+kQ/NE4RXZHsIGA==
 
-gena-app@^4.4.0:
-  version "4.4.0"
-  resolved "https://registry.yarnpkg.com/gena-app/-/gena-app-4.4.0.tgz#241b2d7a0ccc9e41eebd837ffe409c853d0cc8f0"
-  integrity sha512-T/AbZQr6Pnyp6PjplCfFGhChPYUFa4mi756yG72nZ83CnPz4ab/wl2kspPxwGSOPYfyVIvIrTukkiehMromZYA==
+gena-app@^4.4.1:
+  version "4.4.1"
+  resolved "https://registry.yarnpkg.com/gena-app/-/gena-app-4.4.1.tgz#d76e3f1004526e8f89913290240a68483009bf94"
+  integrity sha512-TCUW8M3+WE+p0cgIft7fIbutP4k7l0qq+DCh2ifZp2gq/ujgjocIK9dBngpb8ePaNdDcsdNMaD4dKoSyEtqsog==
   dependencies:
     "@mui/styles" "^5.10.3"
     "@testing-library/jest-dom" "^5.11.4"

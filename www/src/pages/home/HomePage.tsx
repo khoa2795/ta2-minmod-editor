@@ -4,17 +4,17 @@ import React, { useEffect, useState } from "react";
 import { InternalLink } from "gena-app";
 import { Commodity, useStores } from "../../models";
 import { routes } from "../../routes";
-import { SearchBar } from "./SearchBar";
+import { SearchBar, useSearchArgs } from "./SearchBar";
 import { DedupMineralSiteTable } from "./DedupMineralSiteTable";
 
 export const HomePage = observer(() => {
-  const [selectedCommodity, setSelectedCommodity] = useState<Commodity | undefined>(undefined);
+  const [searchArgs, normSearchArgs, setSearchArgs] = useSearchArgs();
 
   return (
     <Flex vertical={true} gap="small">
-      <SearchBar onSearch={({ commodity }) => setSelectedCommodity(commodity)} />
+      <SearchBar searchArgs={searchArgs} setSearchArgs={setSearchArgs} />
 
-      <DedupMineralSiteTable commodity={selectedCommodity} />
+      <DedupMineralSiteTable commodity={normSearchArgs.commodity} />
     </Flex>
   );
 });

@@ -1,13 +1,10 @@
-import { PathDef, NoArgsPathDef, NoQueryArgsPathDef, applyLayout } from "gena-app";
+import { PathDef, NoArgsPathDef, NoURLArgsPathDef, applyLayout } from "gena-app";
 import { HomePage, LoginPage } from "./pages";
 
 import React, { useEffect } from "react";
 import { LeftNavBar } from "./components/Navbar";
 import { Space } from "antd";
-import logo from "./logo.png";
 
-import { CloudUploadOutlined, ProjectOutlined, SettingOutlined } from "@ant-design/icons";
-import { useStores } from "./models";
 import { RequiredAuthentication } from "components/RequiredAuthentication";
 
 /*************************************************************************************
@@ -45,7 +42,14 @@ export const routes = {
     pathDef: "/login",
     exact: true,
   }),
-  home: new NoArgsPathDef({ component: HomePage, pathDef: "/", exact: true }),
+  home: new NoURLArgsPathDef({
+    component: HomePage,
+    pathDef: "/",
+    exact: true,
+    querySchema: {
+      commodity: "optionalstring",
+    },
+  }),
 };
 (window as any)._routes = routes;
 
