@@ -66,6 +66,10 @@ export class MineralSite {
     this.mineralInventory = mineralInventory;
   }
 
+  get uri(): string {
+    return `https://minmod.isi.edu/resource/${this.id}`;
+  }
+
   getReferencedDocuments(): { [uri: string]: Document } {
     const docs: { [uri: string]: Document } = {};
     for (const ref of this.reference) {
