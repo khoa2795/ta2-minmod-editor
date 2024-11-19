@@ -2153,9 +2153,9 @@
   integrity sha512-K0VQKziLUWkVKiRVrx4a40iPaxTUefQmjtkQofBkYRcoaaL/8rhwDWww9qWbrgicNOgnpIsMxyNIUM4+n6dUIA==
 
 "@types/node@*":
-  version "22.9.0"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-22.9.0.tgz#b7f16e5c3384788542c72dc3d561a7ceae2c0365"
-  integrity sha512-vuyHg81vvWA1Z1ELfvLko2c8f34gyA0zaic0+Rllc5lbCnbSyuvb2Oxpm6TAUAC/2xZN3QGqxBNggD1nNR2AfQ==
+  version "22.9.1"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-22.9.1.tgz#bdf91c36e0e7ecfb7257b2d75bf1b206b308ca71"
+  integrity sha512-p8Yy/8sw1caA8CdRIQBG5tiLHmxtQKObCijiAa9Ez+d4+PRffM4054xbju0msf+cvhJpnFEeNjxmVT/0ipktrg==
   dependencies:
     undici-types "~6.19.8"
 
@@ -6014,9 +6014,9 @@ fuse.js@^6.4.6:
   integrity sha512-cJaJkxCCxC8qIIcPBF9yGxY0W/tVZS3uEISDxhYIdtk8OL93pe+6Zj7LjCqVV4dzbqcriOZ+kQ/NE4RXZHsIGA==
 
 gena-app@^4.4.3:
-  version "4.4.3"
-  resolved "https://registry.yarnpkg.com/gena-app/-/gena-app-4.4.3.tgz#c063bd97ddbd0984d070ff6dbcdfb4409c384bd8"
-  integrity sha512-e3VLHJoJUWuwuXvCa+YpYh7YBwSBGMGuEKfYBQk8dJOPZiI4sBSEXzSzifJPul2j2WdFKvIDS+gsol+40IJ2+Q==
+  version "4.4.4"
+  resolved "https://registry.yarnpkg.com/gena-app/-/gena-app-4.4.4.tgz#146577cc398abf0fb2302013272e880da04d7366"
+  integrity sha512-iZcWmYcDDuprwp+vufEEAw6Bbk5MOREpBV2GERh+MgHlZZdQM4wVIiBLkq01cmgYMCKaWiEAdEnEpkCs/NQtLQ==
   dependencies:
     "@mui/styles" "^5.10.3"
     "@testing-library/jest-dom" "^5.11.4"

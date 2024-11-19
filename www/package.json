@@ -20,6 +20,7 @@
     "@types/react-router-dom": "^5.1.9",
     "antd": "^5.21.6",
     "axios": "^1.7.7",
+    "caniuse-lite": "1.0.30001632",
     "fuse.js": "^6.4.6",
     "gena-app": "^4.4.3",
     "hyphenation.en-us": "^0.2.1",
@@ -33,8 +34,7 @@
     "react-router-dom": "^5.3.0",
     "react-scripts": "4.0.3",
     "typescript": "^4.1.2",
-    "web-vitals": "^1.0.1",
-    "caniuse-lite": "1.0.30001632"
+    "web-vitals": "^1.0.1"
   },
   "resolutions": {
     "//": "See https://github.com/facebook/create-react-app/issues/11773",
@@ -51,6 +51,7 @@
     "start_nonroot": "PORT=5527 CHOKIDAR_USEPOLLING=true BROWSER=none DANGEROUSLY_DISABLE_HOST_CHECK=true react-scripts start",
     "build": "python ./scripts/build.py ../minmod_editor/www",
     "build:macos": "NODE_OPTIONS=--openssl-legacy-provider python ./scripts/build.py ../minmod_editor/www",
+    "build:editor": "PUBLIC_URL=/editor NODE_OPTIONS=--openssl-legacy-provider python ./scripts/build.py ../minmod_editor/www",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "build:lib": "yarn compile && yarn compile:post",

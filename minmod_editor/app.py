@@ -24,7 +24,7 @@ app = Flask(
     __name__,
     template_folder=os.path.join(pkg_dir, "www"),
     static_folder=os.path.join(pkg_dir, "www/static"),
-    static_url_path="/static",
+    static_url_path="/editor/static",
 )
 app.config["app.json.sort_keys"] = False
 
@@ -63,8 +63,8 @@ def forward_request(
     return response
 
 
-@app.route("/", defaults={"path": ""})
-@app.route("/<path:path>")
+@app.route("/editor", defaults={"path": ""})
+@app.route("/editor/<path:path>")
 def home(path):
     if path.find("/") == -1 and path.find(".") != -1:
         if path.endswith(".json") or path.endswith(".ico") or path.endswith(".png"):

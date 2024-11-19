@@ -6,6 +6,7 @@ import { LeftNavBar } from "./components/Navbar";
 import { Space } from "antd";
 
 import { RequiredAuthentication } from "components/RequiredAuthentication";
+import { PUBLIC_URL } from "env";
 
 /*************************************************************************************
  * Layouts of the application
@@ -39,12 +40,12 @@ const None = () => <h1>Not supposed to see this page</h1>;
 export const routes = {
   login: new NoArgsPathDef({
     component: LoginPage,
-    pathDef: "/login",
+    pathDef: `${PUBLIC_URL}/login`,
     exact: true,
   }),
   home: new NoURLArgsPathDef({
     component: HomePage,
-    pathDef: "/",
+    pathDef: `${PUBLIC_URL}/`,
     exact: true,
     querySchema: {
       commodity: "optionalstring",

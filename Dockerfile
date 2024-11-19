@@ -34,7 +34,6 @@ ADD --chown=criticalmaas:criticalmaas minmod_editor /home/criticalmaas/kg/minmod
 
 # add www code
 # ADD --chown=criticalmaas:criticalmaas www /home/criticalmaas/kg/www
-
 # RUN cd /home/criticalmaas/kg/www && yarn build:macos
 
 WORKDIR /home/criticalmaas/kg/
