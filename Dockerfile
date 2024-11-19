@@ -12,7 +12,7 @@ RUN groupadd -f -g $GID criticalmaas && useradd -ms /bin/bash criticalmaas -u $U
 
 USER criticalmaas
 
-ENV PATH="/home/criticalmaas/.local/bin:${PATH}"
+ENV PATH="/home/criticalmaas/kg/.venv/bin:${PATH}"
 
 # install libraries
 RUN mkdir -p /home/criticalmaas/kg/minmod_editor && \
@@ -22,7 +22,7 @@ ADD pyproject.toml /home/criticalmaas/kg/
 ADD poetry.lock /home/criticalmaas/kg/
 ADD README.md /home/criticalmaas/kg/
 
-RUN cd /home/criticalmaas/kg && python3 -m venv .venv && .venv/bin/pip install .
+RUN cd /home/criticalmaas/kg && python3 -m venv .venv && pip install .
 
 RUN mkdir -p /home/criticalmaas/kg/www
 ADD --chown=criticalmaas:criticalmaas www/package.json /home/criticalmaas/kg/www/
@@ -39,4 +39,4 @@ RUN cd /home/criticalmaas/kg/www && yarn build
 
 WORKDIR /home/criticalmaas/kg/
 
-CMD [ "/home/criticalmaas/kg/.venv/bin/python", "-m", "minmod_editor" ]
+CMD [ "python", "-m", "minmod_editor" ]
