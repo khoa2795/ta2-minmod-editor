@@ -1,24 +1,10 @@
-version: '3.8'
-
 services:
-  frontend:
+  editor:
+    image: darpa-criticalmaas/ta2-minmod-editor
     build:
-      context: ./minmod
+      context: .
       dockerfile: Dockerfile
+    environment:
+      - MINMOD_API=https://dev.minmod.isi.edu
     ports:
-      - "3000:80"
-    networks:
-      - app-network
-
-  backend:
-    build:
-      context: ./ISI BACKEND
-      dockerfile: Dockerfile
-    ports:
-      - "8000:8000"
-    networks:
-      - app-network
-
-networks:
-  app-network:
-    driver: bridge
+      - "8888:80"
