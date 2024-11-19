@@ -10,8 +10,10 @@ import { Country, CountryStore } from "./country";
 import { StateOrProvince, StateOrProvinceStore } from "./stateOrProvince";
 import { DedupMineralSite, DedupMineralSiteStore } from "./dedupMineralSite";
 import { FieldEdit, EditableField, Reference, Document, GradeTonnage, CandidateEntity, DraftCreateMineralSite, DraftUpdateMineralSite, MineralSite, MineralSiteStore } from "./mineralSite";
+import { NamespaceManager, BindedNamespace } from "./Namespace";
 
-const dedupMineralSiteStore = new DedupMineralSiteStore();
+const namespaceManager = new NamespaceManager();
+const dedupMineralSiteStore = new DedupMineralSiteStore(namespaceManager);
 
 export const stores = {
   userStore: new UserStore(),
@@ -46,5 +48,5 @@ export function useStores(): IStore {
   return React.useContext(StoreContext);
 }
 
-export { Document, DedupMineralSite, MineralSite, Reference, GradeTonnage, CandidateEntity, DraftCreateMineralSite, DraftUpdateMineralSite };
+export { Document, DedupMineralSite, MineralSite, Reference, GradeTonnage, CandidateEntity, DraftCreateMineralSite, DraftUpdateMineralSite, BindedNamespace, NamespaceManager };
 export type { FieldEdit, EditableField, Commodity, User, DepositType, Country, StateOrProvince };

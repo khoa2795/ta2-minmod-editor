@@ -1,3 +1,4 @@
+import { IStore } from "models";
 import { CountryStore } from "models/country";
 import { DepositTypeStore } from "models/depositType";
 import { CandidateEntity, GradeTonnage, LocationInfo } from "models/mineralSite";
@@ -5,17 +6,17 @@ import { StateOrProvinceStore } from "models/stateOrProvince";
 import { InternalID, IRI } from "models/typing";
 
 export class DedupMineralSiteDepositType {
-  uri: string;
+  uri: IRI;
   source: string;
   confidence: number;
 
-  public constructor({ uri, source, confidence }: { uri: string; source: string; confidence: number }) {
+  public constructor({ uri, source, confidence }: { uri: IRI; source: string; confidence: number }) {
     this.uri = uri;
     this.source = source;
     this.confidence = confidence;
   }
 
-  public toCandidateEntity(stores: { depositTypeStore: DepositTypeStore }): CandidateEntity {
+  public toCandidateEntity(stores: IStore): CandidateEntity {
     return new CandidateEntity({
       source: this.source,
       confidence: this.confidence,
@@ -28,10 +29,10 @@ export class DedupMineralSiteDepositType {
 export class DedupMineralSiteLocation {
   lat?: number;
   lon?: number;
-  country: string[];
-  stateOrProvince: string[];
+  country: IRI[];
+  stateOrProvince: IRI[];
 
-  public constructor({ lat, lon, country, stateOrProvince }: { lat?: number; lon?: number; country: string[]; stateOrProvince: string[] }) {
+  public constructor({ lat, lon, country, stateOrProvince }: { lat?: number; lon?: number; country: IRI[]; stateOrProvince: IRI[] }) {
     this.lat = lat;
     this.lon = lon;
     this.country = country;
@@ -94,7 +95,7 @@ export class DedupMineralSite {
   name: string;
   type: string;
   rank: string;
-  sites: string[];
+  sites: IRI[];
   depositTypes: DedupMineralSiteDepositType[];
   location?: DedupMineralSiteLocation;
   gradeTonnage: GradeTonnage;

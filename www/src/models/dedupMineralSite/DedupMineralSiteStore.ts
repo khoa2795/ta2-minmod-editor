@@ -1,13 +1,18 @@
 import { RStore, FetchResponse, FetchResult, SingleKeyIndex } from "gena-app";
 import { SERVER } from "../../env";
 import { Commodity } from "models/commodity";
-import { DedupMineralSite } from "./DedupMineralSite";
+import { DedupMineralSite, DedupMineralSiteDepositType, DedupMineralSiteLocation } from "./DedupMineralSite";
 import axios from "axios";
 import { action, makeObservable, runInAction } from "mobx";
+import { NamespaceManager } from "models/Namespace";
+import { GradeTonnage } from "models/mineralSite";
 
 export class DedupMineralSiteStore extends RStore<string, DedupMineralSite> {
-  constructor() {
+  ns: NamespaceManager;
+
+  constructor(ns: NamespaceManager) {
     super(`${SERVER}/api/v1/dedup-mineral-sites`, undefined, false, [new SingleKeyIndex("commodity", "id")]);
+    this.ns = ns;
 
     makeObservable(this, {
       forceFetchByURI: action,
@@ -74,7 +79,34 @@ export class DedupMineralSiteStore extends RStore<string, DedupMineralSite> {
   }
 
   public deserialize(record: any): DedupMineralSite {
-    return DedupMineralSite.deserialize(record);
+    const MR = this.ns.MR;
+
+    return new DedupMineralSite({
+      id: record.id,
+      uri: MR.getURI(record.id),
+      name: record.name,
+      type: record.type,
+      rank: record.rank,
+      sites: record.sites,
+      depositTypes: record.deposit_types.map(
+        (depositType: any) =>
+          new DedupMineralSiteDepositType({
+            uri: MR.getURI(depositType.id),
+            source: depositType.source,
+            confidence: depositType.confidence,
+          })
+      ),
+      location:
+        record.location !== undefined
+          ? new DedupMineralSiteLocation({
+              lat: record.location.lat,
+              lon: record.location.lon,
+              country: (record.location.country || []).map((country: string) => MR.getURI(country)),
+              stateOrProvince: (record.location.state_or_province || []).map((sop: string) => MR.getURI(sop)),
+            })
+          : undefined,
+      gradeTonnage: GradeTonnage.deserialize(record.grade_tonnage),
+    });
   }
 
   protected normRemoteSuccessfulResponse(resp: any): FetchResponse {

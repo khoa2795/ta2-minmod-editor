@@ -1,10 +1,12 @@
+import { InternalID } from "models/typing";
+
 export class GradeTonnage {
-  commodity: string; // ID not URI
+  commodity: InternalID; // ID not URI
   totalTonnage?: number;
   totalGrade?: number;
   totalContainedMetal?: number;
 
-  public constructor({ commodity, totalTonnage, totalGrade, totalContainedMetal }: { commodity: string; totalTonnage?: number; totalGrade?: number; totalContainedMetal?: number }) {
+  public constructor({ commodity, totalTonnage, totalGrade, totalContainedMetal }: { commodity: InternalID; totalTonnage?: number; totalGrade?: number; totalContainedMetal?: number }) {
     this.commodity = commodity;
     this.totalTonnage = totalTonnage;
     this.totalGrade = totalGrade;
