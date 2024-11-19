@@ -1,4 +1,3 @@
-import { IStore } from "models";
 import { CountryStore } from "models/country";
 import { DepositTypeStore } from "models/depositType";
 import { CandidateEntity, GradeTonnage, LocationInfo } from "models/mineralSite";
@@ -16,7 +15,7 @@ export class DedupMineralSiteDepositType {
     this.confidence = confidence;
   }
 
-  public toCandidateEntity(stores: IStore): CandidateEntity {
+  public toCandidateEntity(stores: { depositTypeStore: DepositTypeStore }): CandidateEntity {
     return new CandidateEntity({
       source: this.source,
       confidence: this.confidence,
