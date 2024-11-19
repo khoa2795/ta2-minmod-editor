@@ -125,7 +125,7 @@ export const EditSiteField: React.FC<EditSiteFieldProps> = ({ currentSite, sites
   if (editField === "grade" || editField === "tonnage") {
     fieldValueComponent = <Input type="number" />;
   } else if (editField === "depositType") {
-    fieldValueComponent = <Select options={fieldValueOptions2} />;
+    fieldValueComponent = <Select showSearch={true} options={fieldValueOptions2} optionFilterProp="label" />;
   } else {
     fieldValueComponent = <EditableSelect onProvenanceChange={setFieldProvenance} options={fieldValueOptions} />;
   }
