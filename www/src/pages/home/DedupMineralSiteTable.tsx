@@ -31,7 +31,7 @@ const columns = [
         </Typography.Link>
       );
     },
-    sorter: true,
+    sorter: (a: DedupMineralSite, b: DedupMineralSite) => a.name.localeCompare(b.name),
   },
   {
     title: "Type",
@@ -39,6 +39,7 @@ const columns = [
     render: (_: any, site: DedupMineralSite) => {
       return <span className="font-small">{site.type}</span>;
     },
+    sorter: (a: DedupMineralSite, b: DedupMineralSite) => a.type.localeCompare(b.type),
   },
   {
     title: "Rank",
@@ -46,6 +47,7 @@ const columns = [
     render: (_: any, site: DedupMineralSite) => {
       return <span className="font-small">{site.rank}</span>;
     },
+    sorter: (a: DedupMineralSite, b: DedupMineralSite) => a.rank.localeCompare(b.rank),
   },
   {
     title: "Location",

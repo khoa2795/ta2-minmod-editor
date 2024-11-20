@@ -1,6 +1,6 @@
 {
   "name": "minmod-editor",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "dependencies": {
     "@ant-design/icons": "^5.5.1",
