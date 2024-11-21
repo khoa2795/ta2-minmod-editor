@@ -62,7 +62,11 @@ export const DedupMineralSiteTable: React.FC<DedupMineralSiteTableProps> = obser
         key: "location",
         render: (value: any, dedupSite: DedupMineralSite) => {
           if (dedupSite.location !== undefined && dedupSite.location.lat !== undefined && dedupSite.location.lon !== undefined) {
-            return `${dedupSite.location.lat.toFixed(5)}, ${dedupSite.location.lon.toFixed(5)}`;
+            return (
+              <Typography.Link href={`http://maps.google.com/maps?z=12&t=m&q=loc:${dedupSite.location.lat}+${dedupSite.location.lon}`} target="_blank">
+                {`${dedupSite.location.lat.toFixed(5)}, ${dedupSite.location.lon.toFixed(5)}`}
+              </Typography.Link>
+            );
           }
           return "᠆";
         },
