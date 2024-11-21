@@ -1,4 +1,4 @@
-import { Dropdown, Input, MenuProps, Space } from "antd";
+import { Dropdown, Input, MenuProps, Select, Space, Typography } from "antd";
 import { DownOutlined, SmileOutlined, UserOutlined, CloseCircleOutlined } from "@ant-design/icons";
 import { useState } from "react";
 
@@ -14,6 +14,8 @@ export interface EditableSelectProps {
   options: EditableSelectOption[];
 }
 
+const UNSELECT_VALUE = "e269e284cd592d703cb477fc2075cfde6ebfa9299e06deb0850f6061f72a6a9f";
+
 /**
  * First time, it shows the dropdown with predefined options.
  *
@@ -28,26 +30,6 @@ export interface EditableSelectProps {
  */
 export const EditableSelect: React.FC<EditableSelectProps> = (props) => {
   const [selectingValue, setSelectingValue] = useState(props.value !== undefined);
-  const items: MenuProps["items"] = props.options.map((option) => ({
-    key: option.key,
-    label: option.label,
-    onClick: () => {
-      setSelectingValue(true);
-      if (props.onChange !== undefined) props.onChange(option.label);
-      props.onProvenanceChange(option.key);
-    },
-  }));
-  items.push({ type: "divider" });
-  items.push({
-    key: "new",
-    label: "Enter your own",
-    onClick: () => {
-      setSelectingValue(true);
-      props.onProvenanceChange(undefined);
-      if (props.onChange !== undefined) props.onChange("");
-    },
-  });
-
   if (selectingValue) {
     return (
       <Input
@@ -67,11 +49,14 @@ export const EditableSelect: React.FC<EditableSelectProps> = (props) => {
     );
   }
 
-  // Update React will solve the update state of unmounted component warnings
-  // https://github.com/ant-design/ant-design/issues/44994
-  return (
-    <Dropdown menu={{ items, style: { marginLeft: -12, marginTop: 8 } }}>
-      <Input value={props.value} placeholder={"Select an option or enter your own"} suffix={<DownOutlined style={{ color: "rgba(0,0,0,.25)" }} />} />
-    </Dropdown>
-  );
+  const options: object[] = props.options.map((option) => ({ value: option.key, label: option.label }));
+  options.push({ value: UNSELECT_VALUE, label: <Typography.Text italic={true}>Enter your own</Typography.Text> });
+
+  const onUpdateOption = (option: { value: string; label: string }) => {
+    setSelectingValue(true);
+    if (props.onChange !== undefined) props.onChange(option.label);
+    if (option.value !== UNSELECT_VALUE) props.onProvenanceChange(option.value);
+  };
+
+  return <Select options={options} onChange={(value, option) => onUpdateOption(option as any)} />;
 };

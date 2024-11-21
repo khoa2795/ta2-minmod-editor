@@ -16,7 +16,7 @@ interface DedupMineralSiteTableProps {
 const emptyFetchResult = { records: [], total: 0 };
 
 export const DedupMineralSiteTable: React.FC<DedupMineralSiteTableProps> = observer(({ commodity }) => {
-  const { dedupMineralSiteStore, countryStore, stateOrProvinceStore } = useStores();
+  const { dedupMineralSiteStore, depositTypeStore, countryStore, stateOrProvinceStore } = useStores();
   const [editingDedupSite, setEditingDedupSite] = useState<string | undefined>(undefined);
   const [selectedDedupSiteIds, setSelectedDedupSiteIds] = useState<Set<string>>(new Set());
 
@@ -126,7 +126,13 @@ export const DedupMineralSiteTable: React.FC<DedupMineralSiteTableProps> = obser
           }
           return <Entity uri={dt.uri} store="depositTypeStore" />;
         },
-        // sorter: (a: DedupMineralSite, b: DedupMineralSite) => (a.getTop1DepositType()?.name || "").localeCompare(b.getTop1DepositType()?.name || ""),
+        sorter: (a: DedupMineralSite, b: DedupMineralSite) => {
+          const dtA = a.getTop1DepositType()?.uri;
+          const dtB = b.getTop1DepositType()?.uri;
+          const dtAName = dtA !== undefined ? depositTypeStore.getByURI(dtA)!.name : "";
+          const dtBName = dtB !== undefined ? depositTypeStore.getByURI(dtB)!.name : "";
+          return dtAName.localeCompare(dtBName);
+        },
       },
       {
         title: "Dep. Score",

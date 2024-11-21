@@ -16,7 +16,7 @@ interface EditSiteFieldProps {
 }
 
 type FormFields = {
-  fieldValue: string;
+  fieldValue: string | undefined;
   refDoc: Document | null;
   refComment: string;
   refAppliedToAll: boolean;
@@ -87,7 +87,7 @@ export const EditSiteField: React.FC<EditSiteFieldProps> = ({ currentSite, sites
   const onSave = (values: any) => {
     if (editField === undefined) return;
     const val = form.getFieldsValue();
-    if (val.refDoc === null) {
+    if (val.refDoc === null || val.fieldValue === undefined) {
       return;
     }
 
@@ -143,7 +143,7 @@ export const EditSiteField: React.FC<EditSiteFieldProps> = ({ currentSite, sites
 };
 
 const defaultInitialValues: FormFields = {
-  fieldValue: "",
+  fieldValue: undefined,
   refDoc: null,
   refComment: "",
   refAppliedToAll: true,

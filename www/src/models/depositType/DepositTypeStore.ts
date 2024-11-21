@@ -1,15 +1,16 @@
 import { RStore, FetchResponse, SingleKeyUniqueIndex } from "gena-app";
 import { SERVER } from "../../env";
+import { InternalID } from "models/typing";
 
 export interface DepositType {
-  id: string; // it is the URI
+  id: InternalID; // it is the URI
   uri: string;
   name: string;
   environment: string;
   group: string;
 }
 
-export class DepositTypeStore extends RStore<string, DepositType> {
+export class DepositTypeStore extends RStore<InternalID, DepositType> {
   constructor() {
     super(`${SERVER}/api/v1/deposit-types`, undefined, false, [new SingleKeyUniqueIndex("name", "id"), new SingleKeyUniqueIndex("uri", "id")]);
   }

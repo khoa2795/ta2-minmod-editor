@@ -20,7 +20,7 @@ export class DedupMineralSiteDepositType {
       source: this.source,
       confidence: this.confidence,
       normalizedURI: this.uri,
-      observedName: stores.depositTypeStore.get(this.uri)?.name,
+      observedName: stores.depositTypeStore.getByURI(this.uri)?.name,
     });
   }
 }

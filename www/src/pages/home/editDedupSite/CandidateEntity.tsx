@@ -1,21 +1,30 @@
 import { Typography } from "antd";
-import { CandidateEntity } from "models";
+import { CandidateEntity, useStores } from "models";
 
 interface CanEntCompProps {
   entity?: CandidateEntity;
+  store?: "depositTypeStore";
 }
 
 interface ListCanEntProps {
   entities: CandidateEntity[];
 }
 
-export const CanEntComponent: React.FC<CanEntCompProps> = ({ entity }: CanEntCompProps) => {
+export const CanEntComponent: React.FC<CanEntCompProps> = ({ entity, store }: CanEntCompProps) => {
+  const stores = useStores();
+
   if (entity === undefined) {
     return <span>-</span>;
   }
 
-  const name = entity.observedName === undefined ? " " : entity.observedName;
+  let name = entity.observedName === undefined ? " " : entity.observedName;
   if (entity.normalizedURI !== undefined) {
+    if (store !== undefined) {
+      const ent = stores[store].getByURI(entity.normalizedURI);
+      if (ent !== undefined && ent !== null) {
+        name = ent.name;
+      }
+    }
     return (
       <Typography.Link href={entity.normalizedURI} target="_blank">
         {name}

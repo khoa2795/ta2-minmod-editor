@@ -8,13 +8,15 @@ export interface EditRefDocProps {
   onChange?: (doc: Document | null) => void;
 }
 
+const UNSELECT_VALUE = "e269e284cd592d703cb477fc2075cfde6ebfa9299e06deb0850f6061f72a6a9f";
+
 export const EditRefDoc: React.FC<EditRefDocProps> = ({ availableDocs, value: doc, onChange }) => {
   const [selectingValue, setSelectingValue] = useState(false);
   const options: object[] = availableDocs.map((doc) => ({ value: doc.uri, label: doc.title || doc.uri }));
-  options.push({ value: null, label: <Typography.Text italic={true}>Enter your own</Typography.Text> });
+  options.push({ value: UNSELECT_VALUE, label: <Typography.Text italic={true}>Enter your own</Typography.Text> });
 
-  const onUpdateOption = (uri: string | null) => {
-    if (uri === null) {
+  const onUpdateOption = (uri: string) => {
+    if (uri === UNSELECT_VALUE) {
       setSelectingValue(true);
       if (onChange !== undefined) onChange(null);
     } else {
@@ -51,5 +53,5 @@ export const EditRefDoc: React.FC<EditRefDocProps> = ({ availableDocs, value: do
     );
   }
 
-  return <Select showSearch={true} options={options} value={doc === null || doc === undefined ? null : doc.uri} onChange={(uri) => onUpdateOption(uri)} />;
+  return <Select options={options} value={doc === null || doc === undefined ? undefined : doc.uri} onChange={(uri) => onUpdateOption(uri)} />;
 };

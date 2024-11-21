@@ -162,7 +162,7 @@ export const EditDedupMineralSite = withStyles(css)(
           ),
           key: "deposit-type",
           render: (_: any, site: MineralSite) => {
-            return <CanEntComponent entity={site.depositTypeCandidate[0]} />;
+            return <CanEntComponent entity={site.depositTypeCandidate[0]} store="depositTypeStore" />;
           },
         },
         {

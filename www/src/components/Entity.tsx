@@ -19,7 +19,6 @@ export const Entity: React.FC<EntityProps> = ({ uri: uri, store }) => {
   }
 
   if (record === undefined) {
-    console.log({ store, db, uri, record });
     return (
       <Typography.Link href={uri} target="_blank">
         Loading...
