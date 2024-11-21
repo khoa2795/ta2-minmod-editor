@@ -129,27 +129,20 @@ export class DedupMineralSiteStore extends RStore<string, DedupMineralSite> {
       location:
         record.location !== undefined
           ? new DedupMineralSiteLocation({
-            lat: record.location.lat,
-            lon: record.location.lon,
-            country: (record.location.country || []).map((country: string) => MR.getURI(country)),
-            stateOrProvince: (record.location.state_or_province || []).map((sop: string) => MR.getURI(sop)),
-          })
+              lat: record.location.lat,
+              lon: record.location.lon,
+              country: (record.location.country || []).map((country: string) => MR.getURI(country)),
+              stateOrProvince: (record.location.state_or_province || []).map((sop: string) => MR.getURI(sop)),
+            })
           : undefined,
       gradeTonnage: GradeTonnage.deserialize(record.grade_tonnage),
     });
   }
 
   async updateSameAsGroup(groups: { sites: InternalID[] }[]): Promise<InternalID[]> {
-    const response = await axios.post("/api/v1/same-as", groups, {
-      headers: {
-        "Content-Type": "application/json",
-      },
-      withCredentials: true,
-    });
-    return response.data.map((dedupSite: any) => dedupSite.id);
+    const resp = await axios.post("/api/v1/same-as", groups);
+    return resp.data.map((dedupSite: any) => dedupSite.id);
   }
-
-
 
   protected normRemoteSuccessfulResponse(resp: any): FetchResponse {
     return { items: Array.isArray(resp.data) ? resp.data : Object.values(resp.data), total: resp.total };

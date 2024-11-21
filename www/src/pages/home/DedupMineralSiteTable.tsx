@@ -200,20 +200,19 @@ export const DedupMineralSiteTable: React.FC<DedupMineralSiteTableProps> = obser
     const fetchData = async () => {
       if (commodity !== undefined) {
         await dedupMineralSiteStore.fetchByCommodity(commodity);
-
       }
     };
     fetchData();
   }, [commodity, dedupMineralSiteStore]);
 
-
   const selectDedupSite = (site: DedupMineralSite, selectOrNot: boolean) => {
-
+    const newSelectedDedupSiteIds = new Set(selectedDedupSiteIds);
     if (selectOrNot) {
-      setSelectedDedupSiteIds(selectedDedupSiteIds.union(new Set([site.id])));
+      newSelectedDedupSiteIds.add(site.id);
     } else {
-      setSelectedDedupSiteIds(selectedDedupSiteIds.difference(new Set([site.id])));
+      newSelectedDedupSiteIds.delete(site.id);
     }
+    setSelectedDedupSiteIds(newSelectedDedupSiteIds);
   };
 
   const handleGroup = async () => {
@@ -240,30 +239,30 @@ export const DedupMineralSiteTable: React.FC<DedupMineralSiteTableProps> = obser
 
   return (
     <>
-      {selectedDedupSiteIds.size > 0 && (
-        <>
-          <div>
-            <Button type="primary" onClick={handleGroup}>
-              Group selected sites
-            </Button>
-          </div>
-          <Table<DedupMineralSite>
-            bordered={true}
-            size="small"
-            rowKey="id"
-            pagination={false}
-            columns={[
-              {
-                title: "Select",
-                key: "group",
-                render: (_: any, site: DedupMineralSite) => <Checkbox type="primary" checked={true} onClick={() => selectDedupSite(site, false)} />,
-              },
-              ...columns.slice(1),
-            ]}
-            dataSource={Array.from(selectedDedupSiteIds).map((id) => dedupMineralSiteStore.get(id)!)}
-          />
-        </>
-      )}
+      {selectedDedupSiteIds.size > 0
+        ? [
+            <div>
+              <Button type="primary" onClick={handleGroup} disabled={selectedDedupSiteIds.size === 1}>
+                Group selected sites
+              </Button>
+            </div>,
+            <Table<DedupMineralSite>
+              bordered={true}
+              size="small"
+              rowKey="id"
+              pagination={false}
+              columns={[
+                {
+                  title: "Select",
+                  key: "group",
+                  render: (_: any, site: DedupMineralSite) => <Checkbox type="primary" checked={true} onClick={() => selectDedupSite(site, false)} />,
+                },
+                ...columns.slice(1),
+              ]}
+              dataSource={Array.from(selectedDedupSiteIds).map((id) => dedupMineralSiteStore.get(id)!)}
+            />,
+          ]
+        : []}
       <Table<DedupMineralSite>
         bordered={true}
         size="small"

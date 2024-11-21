@@ -124,7 +124,9 @@ export const SearchBar: React.FC<SearchBarProps> = ({ searchArgs, setSearchArgs 
 
   return (
     <Space>
-      <Typography.Text>Commodity:</Typography.Text>
+      <Typography.Text>
+        Commodity<span style={{ color: "red" }}>*</span>:
+      </Typography.Text>
       <Select style={{ width: 200 }} value={searchArgs.commodity} placeholder="Select a commodity" showSearch={true} optionFilterProp="label" onChange={onSelect} options={options} />
     </Space>
   );

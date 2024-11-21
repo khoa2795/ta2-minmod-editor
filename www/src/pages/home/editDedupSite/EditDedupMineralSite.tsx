@@ -40,7 +40,6 @@ export const EditDedupMineralSite = withStyles(css)(
     const [editField, setEditField] = useState<EditableField | undefined>(undefined);
     const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
 
-
     const tmpLst: (MineralSite | null | undefined)[] = dedupSite.sites.map((id) => mineralSiteStore.get(id));
     // no idea why typescript compiler incorrectly complains about the incorrect type
     const fetchedSites = tmpLst.filter((site) => site !== undefined) as (MineralSite | null)[];
@@ -49,31 +48,22 @@ export const EditDedupMineralSite = withStyles(css)(
 
     const ungroupTogether = async () => {
       const selectedSiteIds = Array.from(selectedRows);
-
       const allSiteIds = sites.map((site) => site.id);
-
       const unselectedSiteIds = allSiteIds.filter((id) => !selectedRows.has(id));
 
-      const newGroups =
-        [
-          { sites: selectedSiteIds },
-          { sites: unselectedSiteIds },
-        ]
-
+      const newGroups = [{ sites: selectedSiteIds }, { sites: unselectedSiteIds }];
       const newIds = await dedupMineralSiteStore.updateSameAsGroup(newGroups);
+
       if (commodity && commodity.id) {
         const commodityId = commodity.id;
         await dedupMineralSiteStore.replaceSites([dedupSite.id], newIds, commodityId);
         message.success("Ungrouping was successful!");
-
       }
     };
 
     const ungroupSeparately = async () => {
       const selectedSiteIds = Array.from(selectedRows);
-
       const allSiteIds = sites.map((site) => site.id);
-
       const unselectedSiteIds = allSiteIds.filter((id) => !selectedRows.has(id));
 
       const selectedPayload = selectedSiteIds.map((id) => ({ sites: [id] }));
@@ -82,48 +72,19 @@ export const EditDedupMineralSite = withStyles(css)(
 
       const newIds = await dedupMineralSiteStore.updateSameAsGroup(createPayload);
 
-
       if (commodity && commodity.id) {
         const commodityId = commodity.id;
         await dedupMineralSiteStore.replaceSites([dedupSite.id], newIds, commodityId);
         message.success("Ungrouping was successful!");
       }
-
     };
 
     const columns = useMemo(() => {
       return [
         {
-          title: (
-            <Space>
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "10px",
-                  alignItems: "flex-start",
-                }}
-              >
-                <Button
-                  style={{ background: "#e6f4ff", color: "#1677ff" }}
-                  type="default"
-                  size="small"
-                  onClick={ungroupTogether}
-                >
-                  Ungroup together
-                </Button>
-                <Button
-                  style={{ background: "#e6f4ff", color: "#1677ff" }}
-                  type="default"
-                  size="small"
-                  onClick={ungroupSeparately}
-                >
-                  Ungroup Separetely
-                </Button>
-              </div>
-            </Space>
-          ),
+          title: "Select",
           key: "select",
+          hidden: sites.length === 1,
           render: (_: any, site: MineralSite) => (
             <Checkbox
               checked={selectedRows.has(site.id)}
@@ -254,12 +215,11 @@ export const EditDedupMineralSite = withStyles(css)(
           },
         },
       ];
-    }, [commodity.id, selectedRows, selectedRows, ungroupTogether]);
+    }, [commodity.id, sites.length, selectedRows, ungroupTogether]);
 
     useEffect(() => {
       mineralSiteStore.fetchByIds(dedupSite.sites);
     }, [mineralSiteStore]);
-
 
     const onEditFinish = (change?: { edit: FieldEdit; reference: Reference }) => {
       if (change === undefined) {
@@ -287,8 +247,29 @@ export const EditDedupMineralSite = withStyles(css)(
 
     const currentSite = sites.find((site) => site.createdBy.includes(userStore.getCurrentUser()!.url));
 
+    let groupBtns = undefined;
+    if (selectedRows.size > 0 && sites.length > 1) {
+      const ungrpSepBtn = (
+        <Button key="separately" type="primary" onClick={ungroupTogether}>
+          Ungroup Separately
+        </Button>
+      );
+      const ungrpTogBtn = (
+        <Button key="together" type="primary" onClick={ungroupTogether}>
+          Ungroup Together
+        </Button>
+      );
+      if (selectedRows.size === 1 || selectedRows.size === sites.length) {
+        groupBtns = [ungrpSepBtn];
+      } else {
+        groupBtns = [ungrpSepBtn, ungrpTogBtn];
+      }
+      groupBtns = <Space>{groupBtns}</Space>;
+    }
+
     return (
-      <>
+      <Flex vertical={true} gap="small">
+        {groupBtns}
         <Table<MineralSite>
           className={classes.table}
           bordered={true}
@@ -303,7 +284,7 @@ export const EditDedupMineralSite = withStyles(css)(
           }}
         />
         <EditSiteField key={editField} sites={sites} currentSite={currentSite} editField={editField} onFinish={onEditFinish} commodity={commodity.id} />
-      </>
+      </Flex>
     );
   })
 ) as React.FC<EditDedupMineralSiteProps>;

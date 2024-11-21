@@ -9,7 +9,6 @@ export const HomePage = observer(() => {
   return (
     <Flex vertical={true} gap="small">
       <SearchBar searchArgs={searchArgs} setSearchArgs={setSearchArgs} />
-
       <DedupMineralSiteTable commodity={normSearchArgs.commodity} />
     </Flex>
   );
