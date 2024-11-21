@@ -6013,7 +6013,7 @@ fuse.js@^6.4.6:
   resolved "https://registry.yarnpkg.com/fuse.js/-/fuse.js-6.6.2.tgz#fe463fed4b98c0226ac3da2856a415576dc9a111"
   integrity sha512-cJaJkxCCxC8qIIcPBF9yGxY0W/tVZS3uEISDxhYIdtk8OL93pe+6Zj7LjCqVV4dzbqcriOZ+kQ/NE4RXZHsIGA==
 
-gena-app@^4.4.3:
+gena-app@^4.4.4:
   version "4.4.4"
   resolved "https://registry.yarnpkg.com/gena-app/-/gena-app-4.4.4.tgz#146577cc398abf0fb2302013272e880da04d7366"
   integrity sha512-iZcWmYcDDuprwp+vufEEAw6Bbk5MOREpBV2GERh+MgHlZZdQM4wVIiBLkq01cmgYMCKaWiEAdEnEpkCs/NQtLQ==

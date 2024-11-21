@@ -22,7 +22,7 @@
     "axios": "^1.7.7",
     "caniuse-lite": "1.0.30001632",
     "fuse.js": "^6.4.6",
-    "gena-app": "^4.4.3",
+    "gena-app": "^4.4.4",
     "hyphenation.en-us": "^0.2.1",
     "lodash": "^4.17.21",
     "memoize-one": "^5.2.1",
@@ -76,7 +76,7 @@
       ]
     }
   },
-  "proxy": "http://127.0.0.1:8080",
+  "proxy": "https://dev.minmod.isi.edu",
   "browserslist": {
     "production": [
       ">0.2%",

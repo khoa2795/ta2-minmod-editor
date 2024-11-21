@@ -6,6 +6,7 @@ import axios from "axios";
 import { action, makeObservable, runInAction } from "mobx";
 import { NamespaceManager } from "models/Namespace";
 import { GradeTonnage } from "models/mineralSite";
+import { InternalID } from "models/typing";
 
 export class DedupMineralSiteStore extends RStore<string, DedupMineralSite> {
   ns: NamespaceManager;
@@ -16,11 +17,40 @@ export class DedupMineralSiteStore extends RStore<string, DedupMineralSite> {
 
     makeObservable(this, {
       forceFetchByURI: action,
+      deleteByIds: action,
+      replaceSites: action,
     });
   }
 
   get commodity2ids() {
     return this.indices[0] as SingleKeyIndex<string, string, DedupMineralSite>;
+  }
+
+  /**
+   * Delete dedup mineral sites by their Ids
+   * @param ids
+   */
+  deleteByIds(ids: InternalID[]): void {
+    this.state.value = "updating";
+    for (const id of ids) {
+      const record = this.records.get(id);
+      if (record !== undefined && record !== null) {
+        this.deindex(record);
+        this.records.delete(id);
+      }
+    }
+    this.state.value = "updated";
+  }
+
+  /**
+   * Replace given dedup sites with new sites
+   *
+   * @param prevIds previous sites to delete
+   * @param newIds new sites to add
+   */
+  async replaceSites(prevIds: InternalID[], newIds: InternalID[], commodity: Object): Promise<void> {
+    this.deleteByIds(prevIds);
+    await this.fetchByIds(newIds, true, { commodity });
   }
 
   async forceFetchByURI(uri: string, commodity: string): Promise<DedupMineralSite | undefined> {
@@ -99,17 +129,38 @@ export class DedupMineralSiteStore extends RStore<string, DedupMineralSite> {
       location:
         record.location !== undefined
           ? new DedupMineralSiteLocation({
-              lat: record.location.lat,
-              lon: record.location.lon,
-              country: (record.location.country || []).map((country: string) => MR.getURI(country)),
-              stateOrProvince: (record.location.state_or_province || []).map((sop: string) => MR.getURI(sop)),
-            })
+            lat: record.location.lat,
+            lon: record.location.lon,
+            country: (record.location.country || []).map((country: string) => MR.getURI(country)),
+            stateOrProvince: (record.location.state_or_province || []).map((sop: string) => MR.getURI(sop)),
+          })
           : undefined,
       gradeTonnage: GradeTonnage.deserialize(record.grade_tonnage),
     });
   }
 
+  async updateSameAsGroup(groups: { sites: InternalID[] }[]): Promise<InternalID[]> {
+    const response = await axios.post("/api/v1/same-as", groups, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+      withCredentials: true,
+    });
+    return response.data.map((dedupSite: any) => dedupSite.id);
+  }
+
+
+
   protected normRemoteSuccessfulResponse(resp: any): FetchResponse {
-    return { items: resp.data, total: resp.total };
+    return { items: Array.isArray(resp.data) ? resp.data : Object.values(resp.data), total: resp.total };
+  }
+
+  /**
+   * Remove a record (by id) from your indexes
+   */
+  protected deindex(record: DedupMineralSite): void {
+    for (const index of this.indices) {
+      index.remove(record);
+    }
   }
 }

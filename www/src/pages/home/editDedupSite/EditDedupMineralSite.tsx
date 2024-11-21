@@ -1,4 +1,4 @@
-import { Button, Col, Flex, Row, Select, Space, Table, Typography } from "antd";
+import { Button, Col, Flex, Row, Select, Space, Table, Typography, message, Checkbox } from "antd";
 import { toJS } from "mobx";
 import { observer } from "mobx-react";
 import { useStores, Commodity, DedupMineralSite, MineralSite, CandidateEntity, Reference, DraftCreateMineralSite, FieldEdit, EditableField, DraftUpdateMineralSite } from "models";
@@ -9,7 +9,7 @@ import { join } from "misc";
 import { EditOutlined } from "@ant-design/icons";
 import { EditSiteField } from "./EditSiteField";
 import { orange } from "@ant-design/colors";
-
+import axios from "axios";
 const css = {
   table: {
     "& .ant-table": {
@@ -36,11 +36,109 @@ interface EditDedupMineralSiteProps {
 export const EditDedupMineralSite = withStyles(css)(
   observer(({ dedupSite, commodity, classes }: EditDedupMineralSiteProps & WithStyles<typeof css>) => {
     const stores = useStores();
-    const { mineralSiteStore, userStore } = stores;
+    const { mineralSiteStore, userStore, dedupMineralSiteStore } = stores;
     const [editField, setEditField] = useState<EditableField | undefined>(undefined);
+    const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
+
+
+    const tmpLst: (MineralSite | null | undefined)[] = dedupSite.sites.map((id) => mineralSiteStore.get(id));
+    // no idea why typescript compiler incorrectly complains about the incorrect type
+    const fetchedSites = tmpLst.filter((site) => site !== undefined) as (MineralSite | null)[];
+    const sites = fetchedSites.filter((site) => site !== null) as MineralSite[];
+    const isLoading = mineralSiteStore.state.value === "updating" || fetchedSites.length !== dedupSite.sites.length;
+
+    const ungroupTogether = async () => {
+      const selectedSiteIds = Array.from(selectedRows);
+
+      const allSiteIds = sites.map((site) => site.id);
+
+      const unselectedSiteIds = allSiteIds.filter((id) => !selectedRows.has(id));
+
+      const newGroups =
+        [
+          { sites: selectedSiteIds },
+          { sites: unselectedSiteIds },
+        ]
+
+      const newIds = await dedupMineralSiteStore.updateSameAsGroup(newGroups);
+      if (commodity && commodity.id) {
+        const commodityId = commodity.id;
+        await dedupMineralSiteStore.replaceSites([dedupSite.id], newIds, commodityId);
+        message.success("Ungrouping was successful!");
+
+      }
+    };
+
+    const ungroupSeparately = async () => {
+      const selectedSiteIds = Array.from(selectedRows);
+
+      const allSiteIds = sites.map((site) => site.id);
+
+      const unselectedSiteIds = allSiteIds.filter((id) => !selectedRows.has(id));
+
+      const selectedPayload = selectedSiteIds.map((id) => ({ sites: [id] }));
+      const unselectedPayload = unselectedSiteIds.length > 0 ? [{ sites: unselectedSiteIds }] : [];
+      const createPayload = [...selectedPayload, ...unselectedPayload];
+
+      const newIds = await dedupMineralSiteStore.updateSameAsGroup(createPayload);
+
+
+      if (commodity && commodity.id) {
+        const commodityId = commodity.id;
+        await dedupMineralSiteStore.replaceSites([dedupSite.id], newIds, commodityId);
+        message.success("Ungrouping was successful!");
+      }
+
+    };
 
     const columns = useMemo(() => {
       return [
+        {
+          title: (
+            <Space>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "10px",
+                  alignItems: "flex-start",
+                }}
+              >
+                <Button
+                  style={{ background: "#e6f4ff", color: "#1677ff" }}
+                  type="default"
+                  size="small"
+                  onClick={ungroupTogether}
+                >
+                  Ungroup together
+                </Button>
+                <Button
+                  style={{ background: "#e6f4ff", color: "#1677ff" }}
+                  type="default"
+                  size="small"
+                  onClick={ungroupSeparately}
+                >
+                  Ungroup Separetely
+                </Button>
+              </div>
+            </Space>
+          ),
+          key: "select",
+          render: (_: any, site: MineralSite) => (
+            <Checkbox
+              checked={selectedRows.has(site.id)}
+              onChange={(e) => {
+                const updatedRows = new Set(selectedRows);
+                if (e.target.checked) {
+                  updatedRows.add(site.id);
+                } else {
+                  updatedRows.delete(site.id);
+                }
+                setSelectedRows(updatedRows);
+              }}
+            />
+          ),
+        },
         {
           title: (
             <Flex justify="space-between">
@@ -156,17 +254,12 @@ export const EditDedupMineralSite = withStyles(css)(
           },
         },
       ];
-    }, [commodity.id]);
+    }, [commodity.id, selectedRows, selectedRows, ungroupTogether]);
 
     useEffect(() => {
       mineralSiteStore.fetchByIds(dedupSite.sites);
     }, [mineralSiteStore]);
 
-    const tmpLst: (MineralSite | null | undefined)[] = dedupSite.sites.map((id) => mineralSiteStore.get(id));
-    // no idea why typescript compiler incorrectly complains about the incorrect type
-    const fetchedSites = tmpLst.filter((site) => site !== undefined) as (MineralSite | null)[];
-    const sites = fetchedSites.filter((site) => site !== null) as MineralSite[];
-    const isLoading = mineralSiteStore.state.value === "updating" || fetchedSites.length !== dedupSite.sites.length;
 
     const onEditFinish = (change?: { edit: FieldEdit; reference: Reference }) => {
       if (change === undefined) {
