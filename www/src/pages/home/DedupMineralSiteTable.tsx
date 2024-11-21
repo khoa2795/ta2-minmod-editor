@@ -23,9 +23,10 @@ export const DedupMineralSiteTable: React.FC<DedupMineralSiteTableProps> = obser
   const columns = useMemo(() => {
     return [
       {
-        title: "Select",
+        title: "G",
         key: "select",
         render: (_: any, site: DedupMineralSite) => <Checkbox onChange={(e) => selectDedupSite(site, e.target.checked)} checked={selectedDedupSiteIds.has(site.id)} />,
+        sorter: (a: DedupMineralSite, b: DedupMineralSite) => a.sites.length - b.sites.length,
       },
       {
         title: "Name",
