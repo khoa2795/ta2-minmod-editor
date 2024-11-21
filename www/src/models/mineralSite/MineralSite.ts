@@ -121,12 +121,13 @@ export class MineralSite {
           this.gradeTonnage[edit.commodity] = new GradeTonnage({
             commodity: edit.commodity,
             totalTonnage: edit.value,
-            totalGrade: 0.0,
+            // set the grade to be very small, so the server is not going to discard this record
+            totalGrade: 0.000000001,
           });
         } else {
           this.gradeTonnage[edit.commodity].totalTonnage = edit.value;
           if (this.gradeTonnage[edit.commodity].totalGrade === undefined) {
-            this.gradeTonnage[edit.commodity].totalGrade = 0.0;
+            this.gradeTonnage[edit.commodity].totalGrade = 0.000000001;
           }
         }
 
