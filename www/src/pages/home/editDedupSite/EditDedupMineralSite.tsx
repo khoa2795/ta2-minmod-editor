@@ -250,7 +250,7 @@ export const EditDedupMineralSite = withStyles(css)(
     let groupBtns = undefined;
     if (selectedRows.size > 0 && sites.length > 1) {
       const ungrpSepBtn = (
-        <Button key="separately" type="primary" onClick={ungroupTogether}>
+        <Button key="separately" type="primary" onClick={ungroupSeparately}>
           Ungroup Separately
         </Button>
       );
