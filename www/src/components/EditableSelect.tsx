@@ -27,7 +27,7 @@ export interface EditableSelectProps {
  * @returns
  */
 export const EditableSelect: React.FC<EditableSelectProps> = (props) => {
-  const [selectingValue, setSelectingValue] = useState(false);
+  const [selectingValue, setSelectingValue] = useState(props.value !== undefined);
   const items: MenuProps["items"] = props.options.map((option) => ({
     key: option.key,
     label: option.label,

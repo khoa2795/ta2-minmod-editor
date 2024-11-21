@@ -23,7 +23,7 @@ export const DedupMineralSiteTable: React.FC<DedupMineralSiteTableProps> = obser
   const columns = useMemo(() => {
     return [
       {
-        title: "G",
+        title: "",
         key: "select",
         render: (_: any, site: DedupMineralSite) => <Checkbox onChange={(e) => selectDedupSite(site, e.target.checked)} checked={selectedDedupSiteIds.has(site.id)} />,
         sorter: (a: DedupMineralSite, b: DedupMineralSite) => a.sites.length - b.sites.length,
@@ -254,7 +254,7 @@ export const DedupMineralSiteTable: React.FC<DedupMineralSiteTableProps> = obser
               pagination={false}
               columns={[
                 {
-                  title: "Select",
+                  title: "",
                   key: "group",
                   render: (_: any, site: DedupMineralSite) => <Checkbox type="primary" checked={true} onClick={() => selectDedupSite(site, false)} />,
                 },
