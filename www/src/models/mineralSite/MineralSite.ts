@@ -105,10 +105,13 @@ export class MineralSite {
           this.gradeTonnage[edit.commodity] = new GradeTonnage({
             commodity: edit.commodity,
             totalGrade: edit.value,
-            totalTonnage: 0.00001,
+            totalTonnage: 0.0,
           });
         } else {
           this.gradeTonnage[edit.commodity].totalGrade = edit.value;
+          if (this.gradeTonnage[edit.commodity].totalTonnage === undefined) {
+            this.gradeTonnage[edit.commodity].totalTonnage = 0.0;
+          }
         }
 
         this.mineralInventory = [MineralInventory.fromGradeTonnage(stores, this.createdBy[0], this.gradeTonnage[edit.commodity], reference)];
@@ -118,10 +121,13 @@ export class MineralSite {
           this.gradeTonnage[edit.commodity] = new GradeTonnage({
             commodity: edit.commodity,
             totalTonnage: edit.value,
-            totalGrade: 0.00001,
+            totalGrade: 0.0,
           });
         } else {
           this.gradeTonnage[edit.commodity].totalTonnage = edit.value;
+          if (this.gradeTonnage[edit.commodity].totalGrade === undefined) {
+            this.gradeTonnage[edit.commodity].totalGrade = 0.0;
+          }
         }
 
         this.mineralInventory = [MineralInventory.fromGradeTonnage(stores, this.createdBy[0], this.gradeTonnage[edit.commodity], reference)];
