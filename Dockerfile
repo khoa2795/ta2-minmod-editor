@@ -26,15 +26,15 @@ RUN cd /home/criticalmaas/kg && python3 -m venv .venv && pip install .
 
 RUN mkdir -p /home/criticalmaas/kg/www
 ADD --chown=criticalmaas:criticalmaas www/package.json /home/criticalmaas/kg/www/
-ADD --chown=criticalmaas:criticalmaas www/yarn.lock /home/criticalmaas/kg/www/
-# RUN cd /home/criticalmaas/kg/www && yarn install
+ADD --chown=criticalmaas:criticalmaas www/package-lock.json /home/criticalmaas/kg/www/
+RUN cd /home/criticalmaas/kg/www && npm install
 
 # add python code
 ADD --chown=criticalmaas:criticalmaas minmod_editor /home/criticalmaas/kg/minmod_editor
 
 # add www code
-# ADD --chown=criticalmaas:criticalmaas www /home/criticalmaas/kg/www
-# RUN cd /home/criticalmaas/kg/www && yarn build:macos
+ADD --chown=criticalmaas:criticalmaas www /home/criticalmaas/kg/www
+RUN cd /home/criticalmaas/kg/www && npm run build
 
 WORKDIR /home/criticalmaas/kg/
 
