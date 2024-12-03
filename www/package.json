@@ -1,82 +1,37 @@
 {
   "name": "minmod-editor",
-  "version": "1.1.6",
+  "version": "2.0.0",
   "private": true,
   "dependencies": {
-    "@ant-design/icons": "^5.5.1",
-    "@fortawesome/fontawesome-svg-core": "^6.1.0",
-    "@fortawesome/free-regular-svg-icons": "^6.0.0",
-    "@fortawesome/free-solid-svg-icons": "^6.0.0",
-    "@fortawesome/react-fontawesome": "^0.1.17",
-    "@material-ui/styles": "^4.11.5",
-    "@testing-library/jest-dom": "^5.11.4",
-    "@testing-library/react": "^11.1.0",
-    "@testing-library/user-event": "^12.1.10",
-    "@types/jest": "^26.0.15",
-    "@types/lodash": "^4.14.173",
-    "@types/node": "^12.0.0",
-    "@types/react": "^17.0.0",
-    "@types/react-dom": "^17.0.0",
-    "@types/react-router-dom": "^5.1.9",
-    "antd": "^5.21.6",
-    "axios": "^1.7.7",
-    "caniuse-lite": "1.0.30001632",
-    "fuse.js": "^6.4.6",
-    "gena-app": "^4.4.4",
-    "hyphenation.en-us": "^0.2.1",
+    "@testing-library/jest-dom": "^5.17.0",
+    "@testing-library/react": "^13.4.0",
+    "@testing-library/user-event": "^13.5.0",
+    "@types/jest": "^27.5.2",
+    "@types/node": "^16.18.121",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "antd": "^5.22.3",
+    "gena-app": "^5.0.3",
     "lodash": "^4.17.21",
-    "memoize-one": "^5.2.1",
-    "mobx": "^6.3.3",
-    "mobx-react": "^7.2.0",
-    "react": "^17.0.2",
-    "react-dom": "^17.0.2",
-    "react-hotkeys-hook": "^3.4.0",
-    "react-router-dom": "^5.3.0",
-    "react-scripts": "4.0.3",
-    "typescript": "^4.1.2",
-    "web-vitals": "^1.0.1"
-  },
-  "resolutions": {
-    "//": "See https://github.com/facebook/create-react-app/issues/11773",
-    "react-error-overlay": "6.0.9",
-    "caniuse-lite": "1.0.30001632"
-  },
-  "devDependencies": {
-    "//": "See https://github.com/facebook/create-react-app/issues/11773",
-    "react-error-overlay": "6.0.9"
+    "mobx-react-lite": "^4.0.7",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-scripts": "5.0.1",
+    "typescript": "^4.9.5",
+    "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "BROWSER=none react-scripts start",
-    "start:macos": "BROWSER=none NODE_OPTIONS=--openssl-legacy-provider react-scripts start",
-    "start_nonroot": "PORT=5527 CHOKIDAR_USEPOLLING=true BROWSER=none DANGEROUSLY_DISABLE_HOST_CHECK=true react-scripts start",
-    "build": "python ./scripts/build.py ../minmod_editor/www",
-    "build:macos": "NODE_OPTIONS=--openssl-legacy-provider python ./scripts/build.py ../minmod_editor/www",
-    "build:editor": "PUBLIC_URL=/editor NODE_OPTIONS=--openssl-legacy-provider python ./scripts/build.py ../minmod_editor/www",
+    "start": "react-scripts start",
+    "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject",
-    "build:lib": "yarn compile && yarn compile:post",
-    "compile": "tsc --outDir lib --declaration true --noEmit false",
-    "compile:watch": "tsc --outDir lib --declaration true --noEmit false -w",
-    "compile:post": "cp src/*.css lib/ && cp src/*.png lib/"
+    "eject": "react-scripts eject"
   },
   "eslintConfig": {
     "extends": [
       "react-app",
       "react-app/jest"
-    ],
-    "rules": {
-      "jsx-a11y/anchor-is-valid": "off",
-      "react-hooks/exhaustive-deps": "off",
-      "@typescript-eslint/no-unused-vars": [
-        "warn",
-        {
-          "args": "none",
-          "varsIgnorePattern": "^_"
-        }
-      ]
-    }
+    ]
   },
-  "proxy": "http://localhost:8080",
   "browserslist": {
     "production": [
       ">0.2%",
@@ -88,5 +43,10 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "proxy": "http://localhost:8080",
+  "devDependencies": {
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
+    "@types/lodash": "^4.17.13"
   }
 }

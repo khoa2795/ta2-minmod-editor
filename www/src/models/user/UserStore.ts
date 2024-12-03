@@ -1,5 +1,5 @@
 import { RStore } from "gena-app";
-import { SERVER } from "../../env";
+import { SERVER } from "env";
 import { runInAction } from "mobx";
 import axios from "axios";
 

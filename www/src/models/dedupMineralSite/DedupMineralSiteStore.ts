@@ -1,12 +1,12 @@
 import { RStore, FetchResponse, FetchResult, SingleKeyIndex } from "gena-app";
-import { SERVER } from "../../env";
-import { Commodity } from "models/commodity";
+import { SERVER } from "env";
+import { Commodity } from "../commodity";
 import { DedupMineralSite, DedupMineralSiteDepositType, DedupMineralSiteLocation } from "./DedupMineralSite";
 import axios from "axios";
 import { action, makeObservable, runInAction } from "mobx";
-import { NamespaceManager } from "models/Namespace";
-import { GradeTonnage } from "models/mineralSite";
-import { InternalID } from "models/typing";
+import { NamespaceManager } from "../Namespace";
+import { GradeTonnage } from "../mineralSite";
+import { InternalID } from "../typing";
 
 export class DedupMineralSiteStore extends RStore<string, DedupMineralSite> {
   ns: NamespaceManager;

@@ -2,7 +2,7 @@ import { CandidateEntity } from "./CandidateEntity";
 import { GradeTonnage } from "./GradeTonnage";
 import { LocationInfo } from "./LocationInfo";
 import { Reference, Document } from "./Reference";
-import { DedupMineralSite, DedupMineralSiteLocation } from "models/dedupMineralSite";
+import { DedupMineralSite, DedupMineralSiteLocation } from "../dedupMineralSite";
 import { DepositTypeStore } from "models/depositType";
 import { StateOrProvinceStore } from "models/stateOrProvince";
 import { CountryStore } from "models/country";

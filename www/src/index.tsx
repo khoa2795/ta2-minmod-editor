@@ -1,4 +1,4 @@
-import ReactDOM from "react-dom";
+import ReactDOM from "react-dom/client";
 import "./index.css";
 import { App } from "gena-app";
 import reportWebVitals from "./reportWebVitals";
@@ -6,18 +6,19 @@ import { stores, initStores, StoreContext } from "./models";
 import { routes } from "./routes";
 import enUSIntl from "antd/lib/locale/en_US";
 import { ConfigProvider } from "antd";
-import { InitNonCriticalStores } from "components/StoreInit";
+import { InitNonCriticalStores } from "./components/StoreInit";
+
+const root = ReactDOM.createRoot(document.getElementById("root") as HTMLElement);
 
 initStores().then(() => {
-  ReactDOM.render(
+  root.render(
     <StoreContext.Provider value={stores}>
       <ConfigProvider locale={enUSIntl}>
         <InitNonCriticalStores>
-          <App enUSLocale={true} routes={routes} />
+          <App enUSLocale={true} routes={routes} strict={false} />
         </InitNonCriticalStores>
       </ConfigProvider>
-    </StoreContext.Provider>,
-    document.getElementById("root")
+    </StoreContext.Provider>
   );
 });
 

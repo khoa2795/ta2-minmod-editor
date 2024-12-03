@@ -1,6 +1,6 @@
 import { Button, Checkbox, Form, Input, Modal, Select, Space } from "antd";
-import { EditableSelect, EditableSelectOption } from "components/EditableSelect";
-import _, { initial } from "lodash";
+import { EditableSelect } from "components/EditableSelect";
+import _ from "lodash";
 import { MineralSite, Reference, Document, FieldEdit, EditableField, useStores } from "models";
 import { useMemo } from "react";
 import { EditRefDoc } from "./EditRefDoc";

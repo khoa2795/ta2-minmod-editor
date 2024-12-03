@@ -1,8 +1,8 @@
-import { CountryStore } from "models/country";
-import { DepositTypeStore } from "models/depositType";
-import { CandidateEntity, GradeTonnage, LocationInfo } from "models/mineralSite";
-import { StateOrProvinceStore } from "models/stateOrProvince";
-import { InternalID, IRI } from "models/typing";
+import { CountryStore } from "../country";
+import { DepositTypeStore } from "../depositType";
+import { CandidateEntity, GradeTonnage, LocationInfo } from "../mineralSite";
+import { StateOrProvinceStore } from "../stateOrProvince";
+import { InternalID, IRI } from "../typing";
 
 export class DedupMineralSiteDepositType {
   uri: IRI;

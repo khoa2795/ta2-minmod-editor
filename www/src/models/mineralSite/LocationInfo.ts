@@ -1,4 +1,3 @@
-import { computed, makeObservable } from "mobx";
 import { CandidateEntity } from "./CandidateEntity";
 
 export class LocationInfo {

@@ -1,5 +1,5 @@
-import { Dropdown, Input, MenuProps, Select, Space, Typography } from "antd";
-import { DownOutlined, SmileOutlined, UserOutlined, CloseCircleOutlined } from "@ant-design/icons";
+import { Input, Select, Typography } from "antd";
+import { CloseCircleOutlined } from "@ant-design/icons";
 import { useState } from "react";
 
 export interface EditableSelectOption {

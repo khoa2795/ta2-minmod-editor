@@ -1,12 +1,12 @@
 import { Typography } from "antd";
-import { stores, useStores } from "models";
+import { useStores } from "models";
 
 export interface EntityProps {
   uri: string;
   store: "countryStore" | "commodityStore" | "depositTypeStore" | "stateOrProvinceStore";
 }
 
-export const Entity: React.FC<EntityProps> = ({ uri: uri, store }) => {
+export const Entity: React.FC<EntityProps> = ({ uri, store }) => {
   const db = useStores()[store];
   const record = db.get(uri);
 

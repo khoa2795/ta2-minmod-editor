@@ -1,33 +1,8 @@
 import { Menu } from "antd";
-import { WithStyles, withStyles } from "@material-ui/styles";
-import { useLocation } from "react-router-dom";
+import styles from "./Navbar.module.css";
+import { useLocation, useNavigate } from "react-router";
 import { getActiveRouteName, PathDef } from "gena-app";
 import React from "react";
-
-const css = {
-  centerNavBar: {
-    justifyContent: "center",
-    boxShadow: "0 2px 8px #f0f1f2",
-  },
-  leftNavBar: {
-    "& .logo::after": {
-      borderBottom: "none !important",
-      transition: "none !important",
-    },
-    "& .logo:hover::after": {
-      borderBottom: "none !important",
-      transition: "none !important",
-    },
-    "& .logo img": {
-      height: 24,
-      borderRadius: 4,
-      marginTop: -2,
-    },
-    paddingLeft: 24,
-    paddingRight: 24,
-    boxShadow: "0 2px 8px #f0f1f2",
-  },
-};
 
 type MenuItemProps = {
   children: string | JSX.Element;
@@ -45,10 +20,11 @@ interface Props<R> {
 }
 type Component = <R extends Record<any, PathDef<any, any>>>(_p: Props<R>) => JSX.Element;
 
-export const CenterNavBar = withStyles(css)(<R extends Record<any, PathDef<any, any>>>({ classes, menus, routes, className, style, isFirstItemLogo }: Props<R> & WithStyles<typeof css>) => {
+export const CenterNavBar = (<R extends Record<any, PathDef<any, any>>>({ menus, routes, className, style, isFirstItemLogo }: Props<R>) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const openMenu = (e: { key: keyof R }) => {
-    routes[e.key].path({}, {}).open();
+    routes[e.key].path({}, {}).open(navigate);
   };
 
   const items = Object.keys(menus).map((routeName, index) => {
@@ -60,7 +36,7 @@ export const CenterNavBar = withStyles(css)(<R extends Record<any, PathDef<any, 
   return (
     <Menu
       mode="horizontal"
-      className={classes.centerNavBar + (className !== undefined ? " " + className : "")}
+      className={styles.centerNavBar + (className !== undefined ? " " + className : "")}
       style={style}
       onClick={openMenu}
       selectedKeys={activeRouteName !== undefined ? [activeRouteName] : undefined}
@@ -70,10 +46,12 @@ export const CenterNavBar = withStyles(css)(<R extends Record<any, PathDef<any, 
   );
 }) as Component;
 
-export const LeftNavBar = withStyles(css)(<R extends Record<any, PathDef<any, any>>>({ classes, menus, routes, className, style, isFirstItemLogo }: Props<R> & WithStyles<typeof css>) => {
+export const LeftNavBar = (<R extends Record<any, PathDef<any, any>>>({ menus, routes, className, style, isFirstItemLogo }: Props<R>) => {
   const location = useLocation();
+  const navigate = useNavigate();
+
   const openMenu = (e: { key: keyof R }) => {
-    routes[e.key].path({}, {}).open();
+    routes[e.key].path({}, {}).open(navigate);
   };
 
   const items = Object.keys(menus).map((routeName, index) => {
@@ -85,7 +63,7 @@ export const LeftNavBar = withStyles(css)(<R extends Record<any, PathDef<any, an
   return (
     <Menu
       mode="horizontal"
-      className={classes.leftNavBar + (className !== undefined ? " " + className : "")}
+      className={styles.leftNavBar + (className !== undefined ? " " + className : "")}
       style={style}
       onClick={openMenu}
       selectedKeys={activeRouteName !== undefined ? [activeRouteName] : undefined}

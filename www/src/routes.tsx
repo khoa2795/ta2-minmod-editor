@@ -5,8 +5,8 @@ import React, { useEffect } from "react";
 import { LeftNavBar } from "./components/Navbar";
 import { Space } from "antd";
 
-import { RequiredAuthentication } from "components/RequiredAuthentication";
-import { PUBLIC_URL } from "env";
+import { RequiredAuthentication } from "./components/RequiredAuthentication";
+import { PUBLIC_URL } from "./env";
 
 /*************************************************************************************
  * Layouts of the application

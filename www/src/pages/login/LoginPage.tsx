@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
-import "./login.css";
+import styles from "./LoginPage.module.css";
 import { routes } from "routes";
-import { useStores } from "../../models";
+import { useStores } from "models";
+import { useNavigate } from "react-router";
 
 export const LoginPage = () => {
   const { userStore } = useStores();
+  const navigate = useNavigate();
 
   const [username, setUsername] = useState<string>("");
   const [password, setPassword] = useState<string>("");
@@ -12,22 +14,22 @@ export const LoginPage = () => {
 
   useEffect(() => {
     userStore.isLoggedIn().then((isLoggedIn) => {
-      if (isLoggedIn) routes.home.path({ commodity: undefined }).open();
+      if (isLoggedIn) routes.home.path({ commodity: undefined }).open(navigate);
     });
-  }, [userStore]);
+  }, [userStore, navigate]);
 
   const handleLogin = async (event: React.FormEvent) => {
     event.preventDefault();
     try {
       await userStore.login(username, password);
-      routes.home.path({ commodity: undefined }).open();
+      routes.home.path({ commodity: undefined }).open(navigate);
     } catch (err) {
       setError("An error occurred. Please try again later.");
     }
   };
 
   return (
-    <div className="login-container">
+    <div className={styles.loginContainer}>
       <h2>Login</h2>
       <form onSubmit={handleLogin} className="login-form">
         <div className="form-group">

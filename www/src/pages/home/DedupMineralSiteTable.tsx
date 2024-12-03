@@ -1,14 +1,11 @@
 import { DedupMineralSite, useStores } from "models";
 import { useEffect, useMemo, useState } from "react";
-import { observer } from "mobx-react";
+import { observer } from "mobx-react-lite";
 import { Commodity } from "models/commodity";
-import { Alert, Button, Checkbox, Divider, Flex, Space, Spin, Table, Typography, message } from "antd";
-import { FetchResult } from "gena-app";
-import { EditOutlined, UngroupOutlined } from "@ant-design/icons";
+import { Button, Checkbox, Divider, Space, Table, Typography, message } from "antd";
+import { EditOutlined } from "@ant-design/icons";
 import { EditDedupMineralSite } from "./editDedupSite/EditDedupMineralSite";
 import { Entity } from "components/Entity";
-import axios from "axios";
-import { DepositTypeStore } from "models/depositType";
 interface DedupMineralSiteTableProps {
   commodity: Commodity | undefined;
 }
@@ -20,14 +17,8 @@ export const DedupMineralSiteTable: React.FC<DedupMineralSiteTableProps> = obser
   const [editingDedupSite, setEditingDedupSite] = useState<string | undefined>(undefined);
   const [selectedDedupSiteIds, setSelectedDedupSiteIds] = useState<Set<string>>(new Set());
 
-  const columns = useMemo(() => {
+  let columns = useMemo(() => {
     return [
-      {
-        title: "",
-        key: "select",
-        render: (_: any, site: DedupMineralSite) => <Checkbox onChange={(e) => selectDedupSite(site, e.target.checked)} checked={selectedDedupSiteIds.has(site.id)} />,
-        sorter: (a: DedupMineralSite, b: DedupMineralSite) => a.sites.length - b.sites.length,
-      },
       {
         title: "Name",
         dataIndex: "name",
@@ -205,7 +196,7 @@ export const DedupMineralSiteTable: React.FC<DedupMineralSiteTableProps> = obser
         },
       },
     ];
-  }, [commodity?.id, countryStore, stateOrProvinceStore, selectedDedupSiteIds, editingDedupSite]);
+  }, [depositTypeStore, countryStore, stateOrProvinceStore, editingDedupSite]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -216,15 +207,24 @@ export const DedupMineralSiteTable: React.FC<DedupMineralSiteTableProps> = obser
     fetchData();
   }, [commodity, dedupMineralSiteStore]);
 
-  const selectDedupSite = (site: DedupMineralSite, selectOrNot: boolean) => {
+  const toggleSelectSite = (site: DedupMineralSite) => {
     const newSelectedDedupSiteIds = new Set(selectedDedupSiteIds);
-    if (selectOrNot) {
-      newSelectedDedupSiteIds.add(site.id);
-    } else {
+    if (selectedDedupSiteIds.has(site.id)) {
       newSelectedDedupSiteIds.delete(site.id);
+    } else {
+      newSelectedDedupSiteIds.add(site.id);
     }
     setSelectedDedupSiteIds(newSelectedDedupSiteIds);
   };
+
+  columns = [
+    {
+      title: "",
+      key: "group",
+      render: (_: any, site: DedupMineralSite) => <Checkbox type="primary" checked={selectedDedupSiteIds.has(site.id)} onClick={() => toggleSelectSite(site)} />,
+    },
+    ...columns,
+  ];
 
   const handleGroup = async () => {
     const prevIds = Array.from(selectedDedupSiteIds);
@@ -262,14 +262,7 @@ export const DedupMineralSiteTable: React.FC<DedupMineralSiteTableProps> = obser
               size="small"
               rowKey="id"
               pagination={false}
-              columns={[
-                {
-                  title: "",
-                  key: "group",
-                  render: (_: any, site: DedupMineralSite) => <Checkbox type="primary" checked={true} onClick={() => selectDedupSite(site, false)} />,
-                },
-                ...columns.slice(1),
-              ]}
+              columns={columns}
               dataSource={Array.from(selectedDedupSiteIds).map((id) => dedupMineralSiteStore.get(id)!)}
             />,
           ]

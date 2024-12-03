@@ -1,5 +1,5 @@
 import { RStore, FetchResponse } from "gena-app";
-import { SERVER } from "../../env";
+import { SERVER } from "env";
 
 export interface Commodity {
   id: string; // not the URI, e.g. "Q578"

@@ -1,5 +1,5 @@
 import { Flex } from "antd";
-import { observer } from "mobx-react";
+import { observer } from "mobx-react-lite";
 import { SearchBar, useSearchArgs } from "./SearchBar";
 import { DedupMineralSiteTable } from "./DedupMineralSiteTable";
 

@@ -1,5 +1,5 @@
 import { RStore, FetchResponse, SingleKeyUniqueIndex } from "gena-app";
-import { SERVER } from "../../env";
+import { SERVER } from "env";
 import { InternalID } from "models/typing";
 
 export interface DepositType {

@@ -5,7 +5,7 @@ import { LocationInfo } from "./LocationInfo";
 import { CandidateEntity } from "./CandidateEntity";
 import { Reference } from "./Reference";
 import { GradeTonnage } from "./GradeTonnage";
-import { DedupMineralSite, DedupMineralSiteStore } from "models/dedupMineralSite";
+import { DedupMineralSiteStore } from "../dedupMineralSite";
 import { MineralInventory } from "./MineralInventory";
 
 export class MineralSiteStore extends CRUDStore<string, DraftCreateMineralSite, DraftUpdateMineralSite, MineralSite> {

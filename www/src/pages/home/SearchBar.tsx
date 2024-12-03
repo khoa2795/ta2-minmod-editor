@@ -1,9 +1,8 @@
-import { ConsoleSqlOutlined } from "@ant-design/icons";
 import { Select, Space, Typography } from "antd";
 import _ from "lodash";
 import { useStores, Commodity, IStore } from "models";
 import { useEffect, useMemo, useState } from "react";
-import { useLocation } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import { routes } from "routes";
 
 interface SearchBarProps {
@@ -23,6 +22,7 @@ export function useSearchArgs2(): [SearchArgs, NormSearchArgs, (newArgs: SearchA
   const { commodityStore } = useStores();
   const queryParams = routes.home.useQueryParams();
   const location = useLocation();
+  const navigate = useNavigate();
 
   const [args, setArgs] = useState<SearchArgs>({
     commodity: undefined,
@@ -33,7 +33,7 @@ export function useSearchArgs2(): [SearchArgs, NormSearchArgs, (newArgs: SearchA
   const updateSearchArgs = (newArgs: SearchArgs) => {
     console.log("[real update] update search args", newArgs, routes.home.getURL({ commodity: newArgs.commodity }));
     setArgs(newArgs);
-    routes.home.path({ commodity: newArgs.commodity }).open();
+    routes.home.path({ commodity: newArgs.commodity }).open(navigate);
     // window._routeAPIs.history.push("/?commodity=Lithium");
   };
 
