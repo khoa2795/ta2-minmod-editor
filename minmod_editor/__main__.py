@@ -2,11 +2,10 @@ from __future__ import annotations
 
 import typer
 from loguru import logger
+from minmod_editor.app import app
 from tornado.httpserver import HTTPServer
 from tornado.ioloop import IOLoop
 from tornado.wsgi import WSGIContainer
-
-from minmod_editor.app import app
 
 cli = typer.Typer()
 
