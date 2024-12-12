@@ -7,7 +7,7 @@ import { DepositTypeStore } from "models/depositType";
 import { StateOrProvinceStore } from "models/stateOrProvince";
 import { CountryStore } from "models/country";
 import { MineralInventory } from "./MineralInventory";
-import { IStore } from "models";
+import { IStore, User } from "models";
 import { InternalID } from "models/typing";
 
 export type EditableField = "name" | "location" | "depositType" | "grade" | "tonnage";
@@ -154,20 +154,19 @@ export class DraftCreateMineralSite extends MineralSite {
     stores: { depositTypeStore: DepositTypeStore; stateOrProvinceStore: StateOrProvinceStore; countryStore: CountryStore },
     dedupMineralSite: DedupMineralSite,
     sites: MineralSite[],
-    username: string,
+    user: User,
     reference: Reference
   ): DraftCreateMineralSite {
     const baseSite = sites[0].id === dedupMineralSite.sites[0].id ? sites[0] : sites.filter((site) => site.id === dedupMineralSite.sites[0].id)[0];
-    const createdBy = `https://minmod.isi.edu/users/u/${username}`;
     const confidence = 1.0;
 
     return new DraftCreateMineralSite({
       draftID: `draft-${dedupMineralSite.id}`,
       id: "", // backend does not care about uri as they will recalculate it
-      sourceId: DraftCreateMineralSite.updateSourceId(baseSite.sourceId, username),
+      sourceId: DraftCreateMineralSite.updateSourceId(baseSite.sourceId, user.id),
       recordId: baseSite.recordId,
       dedupSiteURI: dedupMineralSite.uri,
-      createdBy: [createdBy],
+      createdBy: [user.url],
       name: "",
       locationInfo: new LocationInfo({ country: [], stateOrProvince: [] }),
       depositTypeCandidate: [],

@@ -264,7 +264,7 @@ export const EditDedupMineralSite = observer(({ dedupSite, commodity }: EditDedu
     const existingSite = sites.find((site) => site.createdBy.includes(currentUser.url));
     let cb;
     if (existingSite === undefined) {
-      const draftSite = DraftCreateMineralSite.fromMineralSite(stores, dedupSite, sites, currentUser.id, change.reference);
+      const draftSite = DraftCreateMineralSite.fromMineralSite(stores, dedupSite, sites, currentUser, change.reference);
       draftSite.updateField(stores, change.edit, change.reference);
       cb = mineralSiteStore.createAndUpdateDedup(dedupSite.commodity, draftSite);
     } else {

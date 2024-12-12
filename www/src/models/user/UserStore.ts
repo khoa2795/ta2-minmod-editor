@@ -48,7 +48,7 @@ export class UserStore extends RStore<string, User> {
       id: obj.username,
       email: obj.email,
       name: obj.name,
-      url: `https://minmod.isi.edu/users/${obj.username}`,
+      url: obj.uri,
     };
   }
 }
