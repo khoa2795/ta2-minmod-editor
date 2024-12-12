@@ -187,7 +187,7 @@ export const EditDedupMineralSite = observer(({ dedupSite, commodity }: EditDedu
         },
       },
       {
-        title: "Reference",
+        title: "Source",
         key: "reference",
         render: (_: any, site: MineralSite) => {
           return <ReferenceComponent site={site} />;
