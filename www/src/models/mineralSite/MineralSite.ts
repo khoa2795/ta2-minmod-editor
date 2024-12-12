@@ -16,10 +16,10 @@ export type FieldEdit =
   | { field: "location"; value: string }
   | { field: "depositType"; observedName: string; normalizedURI: string }
   | {
-    field: "grade";
-    value: number;
-    commodity: string;
-  }
+      field: "grade";
+      value: number;
+      commodity: string;
+    }
   | { field: "tonnage"; value: number; commodity: string };
 
 export type MineralSiteConstructorArgs = {
@@ -157,8 +157,8 @@ export class DraftCreateMineralSite extends MineralSite {
     username: string,
     reference: Reference
   ): DraftCreateMineralSite {
-    const baseSite = sites[0].id === dedupMineralSite.sites[0] ? sites[0] : sites.filter((site) => site.id === dedupMineralSite.sites[0])[0];
-    const createdBy = `https://minmod.isi.edu/users/${username}`;
+    const baseSite = sites[0].id === dedupMineralSite.sites[0].id ? sites[0] : sites.filter((site) => site.id === dedupMineralSite.sites[0].id)[0];
+    const createdBy = `https://minmod.isi.edu/users/u/${username}`;
     const confidence = 1.0;
 
     return new DraftCreateMineralSite({
@@ -172,7 +172,7 @@ export class DraftCreateMineralSite extends MineralSite {
       locationInfo: new LocationInfo({ country: [], stateOrProvince: [] }),
       depositTypeCandidate: [],
       reference: [reference],
-      sameAs: [],
+      sameAs: dedupMineralSite.sites.map((site) => site.id),
       gradeTonnage: {},
       mineralInventory: [],
     });

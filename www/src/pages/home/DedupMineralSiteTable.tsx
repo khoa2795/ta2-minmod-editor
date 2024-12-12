@@ -228,7 +228,7 @@ export const DedupMineralSiteTable: React.FC<DedupMineralSiteTableProps> = obser
 
   const handleGroup = async () => {
     const prevIds = Array.from(selectedDedupSiteIds);
-    const allSiteIds = Array.from(selectedDedupSiteIds).flatMap((dedupSiteId) => dedupMineralSiteStore.get(dedupSiteId)!.sites.map((siteUri) => DedupMineralSite.getId(siteUri)));
+    const allSiteIds = Array.from(selectedDedupSiteIds).flatMap((dedupSiteId) => dedupMineralSiteStore.get(dedupSiteId)!.sites.map((site) => (site.id)));
 
     const newSiteGroups = [
       {
@@ -252,20 +252,20 @@ export const DedupMineralSiteTable: React.FC<DedupMineralSiteTableProps> = obser
     <>
       {selectedDedupSiteIds.size > 0
         ? [
-            <div>
-              <Button type="primary" onClick={handleGroup} disabled={selectedDedupSiteIds.size === 1}>
-                Group selected sites
-              </Button>
-            </div>,
-            <Table<DedupMineralSite>
-              bordered={true}
-              size="small"
-              rowKey="id"
-              pagination={false}
-              columns={columns}
-              dataSource={Array.from(selectedDedupSiteIds).map((id) => dedupMineralSiteStore.get(id)!)}
-            />,
-          ]
+          <div>
+            <Button type="primary" onClick={handleGroup} disabled={selectedDedupSiteIds.size === 1}>
+              Group selected sites
+            </Button>
+          </div>,
+          <Table<DedupMineralSite>
+            bordered={true}
+            size="small"
+            rowKey="id"
+            pagination={false}
+            columns={columns}
+            dataSource={Array.from(selectedDedupSiteIds).map((id) => dedupMineralSiteStore.get(id)!)}
+          />,
+        ]
         : []}
       <Table<DedupMineralSite>
         bordered={true}

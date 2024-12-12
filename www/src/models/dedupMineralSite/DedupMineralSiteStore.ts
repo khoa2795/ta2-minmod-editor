@@ -1,7 +1,7 @@
 import { RStore, FetchResponse, FetchResult, SingleKeyIndex } from "gena-app";
 import { SERVER } from "env";
 import { Commodity } from "../commodity";
-import { DedupMineralSite, DedupMineralSiteDepositType, DedupMineralSiteLocation } from "./DedupMineralSite";
+import { DedupMineralSite, DedupMineralSiteDepositType, DedupMineralSiteLocation, DedupMineralSiteOriginalSite } from "./DedupMineralSite";
 import axios from "axios";
 import { action, makeObservable, runInAction } from "mobx";
 import { NamespaceManager } from "../Namespace";
@@ -117,7 +117,13 @@ export class DedupMineralSiteStore extends RStore<string, DedupMineralSite> {
       name: record.name,
       type: record.type,
       rank: record.rank,
-      sites: record.sites,
+      sites: record.sites.map(
+        (site: any) =>
+          new DedupMineralSiteOriginalSite({
+            id: site.id,
+            score: site.score,
+          })
+      ),
       depositTypes: record.deposit_types.map(
         (depositType: any) =>
           new DedupMineralSiteDepositType({

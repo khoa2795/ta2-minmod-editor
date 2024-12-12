@@ -25,6 +25,23 @@ export class DedupMineralSiteDepositType {
   }
 }
 
+export class DedupMineralSiteOriginalSite {
+  id: string;
+  score: number;
+
+  public constructor({ id, score }: { id: string; score: number }) {
+    this.id = id;
+    this.score = score;
+  }
+
+  public static deserialize(record: any): DedupMineralSiteOriginalSite {
+    return new DedupMineralSiteOriginalSite({
+      id: record.id,
+      score: record.score,
+    });
+  }
+}
+
 export class DedupMineralSiteLocation {
   lat?: number;
   lon?: number;
@@ -94,7 +111,7 @@ export class DedupMineralSite {
   name: string;
   type: string;
   rank: string;
-  sites: IRI[];
+  sites: DedupMineralSiteOriginalSite[];
   depositTypes: DedupMineralSiteDepositType[];
   location?: DedupMineralSiteLocation;
   gradeTonnage: GradeTonnage;
@@ -115,7 +132,7 @@ export class DedupMineralSite {
     name: string;
     type: string;
     rank: string;
-    sites: string[];
+    sites: DedupMineralSiteOriginalSite[];
     depositTypes: DedupMineralSiteDepositType[];
     location?: DedupMineralSiteLocation;
     gradeTonnage: GradeTonnage;
@@ -146,7 +163,7 @@ export class DedupMineralSite {
       name: record.name,
       type: record.type,
       rank: record.rank,
-      sites: record.sites,
+      sites: record.sites.map((site: any) => DedupMineralSiteOriginalSite.deserialize(site)),
       depositTypes: record.deposit_types.map((depositType: any) => new DedupMineralSiteDepositType(depositType)),
       location: record.location !== undefined ? DedupMineralSiteLocation.deserialize(record.location) : undefined,
       gradeTonnage: GradeTonnage.deserialize(record.grade_tonnage),

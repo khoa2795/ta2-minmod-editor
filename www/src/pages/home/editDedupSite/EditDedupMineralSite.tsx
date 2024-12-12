@@ -7,6 +7,20 @@ import { join } from "misc";
 import { EditOutlined } from "@ant-design/icons";
 import { EditSiteField } from "./EditSiteField";
 import styles from "./EditDedupMineralSite.module.css";
+import { Tooltip, Avatar } from "antd";
+
+const getUserColor = (username: string) => {
+  let hash = 0;
+  for (let i = 0; i < username.length; i++) {
+    hash = username.charCodeAt(i) + ((hash << 5) - hash);
+    hash = hash & hash;
+  }
+  const hue = Math.abs(hash % 360);
+  const saturation = 70;
+  const lightness = 50;
+
+  return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+};
 
 interface EditDedupMineralSiteProps {
   commodity: Commodity;
@@ -19,7 +33,7 @@ export const EditDedupMineralSite = observer(({ dedupSite, commodity }: EditDedu
   const [editField, setEditField] = useState<EditableField | undefined>(undefined);
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
 
-  const tmpLst: (MineralSite | null | undefined)[] = dedupSite.sites.map((id) => mineralSiteStore.get(id));
+  const tmpLst: (MineralSite | null | undefined)[] = dedupSite.sites.map((site) => mineralSiteStore.get(site.id));
   // no idea why typescript compiler incorrectly complains about the incorrect type
   const fetchedSites = tmpLst.filter((site) => site !== undefined) as (MineralSite | null)[];
   const sites = fetchedSites.filter((site) => site !== null) as MineralSite[];
@@ -48,7 +62,6 @@ export const EditDedupMineralSite = observer(({ dedupSite, commodity }: EditDedu
     const selectedPayload = selectedSiteIds.map((id) => ({ sites: [id] }));
     const unselectedPayload = unselectedSiteIds.length > 0 ? [{ sites: unselectedSiteIds }] : [];
     const createPayload = [...selectedPayload, ...unselectedPayload];
-
     const newIds = await dedupMineralSiteStore.updateSameAsGroup(createPayload);
 
     if (commodity && commodity.id) {
@@ -60,6 +73,47 @@ export const EditDedupMineralSite = observer(({ dedupSite, commodity }: EditDedu
 
   const columns = useMemo(() => {
     return [
+      {
+        title: "User",
+        key: "user",
+        render: (_: any, site: MineralSite, index: number) => {
+          let username;
+          let fullName;
+
+          if (site.createdBy[0]?.includes("/s/")) {
+            username = "System";
+            fullName = "System";
+          } else {
+            const createdBy = site.createdBy[0]?.split("/").pop() || "Unknown";
+            username = createdBy;
+            fullName = createdBy;
+          }
+          const allUsernamesTooltip =
+            username === "System"
+              ? site.createdBy
+                  .map((url, i) => {
+                    const parts = url.split("/");
+                    return parts[parts.length - 1];
+                  })
+                  .join(", ")
+              : fullName;
+
+          const color = getUserColor(username);
+          const confidence = dedupSite.sites[index].score;
+
+          return (
+            <Flex align="center" gap={8}>
+              <Tooltip title={allUsernamesTooltip}>
+                <Avatar style={{ backgroundColor: color, verticalAlign: "middle" }}>{username[0].toUpperCase()}</Avatar>
+              </Tooltip>
+              <Tooltip title={`Confidence: ${confidence}`}>
+                <Avatar>{confidence}</Avatar>
+              </Tooltip>
+            </Flex>
+          );
+        },
+      },
+
       {
         title: "Select",
         key: "select",
@@ -197,7 +251,7 @@ export const EditDedupMineralSite = observer(({ dedupSite, commodity }: EditDedu
   }, [commodity.id, sites.length, selectedRows, ungroupTogether]);
 
   useEffect(() => {
-    mineralSiteStore.fetchByIds(dedupSite.sites);
+    mineralSiteStore.fetchByIds(dedupSite.sites.map((site) => site.id));
   }, [mineralSiteStore]);
 
   const onEditFinish = (change?: { edit: FieldEdit; reference: Reference }) => {
