@@ -17,5 +17,5 @@ export class BindedNamespace {
 export class NamespaceManager {
   MR: BindedNamespace = new BindedNamespace("mr", "https://minmod.isi.edu/resource/");
   MO: BindedNamespace = new BindedNamespace("mo", "https://minmod.isi.edu/ontology/");
-  MD: BindedNamespace = new BindedNamespace("md", "https://minmod.isi.edu/ontology-derived/");
+  MD: BindedNamespace = new BindedNamespace("md", "https://minmod.isi.edu/derived/");
 }

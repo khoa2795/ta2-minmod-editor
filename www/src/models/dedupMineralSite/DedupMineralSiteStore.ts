@@ -110,10 +110,11 @@ export class DedupMineralSiteStore extends RStore<string, DedupMineralSite> {
 
   public deserialize(record: any): DedupMineralSite {
     const MR = this.ns.MR;
+    const MD = this.ns.MD;
 
     return new DedupMineralSite({
       id: record.id,
-      uri: MR.getURI(record.id),
+      uri: MD.getURI(record.id),
       name: record.name,
       type: record.type,
       rank: record.rank,
