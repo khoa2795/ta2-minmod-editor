@@ -5,14 +5,14 @@ import { getActiveRouteName, PathDef } from "gena-app";
 import React from "react";
 
 type MenuItemProps = {
-  children: string | JSX.Element;
+  label: string | JSX.Element;
   icon?: JSX.Element;
   danger?: boolean;
   disabled?: boolean;
 };
 
 interface Props<R> {
-  menus: Partial<Record<keyof R, string | JSX.Element | MenuItemProps>>;
+  menus: Partial<Record<keyof R, MenuItemProps>>;
   routes: R;
   className?: string;
   style?: React.CSSProperties;
@@ -20,43 +20,28 @@ interface Props<R> {
 }
 type Component = <R extends Record<any, PathDef<any, any>>>(_p: Props<R>) => JSX.Element;
 
-export const CenterNavBar = (<R extends Record<any, PathDef<any, any>>>({ menus, routes, className, style, isFirstItemLogo }: Props<R>) => {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const openMenu = (e: { key: keyof R }) => {
-    routes[e.key].path({}, {}).open(navigate);
-  };
-
-  const items = Object.keys(menus).map((routeName, index) => {
-    const className = isFirstItemLogo === true && index === 0 ? "logo" : "";
-    return getMenuItem(routeName, className, menus[routeName]!);
-  });
-  const activeRouteName = getActiveRouteName(location, routes);
-
-  return (
-    <Menu
-      mode="horizontal"
-      className={styles.centerNavBar + (className !== undefined ? " " + className : "")}
-      style={style}
-      onClick={openMenu}
-      selectedKeys={activeRouteName !== undefined ? [activeRouteName] : undefined}
-    >
-      {items}
-    </Menu>
-  );
-}) as Component;
-
 export const LeftNavBar = (<R extends Record<any, PathDef<any, any>>>({ menus, routes, className, style, isFirstItemLogo }: Props<R>) => {
   const location = useLocation();
   const navigate = useNavigate();
 
   const openMenu = (e: { key: keyof R }) => {
-    routes[e.key].path({}, {}).open(navigate);
+    routes[e.key].path({ urlArgs: {}, queryArgs: {} }).open(navigate);
   };
 
   const items = Object.keys(menus).map((routeName, index) => {
-    const className = isFirstItemLogo === true && index === 0 ? "logo" : "";
-    return getMenuItem(routeName, className, menus[routeName]!);
+    const item = menus[routeName]!;
+
+    if (isFirstItemLogo === true && index === 0) {
+      return {
+        key: routeName,
+        ...item,
+        label: <div className="logo">{item.label}</div>,
+      };
+    }
+    return {
+      key: routeName,
+      ...item,
+    };
   });
   const activeRouteName = getActiveRouteName(location, routes);
 
@@ -67,28 +52,7 @@ export const LeftNavBar = (<R extends Record<any, PathDef<any, any>>>({ menus, r
       style={style}
       onClick={openMenu}
       selectedKeys={activeRouteName !== undefined ? [activeRouteName] : undefined}
-    >
-      {items}
-    </Menu>
+      items={items}
+    ></Menu>
   );
 }) as Component;
-
-function getMenuItem(key: string, className: string, props: string | JSX.Element | MenuItemProps) {
-  let children, realprops;
-
-  if (typeof props === "string") {
-    children = props;
-  } else if (React.isValidElement(props)) {
-    children = props;
-  } else {
-    const { children: children2, ...realprops2 } = props as MenuItemProps;
-    children = children2;
-    realprops = realprops2;
-  }
-
-  return (
-    <Menu.Item className={className} key={key} {...realprops}>
-      {children}
-    </Menu.Item>
-  );
-}

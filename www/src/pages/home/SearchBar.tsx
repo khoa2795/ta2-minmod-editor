@@ -4,6 +4,7 @@ import { useStores, Commodity, IStore } from "models";
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { routes } from "routes";
+import { useQueryParams } from "gena-app";
 
 interface SearchBarProps {
   searchArgs: SearchArgs;
@@ -18,75 +19,39 @@ interface NormSearchArgs {
   commodity?: Commodity;
 }
 
-export function useSearchArgs2(): [SearchArgs, NormSearchArgs, (newArgs: SearchArgs) => void] {
+export function useSearchArgs(): [SearchArgs, NormSearchArgs, (newArgs: SearchArgs) => void] {
   const { commodityStore } = useStores();
-  const queryParams = routes.home.useQueryParams();
-  const location = useLocation();
   const navigate = useNavigate();
+  const location = useLocation();
+  const queryParams = useQueryParams(routes.home);
 
   const [args, setArgs] = useState<SearchArgs>({
     commodity: undefined,
   });
 
-  console.log("call useSearchArgs", args);
-
   const updateSearchArgs = (newArgs: SearchArgs) => {
-    console.log("[real update] update search args", newArgs, routes.home.getURL({ commodity: newArgs.commodity }));
     setArgs(newArgs);
-    routes.home.path({ commodity: newArgs.commodity }).open(navigate);
-    // window._routeAPIs.history.push("/?commodity=Lithium");
+    routes.home.path({ queryArgs: { commodity: newArgs.commodity } }).open(navigate);
   };
 
   // sync with queries in the URL
   useEffect(() => {
-    const inv = () => {
-      const newArgs = {
-        commodity: queryParams?.commodity,
-      };
-
-      if (newArgs.commodity !== undefined) {
-        const commodity = commodityStore.getByName(newArgs.commodity);
-        console.log("check commodity", newArgs.commodity, commodity);
-        if (commodity === null) {
-          // does not exist
-          newArgs.commodity = undefined;
-        }
-      }
-
-      console.log("[useEffect] update search args", "new=", newArgs, "old=", args, "query=", queryParams);
-      console.log("location", location, "search", location.search);
-      if (!_.isEqual(newArgs, args)) {
-        updateSearchArgs(newArgs);
-      }
+    const newArgs = {
+      commodity: queryParams?.commodity,
     };
-    // inv();
-    setTimeout(inv, 1000);
-  }, [commodityStore.records.size, queryParams?.commodity]);
 
-  const normArgs: NormSearchArgs = useMemo(() => {
-    if (args.commodity === undefined) {
-      return {
-        commodity: undefined,
-      };
+    if (newArgs.commodity !== undefined) {
+      const commodity = commodityStore.getByName(newArgs.commodity);
+      if (commodity === null) {
+        // does not exist
+        newArgs.commodity = undefined;
+      }
     }
-    const commodity = commodityStore.getByName(args.commodity);
-    return {
-      commodity: commodity === null ? undefined : commodity,
-    };
-  }, [commodityStore.records.size, args.commodity]);
 
-  return [args, normArgs, updateSearchArgs];
-}
-
-export function useSearchArgs(): [SearchArgs, NormSearchArgs, (newArgs: SearchArgs) => void] {
-  const { commodityStore } = useStores();
-  const [args, setArgs] = useState<SearchArgs>({
-    commodity: undefined,
-  });
-
-  const updateSearchArgs = (newArgs: SearchArgs) => {
-    setArgs(newArgs);
-  };
+    if (!_.isEqual(newArgs, args)) {
+      updateSearchArgs(newArgs);
+    }
+  }, [commodityStore.records.size, queryParams?.commodity]);
 
   const normArgs: NormSearchArgs = useMemo(() => {
     if (args.commodity === undefined) {

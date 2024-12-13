@@ -19,7 +19,9 @@ export const Layout = (component: React.FunctionComponent<any> | React.Component
       <Space direction="vertical" style={{ width: "100%" }}>
         <LeftNavBar
           menus={{
-            home: <span>MinMod Editor</span>,
+            home: {
+              label: <span>MinMod Editor</span>,
+            },
           }}
           routes={routes}
           isFirstItemLogo={true}

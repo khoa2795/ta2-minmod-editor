@@ -14,7 +14,7 @@ export const LoginPage = () => {
 
   useEffect(() => {
     userStore.isLoggedIn().then((isLoggedIn) => {
-      if (isLoggedIn) routes.home.path({ commodity: undefined }).open(navigate);
+      if (isLoggedIn) routes.home.path({ queryArgs: { commodity: undefined } }).open(navigate);
     });
   }, [userStore, navigate]);
 
@@ -22,7 +22,7 @@ export const LoginPage = () => {
     event.preventDefault();
     try {
       await userStore.login(username, password);
-      routes.home.path({ commodity: undefined }).open(navigate);
+      routes.home.path({ queryArgs: { commodity: undefined } }).open(navigate);
     } catch (err) {
       setError("An error occurred. Please try again later.");
     }

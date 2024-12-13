@@ -6,6 +6,7 @@ import { Button, Checkbox, Divider, Space, Table, Typography, message } from "an
 import { EditOutlined } from "@ant-design/icons";
 import { EditDedupMineralSite } from "./editDedupSite/EditDedupMineralSite";
 import { Entity } from "components/Entity";
+
 interface DedupMineralSiteTableProps {
   commodity: Commodity | undefined;
 }
@@ -228,7 +229,7 @@ export const DedupMineralSiteTable: React.FC<DedupMineralSiteTableProps> = obser
 
   const handleGroup = async () => {
     const prevIds = Array.from(selectedDedupSiteIds);
-    const allSiteIds = Array.from(selectedDedupSiteIds).flatMap((dedupSiteId) => dedupMineralSiteStore.get(dedupSiteId)!.sites.map((site) => (site.id)));
+    const allSiteIds = Array.from(selectedDedupSiteIds).flatMap((dedupSiteId) => dedupMineralSiteStore.get(dedupSiteId)!.sites.map((site) => site.id));
 
     const newSiteGroups = [
       {
@@ -252,20 +253,20 @@ export const DedupMineralSiteTable: React.FC<DedupMineralSiteTableProps> = obser
     <>
       {selectedDedupSiteIds.size > 0
         ? [
-          <div>
-            <Button type="primary" onClick={handleGroup} disabled={selectedDedupSiteIds.size === 1}>
-              Group selected sites
-            </Button>
-          </div>,
-          <Table<DedupMineralSite>
-            bordered={true}
-            size="small"
-            rowKey="id"
-            pagination={false}
-            columns={columns}
-            dataSource={Array.from(selectedDedupSiteIds).map((id) => dedupMineralSiteStore.get(id)!)}
-          />,
-        ]
+            <div>
+              <Button type="primary" onClick={handleGroup} disabled={selectedDedupSiteIds.size === 1}>
+                Group selected sites
+              </Button>
+            </div>,
+            <Table<DedupMineralSite>
+              bordered={true}
+              size="small"
+              rowKey="id"
+              pagination={false}
+              columns={columns}
+              dataSource={Array.from(selectedDedupSiteIds).map((id) => dedupMineralSiteStore.get(id)!)}
+            />,
+          ]
         : []}
       <Table<DedupMineralSite>
         bordered={true}
