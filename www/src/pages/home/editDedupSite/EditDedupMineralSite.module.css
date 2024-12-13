@@ -1,7 +1,10 @@
-.table .ant-table {
-  margin: 0px !important;
-  border: 1px solid #ccc;
+.table {
+  [class~="ant-table"] {
+    margin: 0px !important;
+    border: 1px solid #ccc;
+  }
 }
+
 .editButton {
   cursor: "pointer";
 }
