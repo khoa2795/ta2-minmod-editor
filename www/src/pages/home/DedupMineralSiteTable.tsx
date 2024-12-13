@@ -248,26 +248,26 @@ export const DedupMineralSiteTable: React.FC<DedupMineralSiteTableProps> = obser
 
   const isLoading = dedupMineralSiteStore.state.value === "updating";
   const dedupMineralSites = commodity === undefined || isLoading ? emptyFetchResult : dedupMineralSiteStore.getByCommodity(commodity);
+  const selectedDedupSites = useMemo(() => {
+    return Array.from(selectedDedupSiteIds)
+      .map((id) => dedupMineralSiteStore.get(id))
+      .filter((site) => site !== undefined) as DedupMineralSite[];
+  }, [selectedDedupSiteIds]);
 
   return (
     <>
-      {selectedDedupSiteIds.size > 0
-        ? [
-            <div>
-              <Button type="primary" onClick={handleGroup} disabled={selectedDedupSiteIds.size === 1}>
-                Group selected sites
-              </Button>
-            </div>,
-            <Table<DedupMineralSite>
-              bordered={true}
-              size="small"
-              rowKey="id"
-              pagination={false}
-              columns={columns}
-              dataSource={Array.from(selectedDedupSiteIds).map((id) => dedupMineralSiteStore.get(id)!)}
-            />,
-          ]
-        : []}
+      {selectedDedupSites.length > 0 ? (
+        <>
+          <div>
+            <Button type="primary" onClick={handleGroup} disabled={selectedDedupSiteIds.size === 1}>
+              Group selected sites
+            </Button>
+          </div>
+          <Table<DedupMineralSite> bordered={true} size="small" rowKey="id" pagination={false} columns={columns} showSorterTooltip={false} dataSource={selectedDedupSites} />
+        </>
+      ) : (
+        <></>
+      )}
       <Table<DedupMineralSite>
         bordered={true}
         size="small"
@@ -275,6 +275,7 @@ export const DedupMineralSiteTable: React.FC<DedupMineralSiteTableProps> = obser
         columns={columns}
         dataSource={dedupMineralSites.records}
         loading={isLoading ? { size: "large" } : false}
+        showSorterTooltip={false}
         expandable={{
           expandedRowRender: (site) => {
             if (editingDedupSite === site.id) {
