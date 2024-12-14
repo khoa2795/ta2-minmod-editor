@@ -64,6 +64,7 @@ def forward_request(
 
 
 @app.route("/editor", defaults={"path": ""})
+@app.route("/editor/", defaults={"path": ""})
 @app.route("/editor/<path:path>")
 def home(path):
     if path.find("/") == -1 and path.find(".") != -1:
