@@ -142,7 +142,7 @@ export class DedupMineralSiteStore extends RStore<string, DedupMineralSite> {
               stateOrProvince: (record.location.state_or_province || []).map((sop: string) => MR.getURI(sop)),
             })
           : undefined,
-      gradeTonnage: GradeTonnage.deserialize(record.grade_tonnage),
+      gradeTonnage: GradeTonnage.deserialize(record.grade_tonnage[0]),
     });
   }
 
