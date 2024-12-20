@@ -6,7 +6,7 @@ export const IFrame = ({ relurl }: { relurl: string }) => {
   useEffect(() => {
     setSize({ width: window.innerWidth, height: window.innerHeight - 64 - 16 });
   }, [window.innerHeight, window.innerWidth]);
-  // const url = `${SERVER}${relurl}`;
-  const url = `https://dev.minmod.isi.edu${relurl}`;
+  const url = `${SERVER}${relurl}`;
+  // const url = `https://dev.minmod.isi.edu${relurl}`;
   return <iframe src={url} style={{ width: size.width, height: size.height, border: "none", marginLeft: -44, marginRight: -44 }} />;
 };
