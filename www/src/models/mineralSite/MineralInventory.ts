@@ -72,9 +72,9 @@ export class MineralInventory {
 
 export class Measure {
   value: number;
-  unit: CandidateEntity;
+  unit?: CandidateEntity;
 
-  public constructor({ value, unit }: { value: number; unit: CandidateEntity }) {
+  public constructor({ value, unit }: { value: number; unit?: CandidateEntity }) {
     this.value = value;
     this.unit = unit;
   }
@@ -82,7 +82,7 @@ export class Measure {
   public static deserialize(obj: any): Measure {
     return new Measure({
       value: obj.value,
-      unit: CandidateEntity.deserialize(obj.unit),
+      unit: obj.unit === undefined ? undefined : CandidateEntity.deserialize(obj.unit),
     });
   }
 }

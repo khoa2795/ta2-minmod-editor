@@ -77,7 +77,7 @@ export const extendedRoutes: Record<keyof typeof routes, ExtendedRoute> = {
   editor: {
     name: "MinMod Editor",
     route: routes.editor,
-    role: Role.Public,
+    role: Role.User,
   },
 };
 
