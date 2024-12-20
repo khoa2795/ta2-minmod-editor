@@ -3,6 +3,7 @@ import styles from "./Navbar.module.css";
 import { useLocation, useNavigate } from "react-router";
 import { getActiveRouteName, PathDef } from "gena-app";
 import React from "react";
+import logo from "../logo.png";
 
 type MenuItemProps = {
   label: string | JSX.Element;
@@ -35,7 +36,12 @@ export const LeftNavBar = (<R extends Record<any, PathDef<any, any>>>({ menus, r
       return {
         key: routeName,
         ...item,
-        label: <div className="logo">{item.label}</div>,
+        label: (
+          <a className={styles.logo}>
+            <img src={logo} alt="logo" />
+            {item.label}
+          </a>
+        ),
       };
     }
     return {

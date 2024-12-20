@@ -7,11 +7,12 @@ import { Space } from "antd";
 
 import { RequiredAuthentication } from "./components/RequiredAuthentication";
 import { PUBLIC_URL } from "./env";
+import { IFrame } from "pages/IFrame";
 
 /*************************************************************************************
  * Layouts of the application
  */
-export const Layout = (component: React.FunctionComponent<any> | React.ComponentClass<any, any>) => {
+export const MinmodLayout = (component: React.FunctionComponent<any> | React.ComponentClass<any, any>) => {
   return (props: any) => {
     const element = React.createElement(component, props);
 
@@ -19,6 +20,18 @@ export const Layout = (component: React.FunctionComponent<any> | React.Component
       <Space direction="vertical" style={{ width: "100%" }}>
         <LeftNavBar
           menus={{
+            dashboard: {
+              label: <span>MinMod</span>,
+            },
+            mapview: {
+              label: <span>Map View</span>,
+            },
+            gradeTonnage: {
+              label: <span>Grade-Tonnage Model</span>,
+            },
+            mineralSite: {
+              label: <span>Mineral Site Data</span>,
+            },
             home: {
               label: <span>MinMod Editor</span>,
             },
@@ -53,8 +66,28 @@ export const routes = {
       commodity: "optionalstring",
     },
   }),
+  dashboard: new NoURLArgsPathDef({
+    component: () => <IFrame relurl="/" />,
+    pathDef: `${PUBLIC_URL}/dashboard`,
+    exact: true,
+  }),
+  mapview: new NoURLArgsPathDef({
+    component: () => <IFrame relurl="/mapview" />,
+    pathDef: `${PUBLIC_URL}/map-view`,
+    exact: true,
+  }),
+  gradeTonnage: new NoURLArgsPathDef({
+    component: () => <IFrame relurl="/gtmodel" />,
+    pathDef: `${PUBLIC_URL}/grade-tonnage`,
+    exact: true,
+  }),
+  mineralSite: new NoURLArgsPathDef({
+    component: () => <IFrame relurl="/mineralsite" />,
+    pathDef: `${PUBLIC_URL}/mineral-site`,
+    exact: true,
+  }),
 };
 (window as any)._routes = routes;
 
 // apply this layout to all routes except login
-applyLayout(routes, Layout, ["login"]);
+applyLayout(routes, MinmodLayout, ["login"]);

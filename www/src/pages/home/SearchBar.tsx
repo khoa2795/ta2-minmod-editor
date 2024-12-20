@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { routes } from "routes";
 import { useQueryParams } from "gena-app";
+import { InternalID } from "models/typing";
 
 interface SearchBarProps {
   searchArgs: SearchArgs;
@@ -22,7 +23,6 @@ interface NormSearchArgs {
 export function useSearchArgs(): [SearchArgs, NormSearchArgs, (newArgs: SearchArgs) => void] {
   const { commodityStore } = useStores();
   const navigate = useNavigate();
-  const location = useLocation();
   const queryParams = useQueryParams(routes.home);
 
   const [args, setArgs] = useState<SearchArgs>({
