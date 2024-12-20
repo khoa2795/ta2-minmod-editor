@@ -24,7 +24,7 @@ app = Flask(
     __name__,
     template_folder=os.path.join(pkg_dir, "www"),
     static_folder=os.path.join(pkg_dir, "www/static"),
-    static_url_path="/editor/static",
+    static_url_path="/static",
 )
 app.config["app.json.sort_keys"] = False
 
