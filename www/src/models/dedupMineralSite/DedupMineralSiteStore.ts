@@ -143,6 +143,7 @@ export class DedupMineralSiteStore extends RStore<string, DedupMineralSite> {
             })
           : undefined,
       gradeTonnage: GradeTonnage.deserialize(record.grade_tonnage[0]),
+      modifiedAt: record.modified_at,
     });
   }
 

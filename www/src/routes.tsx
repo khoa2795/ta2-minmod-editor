@@ -19,7 +19,7 @@ export const routes = {
     exact: true,
   }),
   dashboard: new NoURLArgsPathDef({
-    component: () => <IFrame relurl="/dashboard" />,
+    component: () => <IFrame relurl="/dashboard/" />,
     pathDef: `${PUBLIC_URL}/`,
     exact: true,
   }),
