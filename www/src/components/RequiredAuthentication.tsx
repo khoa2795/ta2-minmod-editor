@@ -4,7 +4,12 @@ import { useStores } from "models";
 import { routes } from "routes";
 import { useNavigate } from "react-router";
 
-export const RequiredAuthentication = observer(({ children }: { children: ReactElement }) => {
+export enum Role {
+  User,
+  Public,
+}
+
+export const RequiredAuthentication = observer(({ children, role }: { children: ReactElement; role: Role }) => {
   const { userStore } = useStores();
   const navigate = useNavigate();
 

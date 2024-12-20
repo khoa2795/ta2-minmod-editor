@@ -23,7 +23,7 @@ interface NormSearchArgs {
 export function useSearchArgs(): [SearchArgs, NormSearchArgs, (newArgs: SearchArgs) => void] {
   const { commodityStore } = useStores();
   const navigate = useNavigate();
-  const queryParams = useQueryParams(routes.home);
+  const queryParams = useQueryParams(routes.editor);
 
   const [args, setArgs] = useState<SearchArgs>({
     commodity: undefined,
@@ -31,7 +31,7 @@ export function useSearchArgs(): [SearchArgs, NormSearchArgs, (newArgs: SearchAr
 
   const updateSearchArgs = (newArgs: SearchArgs) => {
     setArgs(newArgs);
-    routes.home.path({ queryArgs: { commodity: newArgs.commodity } }).open(navigate);
+    routes.editor.path({ queryArgs: { commodity: newArgs.commodity } }).open(navigate);
   };
 
   // sync with queries in the URL

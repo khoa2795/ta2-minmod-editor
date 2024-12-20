@@ -63,9 +63,8 @@ def forward_request(
     return response
 
 
-@app.route("/editor", defaults={"path": ""})
-@app.route("/editor/", defaults={"path": ""})
-@app.route("/editor/<path:path>")
+@app.route("/", defaults={"path": ""})
+@app.route("/<path:path>")
 def home(path):
     if path.find("/") == -1 and path.find(".") != -1:
         if path.endswith(".json") or path.endswith(".ico") or path.endswith(".png"):

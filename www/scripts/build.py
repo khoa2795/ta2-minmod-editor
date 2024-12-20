@@ -24,7 +24,7 @@ if version == built_version and not force:
     exit(0)
 
 env = copy.copy(os.environ)
-env["PUBLIC_URL"] = "/editor"
+env["PUBLIC_URL"] = "/"
 env["BUILD_PATH"] = str(outdir)
 subprocess.check_call(
     [

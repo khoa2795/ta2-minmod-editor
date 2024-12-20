@@ -26,6 +26,7 @@
 .leftNavBar .logo img {
   height: 24px;
   margin-right: 8px;
+  margin-top: -4px;
   display: inline-block;
   vertical-align: middle;
 }

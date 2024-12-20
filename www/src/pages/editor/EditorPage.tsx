@@ -3,7 +3,7 @@ import { observer } from "mobx-react-lite";
 import { SearchBar, useSearchArgs } from "./SearchBar";
 import { DedupMineralSiteTable } from "./DedupMineralSiteTable";
 
-export const HomePage = observer(() => {
+export const EditorPage = observer(() => {
   const [searchArgs, normSearchArgs, setSearchArgs] = useSearchArgs();
 
   return (
