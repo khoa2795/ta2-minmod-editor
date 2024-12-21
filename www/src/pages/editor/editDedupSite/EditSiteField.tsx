@@ -6,6 +6,8 @@ import { useMemo } from "react";
 import { EditRefDoc } from "./EditRefDoc";
 import { InternalID } from "models/typing";
 import { DepositTypeStore } from "models/depositType";
+import { CountryStore } from "models/country";
+import { StateOrProvinceStore } from "models/stateOrProvince";
 
 interface EditSiteFieldProps {
   sites: MineralSite[];
@@ -23,7 +25,7 @@ type FormFields = {
 };
 
 export const EditSiteField: React.FC<EditSiteFieldProps> = ({ currentSite, sites, editField, commodity, onFinish }) => {
-  const { depositTypeStore } = useStores();
+  const { depositTypeStore, stateOrProvinceStore, countryStore } = useStores();
   const [form] = Form.useForm<FormFields>();
 
   const title = useMemo(() => {
@@ -32,6 +34,10 @@ export const EditSiteField: React.FC<EditSiteFieldProps> = ({ currentSite, sites
         return "Name";
       case "location":
         return "Location";
+      case "country":
+        return "Country";
+      case "stateOrProvince":
+        return "State or Province";
       case "depositType":
         return "Deposit Type";
       case "grade":
@@ -61,7 +67,7 @@ export const EditSiteField: React.FC<EditSiteFieldProps> = ({ currentSite, sites
 
   let editFieldComponent = undefined;
   let initialValues: FormFields = defaultInitialValues;
-  const configArgs = { currentSite, sites, setFieldProvenance, stores: { depositTypeStore }, commodity };
+  const configArgs = { currentSite, sites, setFieldProvenance, stores: { depositTypeStore, countryStore, stateOrProvinceStore }, commodity };
   switch (editField) {
     case "name":
       [editFieldComponent, initialValues] = getNameConfig(configArgs);
@@ -71,6 +77,12 @@ export const EditSiteField: React.FC<EditSiteFieldProps> = ({ currentSite, sites
       break;
     case "location":
       [editFieldComponent, initialValues] = getLocationConfig(configArgs);
+      break;
+    case "country":
+      [editFieldComponent, initialValues] = getCountryConfig(configArgs);
+      break;
+    case "stateOrProvince":
+      [editFieldComponent, initialValues] = getStateOrProvinceConfig(configArgs);
       break;
     case "grade":
       [editFieldComponent, initialValues] = getGradeConfig(configArgs);
@@ -94,6 +106,10 @@ export const EditSiteField: React.FC<EditSiteFieldProps> = ({ currentSite, sites
     let edit;
     if (editField === "name" || editField === "location") {
       edit = { field: editField, value: val.fieldValue };
+    } else if (editField === "country") {
+      edit = { field: editField, observedName: countryStore.getByURI(val.fieldValue)!.name, normalizedURI: val.fieldValue };
+    } else if (editField === "stateOrProvince") {
+      edit = { field: editField, observedName: countryStore.getByURI(val.fieldValue)!.name, normalizedURI: val.fieldValue };
     } else if (editField === "depositType") {
       edit = { field: editField, observedName: depositTypeStore.getByURI(val.fieldValue)!.name, normalizedURI: val.fieldValue };
     } else if (editField === "grade" || editField === "tonnage") {
@@ -146,14 +162,14 @@ const defaultInitialValues: FormFields = {
   fieldValue: undefined,
   refDoc: null,
   refComment: "",
-  refAppliedToAll: true,
+  refAppliedToAll: false,
 };
 
 interface GetFieldConfig {
   currentSite: MineralSite | undefined;
   sites: MineralSite[];
   setFieldProvenance: (key: string | undefined) => void;
-  stores: { depositTypeStore: DepositTypeStore };
+  stores: { depositTypeStore: DepositTypeStore; countryStore: CountryStore; stateOrProvinceStore: StateOrProvinceStore };
   commodity: InternalID;
 }
 
@@ -166,7 +182,7 @@ const getNameConfig = ({ currentSite, sites, setFieldProvenance }: GetFieldConfi
           fieldValue: currentSite.name,
           refDoc: currentSite.getFirstReferencedDocument(),
           refComment: currentSite.reference[0].comment,
-          refAppliedToAll: true,
+          refAppliedToAll: false,
         }
       : defaultInitialValues;
   return [component, initialValues];
@@ -181,7 +197,53 @@ const getLocationConfig = ({ currentSite, sites, setFieldProvenance }: GetFieldC
           fieldValue: currentSite.locationInfo.location || "",
           refDoc: currentSite.getFirstReferencedDocument(),
           refComment: currentSite.reference[0].comment,
-          refAppliedToAll: true,
+          refAppliedToAll: false,
+        }
+      : defaultInitialValues;
+  return [component, initialValues];
+};
+
+const getCountryConfig = ({ currentSite, sites, setFieldProvenance, stores }: GetFieldConfig): [React.ReactElement, FormFields] => {
+  let options = _.uniqBy(
+    sites.flatMap((site) => site.locationInfo.country).filter((country) => country.normalizedURI !== undefined),
+    "normalizedURI"
+  )
+    .sort((a, b) => a.confidence - b.confidence)
+    .map((ent) => ({ value: ent.normalizedURI!, label: stores.countryStore.getByURI(ent.normalizedURI!)!.name }));
+  const predictedCountries = new Set(options.map((ent) => ent.value));
+  options = options.concat(stores.countryStore.filter((ent) => !predictedCountries.has(ent.uri)).map((type) => ({ value: type.uri, label: type.name })));
+
+  const component = <Select showSearch={true} options={options} optionFilterProp="label" />;
+  const initialValues =
+    currentSite !== undefined && currentSite.locationInfo.country.length > 0
+      ? {
+          fieldValue: currentSite.locationInfo.country[0].normalizedURI!,
+          refDoc: currentSite.getFirstReferencedDocument(),
+          refComment: currentSite.reference[0].comment,
+          refAppliedToAll: false,
+        }
+      : defaultInitialValues;
+  return [component, initialValues];
+};
+
+const getStateOrProvinceConfig = ({ currentSite, sites, setFieldProvenance, stores }: GetFieldConfig): [React.ReactElement, FormFields] => {
+  let options = _.uniqBy(
+    sites.flatMap((site) => site.locationInfo.stateOrProvince).filter((stateOrProvince) => stateOrProvince.normalizedURI !== undefined),
+    "normalizedURI"
+  )
+    .sort((a, b) => a.confidence - b.confidence)
+    .map((ent) => ({ value: ent.normalizedURI!, label: stores.stateOrProvinceStore.getByURI(ent.normalizedURI!)!.name }));
+  const predictedSOP = new Set(options.map((ent) => ent.value));
+  options = options.concat(stores.stateOrProvinceStore.filter((ent) => !predictedSOP.has(ent.uri)).map((type) => ({ value: type.uri, label: type.name })));
+
+  const component = <Select showSearch={true} options={options} optionFilterProp="label" />;
+  const initialValues =
+    currentSite !== undefined && currentSite.locationInfo.stateOrProvince.length > 0
+      ? {
+          fieldValue: currentSite.locationInfo.stateOrProvince[0].normalizedURI!,
+          refDoc: currentSite.getFirstReferencedDocument(),
+          refComment: currentSite.reference[0].comment,
+          refAppliedToAll: false,
         }
       : defaultInitialValues;
   return [component, initialValues];
@@ -204,7 +266,7 @@ const getDepositTypeConfig = ({ currentSite, sites, setFieldProvenance, stores }
           fieldValue: currentSite.depositTypeCandidate[0].normalizedURI!,
           refDoc: currentSite.getFirstReferencedDocument(),
           refComment: currentSite.reference[0].comment,
-          refAppliedToAll: true,
+          refAppliedToAll: false,
         }
       : defaultInitialValues;
   return [component, initialValues];
@@ -218,7 +280,7 @@ const getTonnageConfig = ({ currentSite, sites, setFieldProvenance, stores, comm
           fieldValue: currentSite.gradeTonnage[commodity]?.totalTonnage?.toFixed(4) || "",
           refDoc: currentSite.getFirstReferencedDocument(),
           refComment: currentSite.reference[0].comment,
-          refAppliedToAll: true,
+          refAppliedToAll: false,
         }
       : defaultInitialValues;
   return [component, initialValues];
@@ -232,7 +294,7 @@ const getGradeConfig = ({ currentSite, sites, setFieldProvenance, stores, commod
           fieldValue: currentSite.gradeTonnage[commodity]?.totalGrade?.toFixed(4) || "",
           refDoc: currentSite.getFirstReferencedDocument(),
           refComment: currentSite.reference[0].comment,
-          refAppliedToAll: true,
+          refAppliedToAll: false,
         }
       : defaultInitialValues;
   return [component, initialValues];

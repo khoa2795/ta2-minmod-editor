@@ -173,14 +173,24 @@ export const EditDedupMineralSite = observer(({ dedupSite, commodity }: EditDedu
         },
       },
       {
-        title: "Country",
+        title: (
+          <Flex justify="space-between">
+            <span>Country</span>
+            <EditOutlined className={styles.editButton} onClick={() => setEditField("country")} />
+          </Flex>
+        ),
         key: "country",
         render: (_: any, site: MineralSite) => {
           return <ListCanEntComponent entities={site.locationInfo.country} store="countryStore" />;
         },
       },
       {
-        title: "State/Province",
+        title: (
+          <Flex justify="space-between">
+            <span>State/Province</span>
+            <EditOutlined className={styles.editButton} onClick={() => setEditField("stateOrProvince")} />
+          </Flex>
+        ),
         key: "state/province",
         render: (_: any, site: MineralSite) => {
           return <ListCanEntComponent entities={site.locationInfo.stateOrProvince} store="stateOrProvinceStore" />;

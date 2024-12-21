@@ -10,10 +10,12 @@ import { MineralInventory } from "./MineralInventory";
 import { IStore, User } from "models";
 import { InternalID } from "models/typing";
 
-export type EditableField = "name" | "location" | "depositType" | "grade" | "tonnage";
+export type EditableField = "name" | "location" | "country" | "stateOrProvince" | "depositType" | "grade" | "tonnage";
 export type FieldEdit =
   | { field: "name"; value: string }
   | { field: "location"; value: string }
+  | { field: "country"; observedName: string; normalizedURI: string }
+  | { field: "stateOrProvince"; observedName: string; normalizedURI: string }
   | { field: "depositType"; observedName: string; normalizedURI: string }
   | {
       field: "grade";
@@ -89,6 +91,26 @@ export class MineralSite {
         break;
       case "location":
         this.locationInfo.location = edit.value;
+        break;
+      case "country":
+        this.locationInfo.country = [
+          new CandidateEntity({
+            source: this.createdBy[0], // this works because createdBy is a single item array for experts
+            confidence: 1.0,
+            normalizedURI: edit.normalizedURI,
+            observedName: edit.observedName,
+          }),
+        ];
+        break;
+      case "stateOrProvince":
+        this.locationInfo.stateOrProvince = [
+          new CandidateEntity({
+            source: this.createdBy[0], // this works because createdBy is a single item array for experts
+            confidence: 1.0,
+            normalizedURI: edit.normalizedURI,
+            observedName: edit.observedName,
+          }),
+        ];
         break;
       case "depositType":
         this.depositTypeCandidate = [
@@ -167,7 +189,7 @@ export class DraftCreateMineralSite extends MineralSite {
       recordId: baseSite.recordId,
       dedupSiteURI: dedupMineralSite.uri,
       createdBy: [user.url],
-      name: "",
+      name: baseSite.name,
       locationInfo: new LocationInfo({ country: [], stateOrProvince: [] }),
       depositTypeCandidate: [],
       reference: [reference],

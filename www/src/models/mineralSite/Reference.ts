@@ -46,12 +46,16 @@ export class Reference {
     };
   }
 
-  public static normalizeProperty(property: "name" | "location" | "depositType" | "grade" | "tonnage"): string {
+  public static normalizeProperty(property: "name" | "location" | "country" | "stateOrProvince" | "depositType" | "grade" | "tonnage"): string {
     switch (property) {
       case "name":
         return "http://www.w3.org/2000/01/rdf-schema#label";
       case "location":
         return "https://minmod.isi.edu/ontology/location";
+      case "country":
+        return "https://minmod.isi.edu/ontology/country";
+      case "stateOrProvince":
+        return "https://minmod.isi.edu/ontology/state_or_province";
       case "depositType":
         return "https://minmod.isi.edu/ontology/deposit_type";
       case "grade":

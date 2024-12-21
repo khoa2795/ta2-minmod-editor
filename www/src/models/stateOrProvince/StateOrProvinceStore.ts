@@ -1,8 +1,10 @@
 import { RStore, FetchResponse } from "gena-app";
 import { SERVER } from "env";
+import { IRI } from "models/typing";
 
 export interface StateOrProvince {
-  id: string; // it is the URI
+  id: IRI; // it is the URI
+  uri: IRI;
   name: string;
 }
 
@@ -26,6 +28,7 @@ export class StateOrProvinceStore extends RStore<string, StateOrProvince> {
   public deserialize(obj: any): StateOrProvince {
     return {
       id: obj.uri,
+      uri: obj.uri,
       name: obj.name,
     };
   }
