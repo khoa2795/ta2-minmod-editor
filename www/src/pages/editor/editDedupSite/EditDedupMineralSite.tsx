@@ -176,14 +176,14 @@ export const EditDedupMineralSite = observer(({ dedupSite, commodity }: EditDedu
         title: "Country",
         key: "country",
         render: (_: any, site: MineralSite) => {
-          return <ListCanEntComponent entities={site.locationInfo.country} />;
+          return <ListCanEntComponent entities={site.locationInfo.country} store="countryStore" />;
         },
       },
       {
         title: "State/Province",
         key: "state/province",
         render: (_: any, site: MineralSite) => {
-          return <ListCanEntComponent entities={site.locationInfo.stateOrProvince} />;
+          return <ListCanEntComponent entities={site.locationInfo.stateOrProvince} store="stateOrProvinceStore" />;
         },
       },
       {

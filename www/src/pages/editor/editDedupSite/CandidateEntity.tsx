@@ -1,13 +1,16 @@
 import { Typography } from "antd";
 import { CandidateEntity, useStores } from "models";
 
+type PredefinedEntityStoreName = "depositTypeStore" | "countryStore" | "stateOrProvinceStore";
+
 interface CanEntCompProps {
   entity?: CandidateEntity;
-  store?: "depositTypeStore";
+  store?: PredefinedEntityStoreName;
 }
 
 interface ListCanEntProps {
   entities: CandidateEntity[];
+  store?: PredefinedEntityStoreName;
 }
 
 export const CanEntComponent: React.FC<CanEntCompProps> = ({ entity, store }: CanEntCompProps) => {
@@ -35,16 +38,16 @@ export const CanEntComponent: React.FC<CanEntCompProps> = ({ entity, store }: Ca
   return <span>{name}</span>;
 };
 
-export const ListCanEntComponent = ({ entities }: ListCanEntProps) => {
+export const ListCanEntComponent = ({ entities, store }: ListCanEntProps) => {
   const comp = [];
 
   if (entities.length > 0) {
-    comp.push(<CanEntComponent key={0} entity={entities[0]} />);
+    comp.push(<CanEntComponent key={0} entity={entities[0]} store={store} />);
   }
 
   for (let i = 1; i < entities.length; i++) {
     comp.push(<span>&nbsp;-&nbsp;</span>);
-    comp.push(<CanEntComponent key={i} entity={entities[i]} />);
+    comp.push(<CanEntComponent key={i} entity={entities[i]} store={store} />);
   }
 
   return <>{comp}</>;
