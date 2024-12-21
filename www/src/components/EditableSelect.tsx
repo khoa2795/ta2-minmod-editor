@@ -54,7 +54,7 @@ export const EditableSelect: React.FC<EditableSelectProps> = (props) => {
 
   const onUpdateOption = (option: { value: string; label: string }) => {
     setSelectingValue(true);
-    if (props.onChange !== undefined) props.onChange(option.label);
+    if (props.onChange !== undefined) props.onChange(option.value === UNSELECT_VALUE ? "" : option.label);
     if (option.value !== UNSELECT_VALUE) props.onProvenanceChange(option.value);
   };
 
