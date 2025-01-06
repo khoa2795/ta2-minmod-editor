@@ -35,26 +35,26 @@ export class MineralInventory {
         gradeTonnage.totalGrade === undefined
           ? undefined
           : new Measure({
-              value: gradeTonnage.totalGrade,
-              unit: new CandidateEntity({
-                source: createdBy,
-                confidence: 1.0,
-                observedName: "%",
-                normalizedURI: "https://minmod.isi.edu/resource/Q201",
-              }),
+            value: gradeTonnage.totalGrade,
+            unit: new CandidateEntity({
+              source: createdBy,
+              confidence: 1.0,
+              observedName: "%",
+              normalizedURI: "https://minmod.isi.edu/resource/Q201",
             }),
+          }),
       ore:
         gradeTonnage.totalTonnage === undefined
           ? undefined
           : new Measure({
-              value: gradeTonnage.totalTonnage,
-              unit: new CandidateEntity({
-                source: createdBy,
-                confidence: 1.0,
-                observedName: "%",
-                normalizedURI: "https://minmod.isi.edu/resource/Q202",
-              }),
+            value: gradeTonnage.totalTonnage,
+            unit: new CandidateEntity({
+              source: createdBy,
+              confidence: 1.0,
+              observedName: "%",
+              normalizedURI: "https://minmod.isi.edu/resource/Q202",
             }),
+          }),
       reference: reference,
     });
   }
@@ -67,6 +67,15 @@ export class MineralInventory {
       ore: obj.ore === undefined ? undefined : Measure.deserialize(obj.ore),
       reference: Reference.deserialize(obj.reference),
     });
+  }
+  public serialize(): object {
+    return {
+      category: this.category.map((entity) => entity.serialize()),
+      commodity: this.commodity.serialize(),
+      grade: this.grade === undefined ? undefined : this.grade.serialize(),
+      ore: this.ore === undefined ? undefined : this.ore.serialize(),
+      reference: this.reference.serialize(),
+    };
   }
 }
 
@@ -85,4 +94,11 @@ export class Measure {
       unit: obj.unit === undefined ? undefined : CandidateEntity.deserialize(obj.unit),
     });
   }
+  public serialize(): object {
+    return {
+      value: this.value,
+      unit: this.unit === undefined ? undefined : this.unit.serialize(),
+    };
+  }
+
 }

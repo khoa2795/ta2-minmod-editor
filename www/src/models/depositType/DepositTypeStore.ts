@@ -47,6 +47,6 @@ export class DepositTypeStore extends RStore<InternalID, DepositType> {
   }
 
   protected normRemoteSuccessfulResponse(resp: any): FetchResponse {
-    return { items: resp.data, total: resp.total };
+    return { items: resp.data, total: resp.data.length };
   }
 }

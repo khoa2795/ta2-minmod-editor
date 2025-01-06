@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { observer } from "mobx-react-lite";
 import { Commodity } from "models/commodity";
 import { Button, Checkbox, Divider, Space, Table, Typography, message } from "antd";
-import { EditOutlined } from "@ant-design/icons";
+import { EditOutlined, PlusOutlined, UngroupOutlined } from "@ant-design/icons";
 import { EditDedupMineralSite } from "./editDedupSite/EditDedupMineralSite";
 import { Entity } from "components/Entity";
 
@@ -248,10 +248,6 @@ export const DedupMineralSiteTable: React.FC<DedupMineralSiteTableProps> = obser
 
   const isLoading = dedupMineralSiteStore.state.value === "updating";
   const dedupMineralSites = commodity === undefined || isLoading ? emptyFetchResult : dedupMineralSiteStore.getByCommodity(commodity);
-  // const dedupMineralSiteRecords = useMemo(() => {
-  //   return dedupMineralSites.records.slice().sort((a, b) => b.modifiedAt.localeCompare(a.modifiedAt));
-  // }, dedupMineralSites.records);
-  const dedupMineralSiteRecords = dedupMineralSites.records;
 
   const selectedDedupSites = useMemo(() => {
     return Array.from(selectedDedupSiteIds)
@@ -278,7 +274,7 @@ export const DedupMineralSiteTable: React.FC<DedupMineralSiteTableProps> = obser
         size="small"
         rowKey="id"
         columns={columns}
-        dataSource={dedupMineralSiteRecords}
+        dataSource={dedupMineralSites.records}
         loading={isLoading ? { size: "large" } : false}
         showSorterTooltip={false}
         expandable={{

@@ -136,11 +136,11 @@ export class DedupMineralSiteStore extends RStore<string, DedupMineralSite> {
       location:
         record.location !== undefined
           ? new DedupMineralSiteLocation({
-              lat: record.location.lat,
-              lon: record.location.lon,
-              country: (record.location.country || []).map((country: string) => MR.getURI(country)),
-              stateOrProvince: (record.location.state_or_province || []).map((sop: string) => MR.getURI(sop)),
-            })
+            lat: record.location.lat,
+            lon: record.location.lon,
+            country: (record.location.country || []).map((country: string) => MR.getURI(country)),
+            stateOrProvince: (record.location.state_or_province || []).map((sop: string) => MR.getURI(sop)),
+          })
           : undefined,
       gradeTonnage: GradeTonnage.deserialize(record.grade_tonnage[0]),
       modifiedAt: record.modified_at,
@@ -153,7 +153,7 @@ export class DedupMineralSiteStore extends RStore<string, DedupMineralSite> {
   }
 
   protected normRemoteSuccessfulResponse(resp: any): FetchResponse {
-    return { items: Array.isArray(resp.data) ? resp.data : Object.values(resp.data), total: resp.total };
+    return { items: Array.isArray(resp.data) ? resp.data : Object.values(resp.data), total: resp.data.length };
   }
 
   /**

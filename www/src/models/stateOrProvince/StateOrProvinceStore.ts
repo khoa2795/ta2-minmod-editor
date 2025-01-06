@@ -34,6 +34,6 @@ export class StateOrProvinceStore extends RStore<string, StateOrProvince> {
   }
 
   protected normRemoteSuccessfulResponse(resp: any): FetchResponse {
-    return { items: resp.data, total: resp.total };
+    return { items: resp.data, total: resp.data.length };
   }
 }

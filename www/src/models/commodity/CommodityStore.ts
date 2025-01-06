@@ -50,6 +50,6 @@ export class CommodityStore extends RStore<string, Commodity> {
   }
 
   protected normRemoteSuccessfulResponse(resp: any): FetchResponse {
-    return { items: resp.data, total: resp.total };
+    return { items: resp.data, total: resp.data.length };
   }
 }
