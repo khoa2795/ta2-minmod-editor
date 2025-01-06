@@ -22,32 +22,29 @@ git clone https://github.com/DARPA-CRITICALMAAS/ta2-minmod-editor.git
 
 ### 2. Backend Setup
 Navigate to the Backend Directory
-Move into the minmod_editor folder where the backend code is located:
---**cd minmod_editor**
 
-Install Dependencies
-We use Poetry to manage Python dependencies. If you haven't installed Poetry yet, follow these instructions.
-Once Poetry is installed, run the following command to install dependencies:
---**poetry install**
+git clone https://github.com/DARPA-CRITICALMAAS/ta2-minmod-kg.git
 
-Activate the Virtual Environment
-Start a new shell session with Poetry:
---**poetry shell**
+Follow the README.md to set it up
 
-Start the Backend Server
-Run the FastAPI backend server:
---**python app.py**
+backend will start on --**http://localhost:8000.--**
+
 
 ### 3. Frontend Setup
 Navigate to the Frontend Directory
+
 In another terminal window, move to the frontend folder:
+
 --**cd minmod_editor/www**
 
 Install Frontend Dependencies
+
 Install the necessary Node.js packages with npm:
+
+Add --**http://localhost:8000.--** to the proxy of package.json
+
 --**npm install**
 
-Start the Frontend Server
 Start the frontend server:
 --**npm start**
 
