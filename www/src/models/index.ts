@@ -11,6 +11,7 @@ import { StateOrProvince, StateOrProvinceStore } from "./stateOrProvince";
 import { DedupMineralSite, DedupMineralSiteStore } from "./dedupMineralSite";
 import { FieldEdit, EditableField, Reference, Document, GradeTonnage, CandidateEntity, DraftCreateMineralSite, DraftUpdateMineralSite, MineralSite, MineralSiteStore } from "./mineralSite";
 import { NamespaceManager, BindedNamespace } from "./Namespace";
+import { Source, SourceStore } from "./source";
 
 const namespaceManager = new NamespaceManager();
 const dedupMineralSiteStore = new DedupMineralSiteStore(namespaceManager);
@@ -23,6 +24,7 @@ export const stores = {
   depositTypeStore: new DepositTypeStore(),
   stateOrProvinceStore: new StateOrProvinceStore(),
   countryStore: new CountryStore(),
+  sourceStore: new SourceStore()
 };
 
 registerDefaultAxiosErrorHandler((error) => {
@@ -39,7 +41,7 @@ export function initStores(): Promise<any> {
 }
 
 export function initNonCriticalStores(): Promise<any> {
-  return Promise.all([stores.depositTypeStore.fetchAll(), stores.countryStore.fetchAll(), stores.stateOrProvinceStore.fetchAll()]);
+  return Promise.all([stores.depositTypeStore.fetchAll(), stores.countryStore.fetchAll(), stores.stateOrProvinceStore.fetchAll(), stores.sourceStore.fetchAll()]);
 }
 
 export const StoreContext = createContext<IStore>(stores);

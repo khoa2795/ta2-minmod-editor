@@ -8,7 +8,9 @@ import { EditOutlined } from "@ant-design/icons";
 import { EditSiteField } from "./EditSiteField";
 import styles from "./EditDedupMineralSite.module.css";
 import { Tooltip, Avatar } from "antd";
-
+import axios from "axios";
+import ReferenceComponent from "components/ReferenceComponent";
+import { SourceStore } from "../../../models/source"
 const getUserColor = (username: string) => {
   let hash = 0;
   for (let i = 0; i < username.length; i++) {
@@ -32,7 +34,6 @@ export const EditDedupMineralSite = observer(({ dedupSite, commodity }: EditDedu
   const { mineralSiteStore, userStore, dedupMineralSiteStore } = stores;
   const [editField, setEditField] = useState<EditableField | undefined>(undefined);
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
-
   const tmpLst: (MineralSite | null | undefined)[] = dedupSite.sites.map((site) => mineralSiteStore.get(site.id));
   // no idea why typescript compiler incorrectly complains about the incorrect type
   const fetchedSites = tmpLst.filter((site) => site !== undefined) as (MineralSite | null)[];
@@ -91,11 +92,11 @@ export const EditDedupMineralSite = observer(({ dedupSite, commodity }: EditDedu
           const allUsernamesTooltip =
             username === "System"
               ? site.createdBy
-                  .map((url, i) => {
-                    const parts = url.split("/");
-                    return parts[parts.length - 1];
-                  })
-                  .join(", ")
+                .map((url, i) => {
+                  const parts = url.split("/");
+                  return parts[parts.length - 1];
+                })
+                .join(", ")
               : fullName;
 
           const color = getUserColor(username);
@@ -253,16 +254,24 @@ export const EditDedupMineralSite = observer(({ dedupSite, commodity }: EditDedu
       {
         title: "Source",
         key: "reference",
-        render: (_: any, site: MineralSite) => {
-          return <ReferenceComponent site={site} />;
-        },
-      },
+        render: (_: any, site: MineralSite) => (
+          <ReferenceComponent site={site} sourceStore={stores.sourceStore} />
+        ),
+      }
     ];
   }, [commodity.id, sites.length, selectedRows, ungroupTogether]);
 
   useEffect(() => {
-    mineralSiteStore.fetchByIds(dedupSite.sites.map((site) => site.id));
-  }, [mineralSiteStore]);
+    const fetchData = async () => {
+      try {
+        mineralSiteStore.fetchByIds(dedupSite.sites.map((site) => site.id));
+      } catch (error) {
+        console.error("Error in fetchData:", error);
+      }
+    };
+
+    fetchData();
+  }, [dedupSite.sites, mineralSiteStore]);
 
   const onEditFinish = (change?: { edit: FieldEdit; reference: Reference }) => {
     if (change === undefined) {
@@ -331,23 +340,3 @@ export const EditDedupMineralSite = observer(({ dedupSite, commodity }: EditDedu
   );
 }) as React.FC<EditDedupMineralSiteProps>;
 
-const ReferenceComponent: React.FC<{ site: MineralSite }> = ({ site }) => {
-  const docs = useMemo(() => {
-    return Object.values(site.getReferencedDocuments());
-  }, [site]);
-
-  return (
-    <Typography.Text ellipsis={true} style={{ maxWidth: 200 }}>
-      {join(
-        docs.map((doc) => (
-          <Typography.Link key={doc.uri} target="_blank" href={doc.uri}>
-            {doc.title || doc.uri}
-          </Typography.Link>
-        )),
-        (index) => (
-          <span key={`sep-${index}`}>&nbsp;·&nbsp;</span>
-        )
-      )}
-    </Typography.Text>
-  );
-};

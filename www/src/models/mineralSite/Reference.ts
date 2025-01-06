@@ -2,22 +2,23 @@ export class Reference {
   document: Document;
   comment: string;
   property?: string;
-  // pageInfo: PageInfo[];
+  pageInfo: PageInfo[];
 
   public constructor({
     document,
     comment,
     property,
+    pageInfo
   }: {
     document: Document;
     comment: string;
     property?: string;
-    // pageInfo: PageInfo[]
+    pageInfo: PageInfo[]
   }) {
     this.document = document;
     this.comment = comment;
     this.property = property;
-    // this.pageInfo = pageInfo;
+    this.pageInfo = pageInfo;
   }
 
   public clone(): Reference {
@@ -25,7 +26,19 @@ export class Reference {
       document: this.document.clone(),
       comment: this.comment,
       property: this.property,
-      // pageInfo: this.pageInfo
+      pageInfo: this.pageInfo.map((info) =>
+        new PageInfo({
+          page: info.page,
+          boundingBox: info.boundingBox
+            ? new BoundingBox({
+              xMax: info.boundingBox.xMax,
+              xMin: info.boundingBox.xMin,
+              yMax: info.boundingBox.yMax,
+              yMin: info.boundingBox.yMin,
+            })
+            : undefined,
+        })
+      ),
     });
   }
 
@@ -33,6 +46,7 @@ export class Reference {
     obj = {
       ...obj,
       document: Document.deserialize(obj.document),
+      pageInfo: obj.page_info?.map((info: any) => PageInfo.deserialize(info)) || [],
     };
     return new Reference(obj);
   }
@@ -42,7 +56,7 @@ export class Reference {
       document: this.document.serialize(),
       comment: this.comment,
       property: this.property,
-      // pageInfo: this.pageInfo
+      pageInfo: this.pageInfo.map((info) => info.serialize()),
     };
   }
 
@@ -94,6 +108,76 @@ export class Document {
   }
 }
 
-// export interface PageInfo {
-//   page: number;
-// }
+export class PageInfo {
+  page: number;
+  boundingBox?: BoundingBox;
+
+  public constructor({
+    page,
+    boundingBox,
+  }: {
+    page: number;
+    boundingBox?: BoundingBox;
+  }) {
+    this.page = page;
+    this.boundingBox = boundingBox;
+  }
+
+  public static deserialize(obj: any): PageInfo {
+    return new PageInfo({
+      page: obj.page,
+      boundingBox: obj.bounding_box
+        ? BoundingBox.deserialize(obj.bounding_box)
+        : undefined,
+    });
+  }
+
+  public serialize(): object {
+    return {
+      page: this.page,
+      bounding_box: this.boundingBox?.serialize(),
+    };
+  }
+}
+
+export class BoundingBox {
+  xMax: number;
+  xMin: number;
+  yMax: number;
+  yMin: number;
+
+  public constructor({
+    xMax,
+    xMin,
+    yMax,
+    yMin,
+  }: {
+    xMax: number;
+    xMin: number;
+    yMax: number;
+    yMin: number;
+  }) {
+    this.xMax = xMax;
+    this.xMin = xMin;
+    this.yMax = yMax;
+    this.yMin = yMin;
+  }
+
+  public static deserialize(obj: any): BoundingBox {
+    return new BoundingBox({
+      xMax: obj.x_max,
+      xMin: obj.x_min,
+      yMax: obj.y_max,
+      yMin: obj.y_min,
+    });
+  }
+
+  public serialize(): object {
+    return {
+      x_max: this.xMax,
+      x_min: this.xMin,
+      y_max: this.yMax,
+      y_min: this.yMin,
+    };
+  }
+}
