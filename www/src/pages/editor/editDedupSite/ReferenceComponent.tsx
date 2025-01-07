@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { Typography } from "antd";
+import { Space, Typography } from "antd";
 import { MineralSite, useStores } from "models";
 import { observer } from "mobx-react-lite";
 import { ExportOutlined } from "@ant-design/icons";
@@ -39,16 +39,11 @@ const ReferenceComponent: React.FC<ReferenceComponentProps> = observer(({ site }
   }, [site, sourceStore]);
 
   const docs = useMemo(() => Object.values(site.getReferencedDocuments()), [site]);
-
-  return connection ? (
-    <Typography.Link target="_blank" href={connection}>
-      <ExportOutlined />
-    </Typography.Link>
-  ) : (
-    <Typography.Text ellipsis={true} style={{ maxWidth: 200 }}>
+  const ref = (
+    <Typography.Text ellipsis={true} style={{ maxWidth: 150 }}>
       {docs.map((doc, index) => (
         <React.Fragment key={doc.uri}>
-          <Typography.Link target="_blank" href={doc.uri}>
+          <Typography.Link target="_blank" href={doc.uri} title={doc.title || doc.uri}>
             {doc.title || doc.uri}
           </Typography.Link>
           {index < docs.length - 1 && <span>&nbsp;·&nbsp;</span>}
@@ -56,6 +51,19 @@ const ReferenceComponent: React.FC<ReferenceComponentProps> = observer(({ site }
       ))}
     </Typography.Text>
   );
+
+  if (connection) {
+    return (
+      <Space>
+        <Typography.Link target="_blank" href={connection}>
+          <ExportOutlined />
+        </Typography.Link>
+        {ref}
+      </Space>
+    );
+  }
+
+  return ref;
 });
 
 export default ReferenceComponent;
