@@ -2,7 +2,7 @@ import { CandidateEntity } from "./CandidateEntity";
 import { GradeTonnage } from "./GradeTonnage";
 import { LocationInfo } from "./LocationInfo";
 import { Reference, Document } from "./Reference";
-import { DedupMineralSite, DedupMineralSiteLocation } from "../dedupMineralSite";
+import { DedupMineralSite } from "../dedupMineralSite";
 import { DepositTypeStore } from "models/depositType";
 import { StateOrProvinceStore } from "models/stateOrProvince";
 import { CountryStore } from "models/country";
@@ -18,10 +18,10 @@ export type FieldEdit =
   | { field: "stateOrProvince"; observedName: string; normalizedURI: string }
   | { field: "depositType"; observedName: string; normalizedURI: string }
   | {
-    field: "grade";
-    value: number;
-    commodity: string;
-  }
+      field: "grade";
+      value: number;
+      commodity: string;
+    }
   | { field: "tonnage"; value: number; commodity: string };
 
 export type MineralSiteConstructorArgs = {
@@ -162,6 +162,24 @@ export class MineralSite {
     // TODO: fix me, we need to avoid duplicated reference
     this.reference.push(reference);
   }
+
+  public static updateSourceId(sourceId: string, username: string): string {
+    const parts = sourceId.split("::");
+    if (parts.length === 2) {
+      return `${sourceId}::${username}`;
+    } else {
+      return `${parts[0]}::${parts[1]}::${username}`;
+    }
+  }
+
+  public static parseSourceId(sourceId: string): { sourceType: string; sourceId: string; username: string | undefined } {
+    const parts = sourceId.split("::");
+    if (parts.length === 3) {
+      return { sourceType: parts[0], sourceId: `${parts[0]}::${parts[1]}`, username: parts[2] };
+    } else {
+      return { sourceType: parts[0], sourceId, username: undefined };
+    }
+  }
 }
 
 export class DraftCreateMineralSite extends MineralSite {
@@ -185,7 +203,7 @@ export class DraftCreateMineralSite extends MineralSite {
     return new DraftCreateMineralSite({
       draftID: `draft-${dedupMineralSite.id}`,
       id: "", // backend does not care about uri as they will recalculate it
-      sourceId: DraftCreateMineralSite.updateSourceId(baseSite.sourceId, user.id),
+      sourceId: MineralSite.updateSourceId(baseSite.sourceId, user.id),
       recordId: baseSite.recordId,
       dedupSiteURI: dedupMineralSite.uri,
       createdBy: [user.url],
@@ -197,13 +215,6 @@ export class DraftCreateMineralSite extends MineralSite {
       gradeTonnage: {},
       mineralInventory: [],
     });
-  }
-
-  public static updateSourceId(sourceId: string, username: string): string {
-    const [sourceType, sourceIdent] = sourceId.split("::", 2);
-    const url = new URL(sourceIdent);
-    url.searchParams.set("username", username);
-    return `${sourceType}::${url.toString()}`;
   }
 }
 

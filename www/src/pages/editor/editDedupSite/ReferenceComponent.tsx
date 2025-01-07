@@ -8,35 +8,36 @@ interface ReferenceComponentProps {
   site: MineralSite;
 }
 
-const ReferenceComponent: React.FC<ReferenceComponentProps> = observer(({ site }) => {
+function getRecordURL(site: MineralSite, richUrlTemplate: string): string | undefined {
+  const [urlType, urlTemplate] = richUrlTemplate.split(":::", 2);
+  if (urlType !== "pdf" && urlType !== "webpage") {
+    return undefined;
+  }
+
+  const pageInfo = site.reference[0]?.pageInfo || [];
+  const page = pageInfo[0]?.page;
+
+  return urlTemplate.replace(/\{(\w+)(=[^}]*)?\}/g, (match, key, _defaultMatch, defaultValue) => {
+    if (key === "record_id") {
+      return site.recordId;
+    } else if (key === "page_number") {
+      return page !== undefined ? page.toString() : defaultValue || "1";
+    } else {
+      return defaultValue || "";
+    }
+  });
+}
+
+export const ReferenceComponent: React.FC<ReferenceComponentProps> = observer(({ site }) => {
   const { sourceStore } = useStores();
   const connection = useMemo(() => {
-    const sourceId = site.sourceId;
-    const rawConnection = sourceStore.getByURI(sourceId);
-
+    const rawConnection = sourceStore.get(MineralSite.parseSourceId(site.sourceId).sourceId)?.connection;
     if (rawConnection == undefined) {
       return null;
     }
-
-    const [type, urlTemplate] = rawConnection.split(":::");
-    if (type !== "pdf" && type !== "webpage") {
-      return null;
-    }
-
-    const recordId = site.recordId;
-    const pageInfo = site.reference[0]?.pageInfo || [];
-    const page = pageInfo.length > 0 && pageInfo[0]?.page ? pageInfo[0].page : 1;
-
-    return urlTemplate.replace(/\{(\w+)(=[^}]*)?\}/g, (match, key, _defaultMatch, defaultValue) => {
-      if (key === "record_id") {
-        return recordId;
-      } else if (key === "page_number") {
-        return page !== undefined ? page.toString() : defaultValue || "1";
-      } else {
-        return defaultValue || "";
-      }
-    });
-  }, [site, sourceStore]);
+    console.log(rawConnection, getRecordURL(site, rawConnection));
+    return getRecordURL(site, rawConnection);
+  }, [site, sourceStore.records.size]);
 
   const docs = useMemo(() => Object.values(site.getReferencedDocuments()), [site]);
   const ref = (
@@ -65,5 +66,3 @@ const ReferenceComponent: React.FC<ReferenceComponentProps> = observer(({ site }
 
   return ref;
 });
-
-export default ReferenceComponent;

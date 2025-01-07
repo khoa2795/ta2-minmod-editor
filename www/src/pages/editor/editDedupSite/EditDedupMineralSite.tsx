@@ -7,7 +7,7 @@ import { EditOutlined } from "@ant-design/icons";
 import { EditSiteField } from "./EditSiteField";
 import styles from "./EditDedupMineralSite.module.css";
 import { Tooltip, Avatar } from "antd";
-import ReferenceComponent from "pages/editor/editDedupSite/ReferenceComponent";
+import { ReferenceComponent } from "pages/editor/editDedupSite/ReferenceComponent";
 const getUserColor = (username: string) => {
   let hash = 0;
   for (let i = 0; i < username.length; i++) {
