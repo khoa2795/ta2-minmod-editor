@@ -95,24 +95,24 @@ const NewMineralSiteForm = ({ commodity }: NewMineralSiteModalProps, ref: Forwar
     }
     const countries = values.country
       ? [
-        new CandidateEntity({
-          observedName: countryStore.getByURI(values.country)!.name,
-          source: currentUserUrl,
-          normalizedURI: values.country,
-          confidence: 1.0,
-        }),
-      ]
+          new CandidateEntity({
+            observedName: countryStore.getByURI(values.country)!.name,
+            source: currentUserUrl,
+            normalizedURI: values.country,
+            confidence: 1.0,
+          }),
+        ]
       : [];
 
     const statesOrProvinces = values.stateOrProvince
       ? [
-        new CandidateEntity({
-          observedName: stateOrProvinceStore.getByURI(values.stateOrProvince)!.name,
-          source: currentUserUrl,
-          normalizedURI: values.stateOrProvince,
-          confidence: 1.0,
-        }),
-      ]
+          new CandidateEntity({
+            observedName: stateOrProvinceStore.getByURI(values.stateOrProvince)!.name,
+            source: currentUserUrl,
+            normalizedURI: values.stateOrProvince,
+            confidence: 1.0,
+          }),
+        ]
       : [];
     const commodity1 = selectedCommodity ? selectedCommodity.id : undefined;
 
@@ -123,6 +123,7 @@ const NewMineralSiteForm = ({ commodity }: NewMineralSiteModalProps, ref: Forwar
     const reference = new Reference({
       document: referenceDocument,
       comment: values.refComment,
+      pageInfo: [],
     });
 
     const mineralInventory = new MineralInventory({
@@ -141,28 +142,30 @@ const NewMineralSiteForm = ({ commodity }: NewMineralSiteModalProps, ref: Forwar
         observedName: commodityName,
         normalizedURI: commodityUri,
       }),
-      grade: values.grade !== undefined
-        ? new Measure({
-          value: values.grade,
-          unit: new CandidateEntity({
-            source: currentUserUrl,
-            confidence: 1,
-            observedName: unitStore.getByURI(values.gradeUnit!)!.name,
-            normalizedURI: values.gradeUnit,
-          }),
-        })
-        : undefined,
-      ore: values.tonnage !== undefined
-        ? new Measure({
-          value: values.tonnage,
-          unit: new CandidateEntity({
-            source: currentUserUrl,
-            confidence: 1,
-            observedName: unitStore.getByURI(values.tonnageUnit!)!.name,
-            normalizedURI: values.tonnageUnit,
-          }),
-        })
-        : undefined,
+      grade:
+        values.grade !== undefined
+          ? new Measure({
+              value: values.grade,
+              unit: new CandidateEntity({
+                source: currentUserUrl,
+                confidence: 1,
+                observedName: unitStore.getByURI(values.gradeUnit!)!.name,
+                normalizedURI: values.gradeUnit,
+              }),
+            })
+          : undefined,
+      ore:
+        values.tonnage !== undefined
+          ? new Measure({
+              value: values.tonnage,
+              unit: new CandidateEntity({
+                source: currentUserUrl,
+                confidence: 1,
+                observedName: unitStore.getByURI(values.tonnageUnit!)!.name,
+                normalizedURI: values.tonnageUnit,
+              }),
+            })
+          : undefined,
       reference: reference,
     });
 
@@ -212,10 +215,21 @@ const NewMineralSiteForm = ({ commodity }: NewMineralSiteModalProps, ref: Forwar
     message.success("Mineral site created and dedup store updated successfully!");
   };
 
-
   return (
     <Modal title="Add New Mineral Site" visible={visible} onCancel={() => setVisible(false)} footer={null} width="70%">
-      <Form form={form} layout="vertical" onFinish={handleSave} initialValues={{ refAppliedToAll: true, depositTypeConfidence: 1, type: "NotSpecified", rank: "U", gradeUnit: "https://minmod.isi.edu/resource/Q201", tonnageUnit: "https://minmod.isi.edu/resource/Q202" }}>
+      <Form
+        form={form}
+        layout="vertical"
+        onFinish={handleSave}
+        initialValues={{
+          refAppliedToAll: true,
+          depositTypeConfidence: 1,
+          type: "NotSpecified",
+          rank: "U",
+          gradeUnit: "https://minmod.isi.edu/resource/Q201",
+          tonnageUnit: "https://minmod.isi.edu/resource/Q202",
+        }}
+      >
         {/* General Information */}
         <Divider orientation="left">General Information</Divider>
         <Row gutter={24}>
@@ -332,7 +346,14 @@ const NewMineralSiteForm = ({ commodity }: NewMineralSiteModalProps, ref: Forwar
                   <Input type="number" placeholder="Enter grade value" style={{ width: "60%" }} />
                 </Form.Item>
                 <Form.Item name="gradeUnit" noStyle rules={[{ required: true, message: "Unit is required" }]}>
-                  <Select placeholder="Select unit" options={unitOptions} style={{ width: "40%" }} showSearch optionFilterProp="label" filterOption={(input, option) => option?.label?.toLowerCase().includes(input.toLowerCase()) ?? false} />
+                  <Select
+                    placeholder="Select unit"
+                    options={unitOptions}
+                    style={{ width: "40%" }}
+                    showSearch
+                    optionFilterProp="label"
+                    filterOption={(input, option) => option?.label?.toLowerCase().includes(input.toLowerCase()) ?? false}
+                  />
                 </Form.Item>
               </Input.Group>
             </Form.Item>
@@ -345,7 +366,14 @@ const NewMineralSiteForm = ({ commodity }: NewMineralSiteModalProps, ref: Forwar
                   <Input type="number" placeholder="Enter tonnage value" style={{ width: "60%" }} />
                 </Form.Item>
                 <Form.Item name="tonnageUnit" noStyle>
-                  <Select placeholder="Select unit" options={unitOptions} style={{ width: "40%" }} showSearch optionFilterProp="label" filterOption={(input, option) => option?.label?.toLowerCase().includes(input.toLowerCase()) ?? false} />
+                  <Select
+                    placeholder="Select unit"
+                    options={unitOptions}
+                    style={{ width: "40%" }}
+                    showSearch
+                    optionFilterProp="label"
+                    filterOption={(input, option) => option?.label?.toLowerCase().includes(input.toLowerCase()) ?? false}
+                  />
                 </Form.Item>
               </Input.Group>
             </Form.Item>
@@ -368,8 +396,8 @@ const NewMineralSiteForm = ({ commodity }: NewMineralSiteModalProps, ref: Forwar
             <Form.Item name="sourceType" label="Source" rules={[{ required: true, message: "Please select a source type" }]}>
               <Radio.Group onChange={handleSourceTypeChange}>
                 <Radio value="database">Database</Radio>
-                <Radio value="technical article">Technical Article</Radio>
-                <Radio value="mining report">Mining Report</Radio>
+                <Radio value="article">Technical Article</Radio>
+                <Radio value="mining-report">Mining Report</Radio>
                 <Radio value="unpublished">Unpublished</Radio>
               </Radio.Group>
             </Form.Item>

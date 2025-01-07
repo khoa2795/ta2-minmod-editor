@@ -40,19 +40,19 @@ export class MineralSiteStore extends CRUDStore<string, DraftCreateMineralSite, 
         record.location_info !== undefined
           ? LocationInfo.deserialize(record.location_info)
           : new LocationInfo({
-            country: [],
-            stateOrProvince: [],
-          }),
+              country: [],
+              stateOrProvince: [],
+            }),
       depositTypeCandidate: (record.deposit_type_candidate || []).map(CandidateEntity.deserialize),
-      reference: record.reference.map(Reference.deserialize),
+      reference: (record.reference || []).map(Reference.deserialize),
       sameAs: record.same_as,
       gradeTonnage: Object.fromEntries(
-        record.grade_tonnage.map((val: any) => {
+        (record.grade_tonnage || []).map((val: any) => {
           const gt = GradeTonnage.deserialize(val);
           return [gt.commodity, gt];
         })
       ),
-      mineralInventory: record.mineral_inventory.map(MineralInventory.deserialize),
+      mineralInventory: (record.mineral_inventory || []).map(MineralInventory.deserialize),
     });
   }
 
