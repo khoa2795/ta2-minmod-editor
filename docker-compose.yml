@@ -1,6 +1,6 @@
 services:
   editor:
-    image: darpa-criticalmaas/ta2-minmod-editor
+    image: minmod-editor
     build:
       context: .
       dockerfile: Dockerfile
