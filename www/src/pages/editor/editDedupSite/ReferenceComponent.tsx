@@ -35,7 +35,6 @@ export const ReferenceComponent: React.FC<ReferenceComponentProps> = observer(({
     if (rawConnection == undefined) {
       return null;
     }
-    console.log(rawConnection, getRecordURL(site, rawConnection));
     return getRecordURL(site, rawConnection);
   }, [site, sourceStore.records.size]);
 
