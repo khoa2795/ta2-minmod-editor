@@ -25,8 +25,8 @@ export const stores = {
   depositTypeStore: new DepositTypeStore(),
   stateOrProvinceStore: new StateOrProvinceStore(),
   countryStore: new CountryStore(),
-  sourceStore: new SourceStore(),
   unitStore: new UnitStore(),
+  sourceStore: new SourceStore(),
 };
 
 registerDefaultAxiosErrorHandler((error) => {
@@ -53,4 +53,4 @@ export function useStores(): IStore {
 }
 
 export { Document, DedupMineralSite, MineralSite, Reference, GradeTonnage, CandidateEntity, DraftCreateMineralSite, DraftUpdateMineralSite, BindedNamespace, NamespaceManager };
-export type { FieldEdit, EditableField, Commodity, User, DepositType, Country, StateOrProvince, Unit };
+export type { FieldEdit, EditableField, Commodity, User, DepositType, Country, StateOrProvince, Unit, Source };

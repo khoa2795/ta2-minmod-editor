@@ -3,14 +3,11 @@ import { observer } from "mobx-react-lite";
 import { useStores, Commodity, DedupMineralSite, MineralSite, Reference, DraftCreateMineralSite, FieldEdit, EditableField, DraftUpdateMineralSite } from "models";
 import { useEffect, useMemo, useState } from "react";
 import { CanEntComponent, ListCanEntComponent } from "./CandidateEntity";
-import { join } from "misc";
 import { EditOutlined } from "@ant-design/icons";
 import { EditSiteField } from "./EditSiteField";
 import styles from "./EditDedupMineralSite.module.css";
 import { Tooltip, Avatar } from "antd";
-import axios from "axios";
-import ReferenceComponent from "components/ReferenceComponent";
-import { SourceStore } from "../../../models/source"
+import ReferenceComponent from "pages/editor/editDedupSite/ReferenceComponent";
 const getUserColor = (username: string) => {
   let hash = 0;
   for (let i = 0; i < username.length; i++) {
@@ -92,11 +89,11 @@ export const EditDedupMineralSite = observer(({ dedupSite, commodity }: EditDedu
           const allUsernamesTooltip =
             username === "System"
               ? site.createdBy
-                .map((url, i) => {
-                  const parts = url.split("/");
-                  return parts[parts.length - 1];
-                })
-                .join(", ")
+                  .map((url, i) => {
+                    const parts = url.split("/");
+                    return parts[parts.length - 1];
+                  })
+                  .join(", ")
               : fullName;
 
           const color = getUserColor(username);
@@ -254,10 +251,8 @@ export const EditDedupMineralSite = observer(({ dedupSite, commodity }: EditDedu
       {
         title: "Source",
         key: "reference",
-        render: (_: any, site: MineralSite) => (
-          <ReferenceComponent site={site} sourceStore={stores.sourceStore} />
-        ),
-      }
+        render: (_: any, site: MineralSite) => <ReferenceComponent site={site} />,
+      },
     ];
   }, [commodity.id, sites.length, selectedRows, ungroupTogether]);
 
@@ -339,4 +334,3 @@ export const EditDedupMineralSite = observer(({ dedupSite, commodity }: EditDedu
     </Flex>
   );
 }) as React.FC<EditDedupMineralSiteProps>;
-
