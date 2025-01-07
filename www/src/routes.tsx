@@ -44,11 +44,6 @@ export const routes = {
       commodity: "optionalstring",
     },
   }),
-  sparqlsearch: new NoURLArgsPathDef({
-    component: () => <IFrame relurl="/dashboard/sparqlsearch" />,
-    pathDef: `${PUBLIC_URL}/sparql-search`,
-    exact: true,
-  }),
 };
 
 (window as any)._routes = routes;
@@ -81,11 +76,6 @@ export const extendedRoutes: Record<keyof typeof routes, ExtendedRoute> = {
     name: "MinMod Editor",
     route: routes.editor,
     role: Role.User,
-  },
-  sparqlsearch: {
-    name: "Advanced Search",
-    route: routes.sparqlsearch,
-    role: Role.Public,
   },
 };
 
