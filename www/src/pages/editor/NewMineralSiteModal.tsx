@@ -404,7 +404,7 @@ const NewMineralSiteForm = ({ commodity }: NewMineralSiteModalProps, ref: Forwar
           </Col>
 
           {/* Reference Document URL */}
-          {(selectedSourceType === "database" || selectedSourceType === "technical article" || selectedSourceType === "mining report") && (
+          {selectedSourceType !== "unpublished" && (
             <Col span={24}>
               <Form.Item name="refDoc" label="Reference Document URL" rules={[{ required: true, message: "Reference Document URL is required" }]}>
                 <Input placeholder="Enter reference document URL" />
