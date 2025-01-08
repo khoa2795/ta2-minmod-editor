@@ -95,24 +95,24 @@ const NewMineralSiteForm = ({ commodity }: NewMineralSiteModalProps, ref: Forwar
     }
     const countries = values.country
       ? [
-          new CandidateEntity({
-            observedName: countryStore.getByURI(values.country)!.name,
-            source: currentUserUrl,
-            normalizedURI: values.country,
-            confidence: 1.0,
-          }),
-        ]
+        new CandidateEntity({
+          observedName: countryStore.getByURI(values.country)!.name,
+          source: currentUserUrl,
+          normalizedURI: values.country,
+          confidence: 1.0,
+        }),
+      ]
       : [];
 
     const statesOrProvinces = values.stateOrProvince
       ? [
-          new CandidateEntity({
-            observedName: stateOrProvinceStore.getByURI(values.stateOrProvince)!.name,
-            source: currentUserUrl,
-            normalizedURI: values.stateOrProvince,
-            confidence: 1.0,
-          }),
-        ]
+        new CandidateEntity({
+          observedName: stateOrProvinceStore.getByURI(values.stateOrProvince)!.name,
+          source: currentUserUrl,
+          normalizedURI: values.stateOrProvince,
+          confidence: 1.0,
+        }),
+      ]
       : [];
     const commodity1 = selectedCommodity ? selectedCommodity.id : undefined;
 
@@ -145,26 +145,26 @@ const NewMineralSiteForm = ({ commodity }: NewMineralSiteModalProps, ref: Forwar
       grade:
         values.grade !== undefined
           ? new Measure({
-              value: values.grade,
-              unit: new CandidateEntity({
-                source: currentUserUrl,
-                confidence: 1,
-                observedName: unitStore.getByURI(values.gradeUnit!)!.name,
-                normalizedURI: values.gradeUnit,
-              }),
-            })
+            value: values.grade,
+            unit: new CandidateEntity({
+              source: currentUserUrl,
+              confidence: 1,
+              observedName: unitStore.getByURI(values.gradeUnit!)!.name,
+              normalizedURI: values.gradeUnit,
+            }),
+          })
           : undefined,
       ore:
         values.tonnage !== undefined
           ? new Measure({
-              value: values.tonnage,
-              unit: new CandidateEntity({
-                source: currentUserUrl,
-                confidence: 1,
-                observedName: unitStore.getByURI(values.tonnageUnit!)!.name,
-                normalizedURI: values.tonnageUnit,
-              }),
-            })
+            value: values.tonnage,
+            unit: new CandidateEntity({
+              source: currentUserUrl,
+              confidence: 1,
+              observedName: unitStore.getByURI(values.tonnageUnit!)!.name,
+              normalizedURI: values.tonnageUnit,
+            }),
+          })
           : undefined,
       reference: reference,
     });
@@ -213,6 +213,8 @@ const NewMineralSiteForm = ({ commodity }: NewMineralSiteModalProps, ref: Forwar
     const dedup_site_uri = newMineralSite.dedupSiteURI;
     const dedupSite = await dedupMineralSiteStore.forceFetchByURI(dedup_site_uri, commodity1 ?? "");
     message.success("Mineral site created and dedup store updated successfully!");
+    setVisible(false);
+
   };
 
   return (
