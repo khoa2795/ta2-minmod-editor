@@ -26,7 +26,7 @@ export const DedupMineralSiteTable: React.FC<DedupMineralSiteTableProps> = obser
         key: "name",
         render: (_: any, site: DedupMineralSite) => {
           return (
-            <Typography.Link href={site.uri} target="_blank">
+            <Typography.Link href={`/derived/${site.id}`} target="_blank">
               {site.name || "᠆"}
             </Typography.Link>
           );
