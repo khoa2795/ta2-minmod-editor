@@ -245,7 +245,7 @@ export const EditDedupMineralSite = observer(({ dedupSite, commodity }: EditDedu
           if (gradeTonnage === undefined || gradeTonnage.totalGrade === undefined) {
             return "-";
           }
-          return gradeTonnage.totalGrade.toFixed(2);
+          return gradeTonnage.totalGrade.toFixed(6);
         },
       },
       {

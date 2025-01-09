@@ -161,7 +161,7 @@ export const DedupMineralSiteTable: React.FC<DedupMineralSiteTableProps> = obser
         dataIndex: "totalGrade",
         render: (_: any, site: DedupMineralSite) => {
           if (site.gradeTonnage !== undefined && site.gradeTonnage.totalGrade !== undefined) {
-            return site.gradeTonnage.totalGrade.toFixed(2);
+            return site.gradeTonnage.totalGrade.toFixed(6);
           }
           return "᠆";
         },
