@@ -1,15 +1,18 @@
-import React, { useEffect, useState } from "react";
-import styles from "./LoginPage.module.css";
+import { useEffect, useState } from "react";
 import { routes } from "routes";
 import { useStores } from "models";
 import { useNavigate } from "react-router";
+import { Button, Form, Input, FormProps, Alert } from "antd";
+
+type LoginData = {
+  username?: string;
+  password?: string;
+};
 
 export const LoginPage = () => {
   const { userStore } = useStores();
   const navigate = useNavigate();
 
-  const [username, setUsername] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
   const [error, setError] = useState<string>("");
 
   useEffect(() => {
@@ -18,37 +21,43 @@ export const LoginPage = () => {
     });
   }, [userStore, navigate]);
 
-  const handleLogin = async (event: React.FormEvent) => {
-    event.preventDefault();
-    try {
-      await userStore.login(username, password);
-      routes.editor.path({ queryArgs: { commodity: undefined } }).open(navigate);
-    } catch (err: any) {
-      if (err.response?.status === 401) {
-        setError("Username or password is wrong.");
-      } else {
-        setError("An error occurred. Please try again later.");
+  const onFinish: FormProps<LoginData>["onFinish"] = async (values: LoginData) => {
+    if (values.username !== undefined && values.password !== undefined) {
+      try {
+        await userStore.login(values.username, values.password);
+        routes.editor.path({ queryArgs: { commodity: undefined } }).open(navigate);
+      } catch (err: any) {
+        if (err.response?.status === 401) {
+          setError("Username or password is wrong.");
+        } else {
+          setError("An error occurred. Please try again later.");
+        }
       }
     }
   };
 
   return (
-    <div className={styles.loginContainer}>
-      <h2>Login</h2>
-      <form onSubmit={handleLogin} className="login-form">
-        <div className="form-group">
-          <label htmlFor="username">Username:</label>
-          <input type="text" id="username" value={username} onChange={(e) => setUsername(e.target.value)} required />
+    <div>
+      <div style={{ maxWidth: 600, marginLeft: "auto", marginRight: "auto" }}>
+        <div style={{ marginBottom: 16 }}>
+          <h2 style={{ textAlign: "center" }}>Login</h2>
+          {error && <Alert message={error} type="error" showIcon />}
         </div>
-        <div className="form-group">
-          <label htmlFor="password">Password:</label>
-          <input type="password" id="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-        </div>
-        {error && <p style={{ color: "red" }} className="error-message">{error}</p>}
-        <button type="submit" className="login-button">
-          Login
-        </button>
-      </form>
+        <Form name="basic" labelCol={{ span: 8 }} wrapperCol={{ span: 16 }} style={{ maxWidth: 600 }} initialValues={{ remember: true }} onFinish={onFinish} autoComplete="off">
+          <Form.Item<LoginData> label="Username" name="username" rules={[{ required: true, message: "Please input your username!" }]}>
+            <Input />
+          </Form.Item>
+
+          <Form.Item<LoginData> label="Password" name="password" rules={[{ required: true, message: "Please input your password!" }]}>
+            <Input.Password />
+          </Form.Item>
+          <Form.Item label={null}>
+            <Button type="primary" htmlType="submit">
+              Submit
+            </Button>
+          </Form.Item>
+        </Form>
+      </div>
     </div>
   );
 };
