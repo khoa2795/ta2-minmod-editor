@@ -142,7 +142,7 @@ export const EditDedupMineralSite = observer(({ dedupSite, commodity }: EditDedu
         render: (_: any, site: MineralSite) => {
           return (
             <Typography.Link href={`/resource/${site.id}`} target="_blank">
-              {site.name}
+              {site.name || "-"}
             </Typography.Link>
           );
         },

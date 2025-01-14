@@ -41,7 +41,7 @@ export const EditSiteField: React.FC<EditSiteFieldProps> = ({ currentSite, sites
       case "depositType":
         return "Deposit Type";
       case "grade":
-        return "Grade (%)";
+        return "Grade (0 - 100%)";
       case "tonnage":
         return "Tonnage (Mt)";
       default:
@@ -175,7 +175,7 @@ interface GetFieldConfig {
 }
 
 const getNameConfig = ({ currentSite, sites, setFieldProvenance }: GetFieldConfig): [React.ReactElement, FormFields] => {
-  const options = sites.map((site) => ({ key: site.id, label: site.name }));
+  const options = sites.filter((site) => site.name !== undefined).map((site) => ({ key: site.id, label: site.name! }));
   const component = <EditableSelect onProvenanceChange={setFieldProvenance} options={options} />;
   const initialValues =
     currentSite !== undefined

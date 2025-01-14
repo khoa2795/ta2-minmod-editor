@@ -30,7 +30,7 @@ export type MineralSiteConstructorArgs = {
   sourceId: string;
   dedupSiteURI: string;
   createdBy: string[];
-  name: string;
+  name?: string;
   locationInfo: LocationInfo;
   depositTypeCandidate: CandidateEntity[];
   reference: Reference[];
@@ -45,7 +45,7 @@ export class MineralSite {
   recordId: string;
   dedupSiteURI: string;
   createdBy: string[];
-  name: string;
+  name?: string;
   locationInfo: LocationInfo;
   depositTypeCandidate: CandidateEntity[];
   reference: Reference[];
@@ -206,7 +206,7 @@ export class DraftCreateMineralSite extends MineralSite {
       recordId: baseSite.recordId,
       dedupSiteURI: dedupMineralSite.uri,
       createdBy: [user.url],
-      name: baseSite.name,
+      name: undefined,
       locationInfo: new LocationInfo({ country: [], stateOrProvince: [] }),
       depositTypeCandidate: [],
       reference: [reference],
