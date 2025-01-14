@@ -33,35 +33,35 @@ export const ReferenceComponent: React.FC<ReferenceComponentProps> = observer(({
   const connection = useMemo(() => {
     const rawConnection = sourceStore.get(MineralSite.parseSourceId(site.sourceId).sourceId)?.connection;
     if (rawConnection == undefined) {
-      return null;
+      return undefined;
     }
     return getRecordURL(site, rawConnection);
   }, [site, sourceStore.records.size]);
 
   const docs = useMemo(() => Object.values(site.getReferencedDocuments()), [site]);
-  const ref = (
-    <Typography.Text ellipsis={true} style={{ maxWidth: 150 }}>
-      {docs.map((doc, index) => (
-        <React.Fragment key={doc.uri}>
-          <Typography.Link target="_blank" href={doc.uri} title={doc.title || doc.uri}>
-            {doc.title || doc.uri}
-          </Typography.Link>
-          {index < docs.length - 1 && <span>&nbsp;·&nbsp;</span>}
-        </React.Fragment>
-      ))}
-    </Typography.Text>
-  );
-
-  if (connection) {
-    return (
-      <Space>
-        <Typography.Link target="_blank" href={connection}>
-          <ExportOutlined />
-        </Typography.Link>
-        {ref}
-      </Space>
+  let content;
+  if (connection !== undefined) {
+    // TODO: fix me, we can solve this bug merging source & docs
+    const doc = docs[0];
+    content = (
+      <Typography.Link target="_blank" href={connection} title={doc.title || doc.uri}>
+        {doc.title || doc.uri}
+      </Typography.Link>
     );
+  } else {
+    content = docs.map((doc, index) => (
+      <React.Fragment key={doc.uri}>
+        <Typography.Link target="_blank" href={doc.uri} title={doc.title || doc.uri}>
+          {doc.title || doc.uri}
+        </Typography.Link>
+        {index < docs.length - 1 && <span>&nbsp;·&nbsp;</span>}
+      </React.Fragment>
+    ));
   }
 
-  return ref;
+  return (
+    <Typography.Text ellipsis={true} style={{ maxWidth: 150 }}>
+      {content}
+    </Typography.Text>
+  );
 });
