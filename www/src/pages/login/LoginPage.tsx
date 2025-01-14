@@ -23,8 +23,12 @@ export const LoginPage = () => {
     try {
       await userStore.login(username, password);
       routes.editor.path({ queryArgs: { commodity: undefined } }).open(navigate);
-    } catch (err) {
-      setError("An error occurred. Please try again later.");
+    } catch (err: any) {
+      if (err.response?.status === 401) {
+        setError("Username or password is wrong.");
+      } else {
+        setError("An error occurred. Please try again later.");
+      }
     }
   };
 
@@ -40,7 +44,7 @@ export const LoginPage = () => {
           <label htmlFor="password">Password:</label>
           <input type="password" id="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
         </div>
-        {error && <p className="error-message">{error}</p>}
+        {error && <p style={{ color: "red" }} className="error-message">{error}</p>}
         <button type="submit" className="login-button">
           Login
         </button>
