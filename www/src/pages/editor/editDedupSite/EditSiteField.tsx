@@ -109,7 +109,7 @@ export const EditSiteField: React.FC<EditSiteFieldProps> = ({ currentSite, sites
     } else if (editField === "country") {
       edit = { field: editField, observedName: countryStore.getByURI(val.fieldValue)!.name, normalizedURI: val.fieldValue };
     } else if (editField === "stateOrProvince") {
-      edit = { field: editField, observedName: countryStore.getByURI(val.fieldValue)!.name, normalizedURI: val.fieldValue };
+      edit = { field: editField, observedName: stateOrProvinceStore.getByURI(val.fieldValue)!.name, normalizedURI: val.fieldValue };
     } else if (editField === "depositType") {
       edit = { field: editField, observedName: depositTypeStore.getByURI(val.fieldValue)!.name, normalizedURI: val.fieldValue };
     } else if (editField === "grade" || editField === "tonnage") {
@@ -124,7 +124,7 @@ export const EditSiteField: React.FC<EditSiteFieldProps> = ({ currentSite, sites
         document: val.refDoc,
         comment: val.refComment,
         property: val.refAppliedToAll ? undefined : Reference.normalizeProperty(editField),
-        pageInfo: []
+        pageInfo: [],
       }),
     });
   };
@@ -180,11 +180,11 @@ const getNameConfig = ({ currentSite, sites, setFieldProvenance }: GetFieldConfi
   const initialValues =
     currentSite !== undefined
       ? {
-        fieldValue: currentSite.name,
-        refDoc: currentSite.getFirstReferencedDocument(),
-        refComment: currentSite.reference[0].comment,
-        refAppliedToAll: false,
-      }
+          fieldValue: currentSite.name,
+          refDoc: currentSite.getFirstReferencedDocument(),
+          refComment: currentSite.reference[0].comment,
+          refAppliedToAll: false,
+        }
       : defaultInitialValues;
   return [component, initialValues];
 };
@@ -195,11 +195,11 @@ const getLocationConfig = ({ currentSite, sites, setFieldProvenance }: GetFieldC
   const initialValues =
     currentSite !== undefined
       ? {
-        fieldValue: currentSite.locationInfo.location || "",
-        refDoc: currentSite.getFirstReferencedDocument(),
-        refComment: currentSite.reference[0].comment,
-        refAppliedToAll: false,
-      }
+          fieldValue: currentSite.locationInfo.location || "",
+          refDoc: currentSite.getFirstReferencedDocument(),
+          refComment: currentSite.reference[0].comment,
+          refAppliedToAll: false,
+        }
       : defaultInitialValues;
   return [component, initialValues];
 };
@@ -218,11 +218,11 @@ const getCountryConfig = ({ currentSite, sites, setFieldProvenance, stores }: Ge
   const initialValues =
     currentSite !== undefined && currentSite.locationInfo.country.length > 0
       ? {
-        fieldValue: currentSite.locationInfo.country[0].normalizedURI!,
-        refDoc: currentSite.getFirstReferencedDocument(),
-        refComment: currentSite.reference[0].comment,
-        refAppliedToAll: false,
-      }
+          fieldValue: currentSite.locationInfo.country[0].normalizedURI!,
+          refDoc: currentSite.getFirstReferencedDocument(),
+          refComment: currentSite.reference[0].comment,
+          refAppliedToAll: false,
+        }
       : defaultInitialValues;
   return [component, initialValues];
 };
@@ -241,11 +241,11 @@ const getStateOrProvinceConfig = ({ currentSite, sites, setFieldProvenance, stor
   const initialValues =
     currentSite !== undefined && currentSite.locationInfo.stateOrProvince.length > 0
       ? {
-        fieldValue: currentSite.locationInfo.stateOrProvince[0].normalizedURI!,
-        refDoc: currentSite.getFirstReferencedDocument(),
-        refComment: currentSite.reference[0].comment,
-        refAppliedToAll: false,
-      }
+          fieldValue: currentSite.locationInfo.stateOrProvince[0].normalizedURI!,
+          refDoc: currentSite.getFirstReferencedDocument(),
+          refComment: currentSite.reference[0].comment,
+          refAppliedToAll: false,
+        }
       : defaultInitialValues;
   return [component, initialValues];
 };
@@ -264,11 +264,11 @@ const getDepositTypeConfig = ({ currentSite, sites, setFieldProvenance, stores }
   const initialValues =
     currentSite !== undefined && currentSite.depositTypeCandidate.length > 0
       ? {
-        fieldValue: currentSite.depositTypeCandidate[0].normalizedURI!,
-        refDoc: currentSite.getFirstReferencedDocument(),
-        refComment: currentSite.reference[0].comment,
-        refAppliedToAll: false,
-      }
+          fieldValue: currentSite.depositTypeCandidate[0].normalizedURI!,
+          refDoc: currentSite.getFirstReferencedDocument(),
+          refComment: currentSite.reference[0].comment,
+          refAppliedToAll: false,
+        }
       : defaultInitialValues;
   return [component, initialValues];
 };
@@ -278,11 +278,11 @@ const getTonnageConfig = ({ currentSite, sites, setFieldProvenance, stores, comm
   const initialValues =
     currentSite !== undefined && currentSite.depositTypeCandidate.length > 0
       ? {
-        fieldValue: currentSite.gradeTonnage[commodity]?.totalTonnage?.toFixed(4) || "",
-        refDoc: currentSite.getFirstReferencedDocument(),
-        refComment: currentSite.reference[0].comment,
-        refAppliedToAll: false,
-      }
+          fieldValue: currentSite.gradeTonnage[commodity]?.totalTonnage?.toFixed(4) || "",
+          refDoc: currentSite.getFirstReferencedDocument(),
+          refComment: currentSite.reference[0].comment,
+          refAppliedToAll: false,
+        }
       : defaultInitialValues;
   return [component, initialValues];
 };
@@ -292,11 +292,11 @@ const getGradeConfig = ({ currentSite, sites, setFieldProvenance, stores, commod
   const initialValues =
     currentSite !== undefined && currentSite.depositTypeCandidate.length > 0
       ? {
-        fieldValue: currentSite.gradeTonnage[commodity]?.totalGrade?.toFixed(4) || "",
-        refDoc: currentSite.getFirstReferencedDocument(),
-        refComment: currentSite.reference[0].comment,
-        refAppliedToAll: false,
-      }
+          fieldValue: currentSite.gradeTonnage[commodity]?.totalGrade?.toFixed(4) || "",
+          refDoc: currentSite.getFirstReferencedDocument(),
+          refComment: currentSite.reference[0].comment,
+          refAppliedToAll: false,
+        }
       : defaultInitialValues;
   return [component, initialValues];
 };
