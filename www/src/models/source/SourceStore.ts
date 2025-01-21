@@ -2,14 +2,15 @@ import { RStore, FetchResponse } from "gena-app";
 import { SERVER } from "env";
 import { IRI } from "models/typing";
 
-export interface Source {
+export interface DataSource {
   id: IRI;
   uri: IRI;
+  name: string;
   connection: string;
 }
-export class SourceStore extends RStore<string, Source> {
+export class DataSourceStore extends RStore<string, DataSource> {
   constructor() {
-    super(`${SERVER}/api/v1/sources`, undefined, false);
+    super(`${SERVER}/api/v1/data-sources`, undefined, false);
   }
 
   async fetchSourcesAndConnections(): Promise<Record<string, string>> {
@@ -32,10 +33,11 @@ export class SourceStore extends RStore<string, Source> {
     }
   }
 
-  public deserialize(obj: any): Source {
+  public deserialize(obj: any): DataSource {
     return {
       id: obj.id,
       uri: obj.uri,
+      name: obj.name,
       connection: obj.connection,
     };
   }
