@@ -162,24 +162,6 @@ export class MineralSite {
     // TODO: fix me, we need to avoid duplicated reference
     this.reference.push(reference);
   }
-
-  public static updateSourceId(sourceId: string, username: string): string {
-    const parts = sourceId.split("::");
-    if (parts.length === 2) {
-      return `${sourceId}::${username}`;
-    } else {
-      return `${parts[0]}::${parts[1]}::${username}`;
-    }
-  }
-
-  public static parseSourceId(sourceId: string): { sourceType: string; sourceId: string; username: string | undefined } {
-    const parts = sourceId.split("::");
-    if (parts.length === 3) {
-      return { sourceType: parts[0], sourceId: `${parts[0]}::${parts[1]}`, username: parts[2] };
-    } else {
-      return { sourceType: parts[0], sourceId, username: undefined };
-    }
-  }
 }
 
 export class DraftCreateMineralSite extends MineralSite {
@@ -202,7 +184,7 @@ export class DraftCreateMineralSite extends MineralSite {
     return new DraftCreateMineralSite({
       draftID: `draft-${dedupMineralSite.id}`,
       id: "", // backend does not care about uri as they will recalculate it
-      sourceId: MineralSite.updateSourceId(baseSite.sourceId, user.id),
+      sourceId: baseSite.sourceId,
       recordId: baseSite.recordId,
       dedupSiteURI: dedupMineralSite.uri,
       createdBy: [user.url],

@@ -31,7 +31,8 @@ function getRecordURL(site: MineralSite, richUrlTemplate: string): string | unde
 export const ReferenceComponent: React.FC<ReferenceComponentProps> = observer(({ site }) => {
   const { sourceStore } = useStores();
   const connection = useMemo(() => {
-    const rawConnection = sourceStore.get(MineralSite.parseSourceId(site.sourceId).sourceId)?.connection;
+    const rawConnection = sourceStore.get(site.sourceId)?.connection;
+    console.log("rawConnection", site.sourceId, sourceStore.get(site.sourceId));
     if (rawConnection == undefined) {
       return undefined;
     }
