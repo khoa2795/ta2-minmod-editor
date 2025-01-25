@@ -32,7 +32,6 @@ export const ReferenceComponent: React.FC<ReferenceComponentProps> = observer(({
   const { sourceStore } = useStores();
   const connection = useMemo(() => {
     const rawConnection = sourceStore.get(site.sourceId)?.connection;
-    console.log("rawConnection", site.sourceId, sourceStore.get(site.sourceId));
     if (rawConnection == undefined) {
       return undefined;
     }
