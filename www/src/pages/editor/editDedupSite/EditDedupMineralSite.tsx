@@ -3,11 +3,13 @@ import { observer } from "mobx-react-lite";
 import { useStores, Commodity, DedupMineralSite, MineralSite, Reference, DraftCreateMineralSite, FieldEdit, EditableField, DraftUpdateMineralSite } from "models";
 import { useEffect, useMemo, useState } from "react";
 import { CanEntComponent, ListCanEntComponent } from "./CandidateEntity";
-import { EditOutlined } from "@ant-design/icons";
+import { EditOutlined, InfoCircleOutlined } from "@ant-design/icons";
 import { EditSiteField } from "./EditSiteField";
 import styles from "./EditDedupMineralSite.module.css";
 import { Tooltip, Avatar } from "antd";
 import { ReferenceComponent } from "pages/editor/editDedupSite/ReferenceComponent";
+import { InternalID } from "models/typing";
+
 const getUserColor = (username: string) => {
   let hash = 0;
   for (let i = 0; i < username.length; i++) {
@@ -26,25 +28,95 @@ interface EditDedupMineralSiteProps {
   dedupSite: DedupMineralSite;
 }
 
+class GroupedSites {
+  nGroups: number;
+  sites: MineralSite[];
+  groups: { [grpKey: string]: { sites: MineralSite[]; label: string } };
+  site2groupKey: { [siteId: InternalID]: string };
+
+  constructor(sites: MineralSite[]) {
+    this.sites = sites;
+    this.groups = {};
+    this.site2groupKey = {};
+    this.nGroups = 0;
+
+    for (const ms of sites) {
+      const key = `${ms.sourceId}--${ms.recordId}`;
+      if (this.groups[key] === undefined) {
+        this.nGroups += 1;
+        this.groups[key] = { sites: [], label: `s${this.nGroups}` };
+      }
+      this.groups[key].sites.push(ms);
+      this.site2groupKey[ms.id] = key;
+    }
+  }
+}
+
+class SelectedSites {
+  groups: Set<string>;
+
+  constructor() {
+    this.groups = new Set();
+  }
+
+  clone(): SelectedSites {
+    const ret = new SelectedSites();
+    ret.groups = new Set(this.groups);
+    return ret;
+  }
+
+  has(id: InternalID, siteGroups: GroupedSites): boolean {
+    return this.groups.has(siteGroups.site2groupKey[id]);
+  }
+
+  add(siteId: InternalID, siteGroups: GroupedSites): SelectedSites {
+    const other = this.clone();
+    other.groups.add(siteGroups.site2groupKey[siteId]);
+    return other;
+  }
+
+  delete(siteId: InternalID, siteGroups: GroupedSites): SelectedSites {
+    const other = this.clone();
+    other.groups.delete(siteGroups.site2groupKey[siteId]);
+    return other;
+  }
+}
+
 export const EditDedupMineralSite = observer(({ dedupSite, commodity }: EditDedupMineralSiteProps) => {
   const stores = useStores();
   const { mineralSiteStore, userStore, dedupMineralSiteStore } = stores;
+  const user = userStore.getCurrentUser()!;
+
   const [editField, setEditField] = useState<EditableField | undefined>(undefined);
-  const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
-  const tmpLst: (MineralSite | null | undefined)[] = dedupSite.sites.map((site) => mineralSiteStore.get(site.id));
-  // no idea why typescript compiler incorrectly complains about the incorrect type
-  const fetchedSites = tmpLst.filter((site) => site !== undefined) as (MineralSite | null)[];
-  const sites = fetchedSites.filter((site) => site !== null) as MineralSite[];
+  const [selectedRows, setSelectedRows] = useState<SelectedSites>(new SelectedSites());
+
+  const [fetchedSites, siteGroups] = useMemo(() => {
+    const tmpLst: (MineralSite | null | undefined)[] = dedupSite.sites.map((site) => mineralSiteStore.get(site.id));
+    // no idea why typescript compiler incorrectly complains about the incorrect type
+    const fetchedSites = tmpLst.filter((site) => site !== undefined) as (MineralSite | null)[];
+    const sites = fetchedSites.filter((site) => site !== null) as MineralSite[];
+
+    return [fetchedSites, new GroupedSites(sites)];
+  }, [dedupSite.sites, mineralSiteStore.records.size]);
   const isLoading = mineralSiteStore.state.value === "updating" || fetchedSites.length !== dedupSite.sites.length;
 
   const ungroupTogether = async () => {
-    const selectedSiteIds = Array.from(selectedRows);
-    const allSiteIds = sites.map((site) => site.id);
-    const unselectedSiteIds = allSiteIds.filter((id) => !selectedRows.has(id));
+    const ungroupPayload = [
+      {
+        sites: Array.from(selectedRows.groups).flatMap((grpKey) => {
+          return siteGroups.groups[grpKey].sites.map((site) => site.id);
+        }),
+      },
+    ];
 
-    const newGroups = [{ sites: selectedSiteIds }, { sites: unselectedSiteIds }];
-    const newIds = await dedupMineralSiteStore.updateSameAsGroup(newGroups);
+    const remainGroup = Object.keys(siteGroups.groups)
+      .filter((grpKey) => !selectedRows.groups.has(grpKey))
+      .flatMap((grpKey) => siteGroups.groups[grpKey].sites.map((site) => site.id));
+    if (remainGroup.length > 0) {
+      ungroupPayload.push({ sites: remainGroup });
+    }
 
+    const newIds = await dedupMineralSiteStore.updateSameAsGroup(ungroupPayload);
     if (commodity && commodity.id) {
       const commodityId = commodity.id;
       await dedupMineralSiteStore.replaceSites([dedupSite.id], newIds, commodityId);
@@ -53,14 +125,18 @@ export const EditDedupMineralSite = observer(({ dedupSite, commodity }: EditDedu
   };
 
   const ungroupSeparately = async () => {
-    const selectedSiteIds = Array.from(selectedRows);
-    const allSiteIds = sites.map((site) => site.id);
-    const unselectedSiteIds = allSiteIds.filter((id) => !selectedRows.has(id));
+    const ungroupPayload = Array.from(selectedRows.groups).map((grpKey) => {
+      return { sites: siteGroups.groups[grpKey].sites.map((site) => site.id) };
+    });
 
-    const selectedPayload = selectedSiteIds.map((id) => ({ sites: [id] }));
-    const unselectedPayload = unselectedSiteIds.length > 0 ? [{ sites: unselectedSiteIds }] : [];
-    const createPayload = [...selectedPayload, ...unselectedPayload];
-    const newIds = await dedupMineralSiteStore.updateSameAsGroup(createPayload);
+    const remainGroup = Object.keys(siteGroups.groups)
+      .filter((grpKey) => !selectedRows.groups.has(grpKey))
+      .flatMap((grpKey) => siteGroups.groups[grpKey].sites.map((site) => site.id));
+    if (remainGroup.length > 0) {
+      ungroupPayload.push({ sites: remainGroup });
+    }
+
+    const newIds = await dedupMineralSiteStore.updateSameAsGroup(ungroupPayload);
 
     if (commodity && commodity.id) {
       const commodityId = commodity.id;
@@ -77,7 +153,7 @@ export const EditDedupMineralSite = observer(({ dedupSite, commodity }: EditDedu
         render: (_: any, site: MineralSite, index: number) => {
           const createdBy = site.createdBy.split("/").pop()!;
           const fullName = createdBy;
-          const username = site.createdBy.includes("/s/") ? "System" : createdBy;
+          const username = createdBy;
 
           const color = getUserColor(username);
           const confidence = dedupSite.sites[index].score;
@@ -98,18 +174,16 @@ export const EditDedupMineralSite = observer(({ dedupSite, commodity }: EditDedu
       {
         title: "Select",
         key: "select",
-        hidden: sites.length === 1,
+        hidden: siteGroups.sites.length === 1,
         render: (_: any, site: MineralSite) => (
           <Checkbox
-            checked={selectedRows.has(site.id)}
+            checked={selectedRows.has(site.id, siteGroups)}
             onChange={(e) => {
-              const updatedRows = new Set(selectedRows);
               if (e.target.checked) {
-                updatedRows.add(site.id);
+                setSelectedRows(selectedRows.add(site.id, siteGroups));
               } else {
-                updatedRows.delete(site.id);
+                setSelectedRows(selectedRows.delete(site.id, siteGroups));
               }
-              setSelectedRows(updatedRows);
             }}
           />
         ),
@@ -234,10 +308,24 @@ export const EditDedupMineralSite = observer(({ dedupSite, commodity }: EditDedu
       {
         title: "Source",
         key: "reference",
-        render: (_: any, site: MineralSite) => <ReferenceComponent site={site} />,
+        render: (_: any, site: MineralSite) => {
+          return (
+            <>
+              <ReferenceComponent site={site} />
+              <Tooltip
+                trigger="click"
+                title="This key identifies same deposits from the same record of a data source. When select/unselect a deposit, all deposits with the same key will be selected/unselected together."
+              >
+                <Typography.Text type="secondary" strong={true} className="font-small" style={{ cursor: "pointer" }}>
+                  &nbsp;({siteGroups.groups[siteGroups.site2groupKey[site.id]].label})
+                </Typography.Text>
+              </Tooltip>
+            </>
+          );
+        },
       },
     ];
-  }, [commodity.id, sites.length, selectedRows, ungroupTogether]);
+  }, [commodity.id, siteGroups, selectedRows, ungroupTogether]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -258,10 +346,10 @@ export const EditDedupMineralSite = observer(({ dedupSite, commodity }: EditDedu
     }
 
     const currentUser = userStore.getCurrentUser()!;
-    const existingSite = sites.find((site) => site.createdBy.includes(currentUser.url));
+    const existingSite = siteGroups.sites.find((site) => site.createdBy.includes(currentUser.url));
     let cb;
     if (existingSite === undefined) {
-      const draftSite = DraftCreateMineralSite.fromMineralSite(stores, dedupSite, sites, currentUser, change.reference);
+      const draftSite = DraftCreateMineralSite.fromMineralSite(stores, dedupSite, siteGroups.sites, currentUser, change.reference);
       draftSite.updateField(stores, change.edit, change.reference);
       cb = mineralSiteStore.createAndUpdateDedup(dedupSite.commodity, draftSite);
     } else {
@@ -275,10 +363,10 @@ export const EditDedupMineralSite = observer(({ dedupSite, commodity }: EditDedu
     });
   };
 
-  const currentSite = sites.find((site) => site.createdBy.includes(userStore.getCurrentUser()!.url));
+  const currentSite = siteGroups.sites.find((site) => site.createdBy == user.url);
 
   let groupBtns = undefined;
-  if (selectedRows.size > 0 && sites.length > 1) {
+  if (siteGroups.nGroups > 1 && selectedRows.groups.size > 0) {
     const ungrpSepBtn = (
       <Button key="separately" type="primary" onClick={ungroupSeparately}>
         Ungroup Separately
@@ -289,12 +377,24 @@ export const EditDedupMineralSite = observer(({ dedupSite, commodity }: EditDedu
         Ungroup Together
       </Button>
     );
-    if (selectedRows.size === 1 || selectedRows.size === sites.length) {
+    if (selectedRows.groups.size === 1) {
+      groupBtns = [ungrpTogBtn];
+    } else if (selectedRows.groups.size === siteGroups.nGroups) {
       groupBtns = [ungrpSepBtn];
     } else {
       groupBtns = [ungrpSepBtn, ungrpTogBtn];
     }
-    groupBtns = <Space>{groupBtns}</Space>;
+    groupBtns = (
+      <Space>
+        {groupBtns}
+        <Tooltip
+          trigger={"click"}
+          title="“Ungroup Separately” creates N new groups, each containing one or more selected deposits from the same record of a data source. “Ungroup Together” creates a single new group containing all the selected deposits."
+        >
+          <InfoCircleOutlined />
+        </Tooltip>
+      </Space>
+    );
   }
 
   return (
@@ -307,13 +407,13 @@ export const EditDedupMineralSite = observer(({ dedupSite, commodity }: EditDedu
         size="small"
         rowKey="id"
         columns={columns}
-        dataSource={sites}
+        dataSource={siteGroups.sites}
         loading={isLoading}
         rowClassName={(site) => {
           return site.createdBy.includes(userStore.getCurrentUser()!.url) ? styles.myEditedRow : "";
         }}
       />
-      <EditSiteField key={editField} sites={sites} currentSite={currentSite} editField={editField} onFinish={onEditFinish} commodity={commodity.id} />
+      <EditSiteField key={editField} sites={siteGroups.sites} currentSite={currentSite} editField={editField} onFinish={onEditFinish} commodity={commodity.id} />
     </Flex>
   );
 }) as React.FC<EditDedupMineralSiteProps>;
