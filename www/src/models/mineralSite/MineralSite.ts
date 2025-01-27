@@ -29,7 +29,7 @@ export type MineralSiteConstructorArgs = {
   recordId: string;
   sourceId: string;
   dedupSiteURI: string;
-  createdBy: string[];
+  createdBy: string;
   name?: string;
   locationInfo: LocationInfo;
   depositTypeCandidate: CandidateEntity[];
@@ -44,7 +44,7 @@ export class MineralSite {
   sourceId: string;
   recordId: string;
   dedupSiteURI: string;
-  createdBy: string[];
+  createdBy: string;
   name?: string;
   locationInfo: LocationInfo;
   depositTypeCandidate: CandidateEntity[];
@@ -95,7 +95,7 @@ export class MineralSite {
       case "country":
         this.locationInfo.country = [
           new CandidateEntity({
-            source: this.createdBy[0], // this works because createdBy is a single item array for experts
+            source: this.createdBy, // this works because createdBy is a single item array for experts
             confidence: 1.0,
             normalizedURI: edit.normalizedURI,
             observedName: edit.observedName,
@@ -105,7 +105,7 @@ export class MineralSite {
       case "stateOrProvince":
         this.locationInfo.stateOrProvince = [
           new CandidateEntity({
-            source: this.createdBy[0], // this works because createdBy is a single item array for experts
+            source: this.createdBy, // this works because createdBy is a single item array for experts
             confidence: 1.0,
             normalizedURI: edit.normalizedURI,
             observedName: edit.observedName,
@@ -115,7 +115,7 @@ export class MineralSite {
       case "depositType":
         this.depositTypeCandidate = [
           new CandidateEntity({
-            source: this.createdBy[0], // this works because createdBy is a single item array for experts
+            source: this.createdBy, // this works because createdBy is a single item array for experts
             confidence: 1.0,
             normalizedURI: edit.normalizedURI,
             observedName: edit.observedName,
@@ -136,7 +136,7 @@ export class MineralSite {
           }
         }
 
-        this.mineralInventory = [MineralInventory.fromGradeTonnage(stores, this.createdBy[0], this.gradeTonnage[edit.commodity], reference)];
+        this.mineralInventory = [MineralInventory.fromGradeTonnage(stores, this.createdBy, this.gradeTonnage[edit.commodity], reference)];
         break;
       case "tonnage":
         if (this.gradeTonnage[edit.commodity] === undefined) {
@@ -153,7 +153,7 @@ export class MineralSite {
           }
         }
 
-        this.mineralInventory = [MineralInventory.fromGradeTonnage(stores, this.createdBy[0], this.gradeTonnage[edit.commodity], reference)];
+        this.mineralInventory = [MineralInventory.fromGradeTonnage(stores, this.createdBy, this.gradeTonnage[edit.commodity], reference)];
         break;
       default:
         throw new Error(`Unknown edit: ${edit}`);
@@ -187,7 +187,7 @@ export class DraftCreateMineralSite extends MineralSite {
       sourceId: baseSite.sourceId,
       recordId: baseSite.recordId,
       dedupSiteURI: dedupMineralSite.uri,
-      createdBy: [user.url],
+      createdBy: user.url,
       name: undefined,
       locationInfo: new LocationInfo({ country: [], stateOrProvince: [] }),
       depositTypeCandidate: [],

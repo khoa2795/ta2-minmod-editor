@@ -183,7 +183,7 @@ const NewMineralSiteForm = ({ commodity }: NewMineralSiteModalProps, ref: Forwar
       recordId: `record-${uuidv4()}`,
       sourceId: combinedSourceId,
       dedupSiteURI: "",
-      createdBy: [currentUserUrl],
+      createdBy: currentUserUrl,
       name: values.name,
       locationInfo: new LocationInfo({
         country: countries,
