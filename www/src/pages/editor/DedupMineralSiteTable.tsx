@@ -198,7 +198,7 @@ export const DedupMineralSiteTable: React.FC<DedupMineralSiteTableProps> = obser
 
   useEffect(() => {
     if (commodity !== undefined) {
-      dedupMineralSiteStore.search(commodity, country, stateOrProvince);
+      dedupMineralSiteStore.searchAndCache(commodity, country, stateOrProvince);
     }
   }, [commodity, country, stateOrProvince]);
 
@@ -241,7 +241,7 @@ export const DedupMineralSiteTable: React.FC<DedupMineralSiteTableProps> = obser
   };
 
   const isLoading = dedupMineralSiteStore.state.value === "updating";
-  const dedupMineralSites = commodity === undefined || isLoading ? emptyFetchResult : dedupMineralSiteStore.getByCommodity(commodity);
+  const dedupMineralSites = commodity === undefined || isLoading ? emptyFetchResult : dedupMineralSiteStore.getCacheSearchResult(commodity, country, stateOrProvince);
 
   const selectedDedupSites = useMemo(() => {
     return Array.from(selectedDedupSiteIds)

@@ -3,29 +3,58 @@ import { SERVER } from "env";
 import { Commodity } from "../commodity";
 import { DedupMineralSite, DedupMineralSiteDepositType, DedupMineralSiteLocation, DedupMineralSiteOriginalSite } from "./DedupMineralSite";
 import axios from "axios";
-import { action, makeObservable, runInAction } from "mobx";
+import { action, makeObservable, observable, runInAction } from "mobx";
 import { NamespaceManager } from "../Namespace";
 import { GradeTonnage } from "../mineralSite";
 import { InternalID } from "../typing";
 import { StateOrProvince } from "models/stateOrProvince";
 import { Country } from "models";
 
+interface SearchCondition {
+  commodity: InternalID;
+  country?: InternalID;
+  state_or_province?: InternalID;
+}
+
+class CacheSearchResult {
+  condition: SearchCondition;
+  results: FetchResult<InternalID>;
+
+  public constructor({ condition, results }: { condition: SearchCondition; results: FetchResult<InternalID> }) {
+    this.condition = condition;
+    this.results = results;
+  }
+
+  public static getCondition(commodity: Commodity, country?: Country, stateOrProvince?: StateOrProvince) {
+    return {
+      commodity: commodity.id,
+      country: country?.id,
+      state_or_province: stateOrProvince?.id,
+    };
+  }
+
+  public matchCondition(condition: SearchCondition): boolean {
+    return this.condition.commodity === condition.commodity && this.condition.country === condition.country && this.condition.state_or_province === condition.state_or_province;
+  }
+}
+
 export class DedupMineralSiteStore extends RStore<string, DedupMineralSite> {
+  static MAX_CACHE_SEARCH_RESULTS = 10;
+
   ns: NamespaceManager;
+  searchResults: CacheSearchResult[] = [];
 
   constructor(ns: NamespaceManager) {
-    super(`${SERVER}/api/v1/dedup-mineral-sites`, undefined, false, [new SingleKeyIndex("commodity", "id")]);
+    super(`${SERVER}/api/v1/dedup-mineral-sites`, undefined, false);
     this.ns = ns;
 
     makeObservable(this, {
+      searchResults: observable,
+      searchAndCache: action,
       forceFetchByURI: action,
       deleteByIds: action,
       replaceSites: action,
     });
-  }
-
-  get commodity2ids() {
-    return this.indices[0] as SingleKeyIndex<string, string, DedupMineralSite>;
   }
 
   /**
@@ -89,45 +118,55 @@ export class DedupMineralSiteStore extends RStore<string, DedupMineralSite> {
     }
   }
 
+  async searchAndCache(commodity: Commodity, country?: Country, stateOrProvince?: StateOrProvince) {
+    const conditions = CacheSearchResult.getCondition(commodity, country, stateOrProvince);
+
+    // skip if we already have the results in cache
+    if (this.searchResults.some((result) => result.matchCondition(conditions))) {
+      return;
+    }
+
+    const results = await this.fetch({
+      conditions,
+    });
+
+    runInAction(() => {
+      this.searchResults.push(
+        new CacheSearchResult({
+          condition: conditions,
+          results: {
+            records: results.records.map((record) => record.id),
+            total: results.total,
+          },
+        })
+      );
+
+      if (this.searchResults.length > DedupMineralSiteStore.MAX_CACHE_SEARCH_RESULTS) {
+        this.searchResults.shift();
+      }
+    });
+  }
+
   /**
+   * Get search results from cache. Return empty if not found
    *
    * @param commodity
    * @param country
    * @param stateOrProvince
    */
-  async search(commodity: Commodity, country?: Country, stateOrProvince?: StateOrProvince): Promise<FetchResult<DedupMineralSite>> {
-    const conditions: any = { commodity: commodity.id };
-    if (country !== undefined) {
-      conditions.country = country.id;
-    }
-    if (stateOrProvince !== undefined) {
-      conditions.stateOrProvince = stateOrProvince.id;
+  public getCacheSearchResult(commodity: Commodity, country?: Country, stateOrProvince?: StateOrProvince): FetchResult<DedupMineralSite> {
+    const conditions = CacheSearchResult.getCondition(commodity, country, stateOrProvince);
+
+    for (const result of this.searchResults) {
+      if (result.matchCondition(conditions)) {
+        return {
+          records: result.results.records.map((id) => this.records.get(id)!),
+          total: result.results.total,
+        };
+      }
     }
 
-    return await this.fetch({
-      conditions,
-    });
-  }
-
-  async fetchByCommodity(commodity: Commodity): Promise<FetchResult<DedupMineralSite>> {
-    if (!this.refetch && this.commodity2ids.index.has(commodity.id)) {
-      return this.getByCommodity(commodity);
-    }
-    return await this.fetch({
-      conditions: { commodity: commodity.id },
-    });
-  }
-
-  public getByCommodity(commodity: Commodity): FetchResult<DedupMineralSite> {
-    if (!this.commodity2ids.index.has(commodity.id)) {
-      return { records: [], total: 0 };
-    }
-
-    const records = [];
-    for (const id of this.commodity2ids.index.get(commodity.id)!) {
-      records.push(this.records.get(id)!);
-    }
-    return { records, total: records.length };
+    return { records: [], total: 0 };
   }
 
   public deserialize(record: any): DedupMineralSite {

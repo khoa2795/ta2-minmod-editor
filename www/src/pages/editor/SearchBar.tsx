@@ -107,7 +107,7 @@ export function useSearchArgs(): [SearchArgs, NormSearchArgs, (newArgs: SearchAr
     }
 
     return output;
-  }, [commodityStore.records.size, countryStore.records.size, stateOrProvinceStore.records.size, args.commodity]);
+  }, [commodityStore.records.size, countryStore.records.size, stateOrProvinceStore.records.size, args]);
 
   return [args, normArgs, updateSearchArgs];
 }
