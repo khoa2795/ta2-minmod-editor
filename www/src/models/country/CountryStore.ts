@@ -1,22 +1,47 @@
-import { RStore, FetchResponse } from "gena-app";
+import { RStore, FetchResponse, SingleKeyUniqueIndex } from "gena-app";
 import { SERVER } from "env";
-import { IRI } from "models/typing";
+import { InternalID, IRI } from "models/typing";
+import { NamespaceManager } from "models/Namespace";
 
 export interface Country {
-  id: IRI; // it is the URI
+  id: InternalID;
   uri: IRI;
   name: string;
 }
 
 export class CountryStore extends RStore<string, Country> {
-  constructor() {
-    super(`${SERVER}/api/v1/countries`, undefined, false);
+  ns: NamespaceManager;
+
+  constructor(ns: NamespaceManager) {
+    super(`${SERVER}/api/v1/countries`, undefined, false, [new SingleKeyUniqueIndex("name", "id"), new SingleKeyUniqueIndex("uri", "id")]);
+    this.ns = ns;
   }
 
-  public getByURI(uri: string): Country | undefined {
-    const country = this.records.get(uri);
-    if (country === null) return undefined;
-    return country;
+  get name2id() {
+    return this.indices[0] as SingleKeyUniqueIndex<string, InternalID, Country>;
+  }
+
+  get uri2id() {
+    return this.indices[1] as SingleKeyUniqueIndex<IRI, InternalID, Country>;
+  }
+
+  public getByURI(uri: IRI): Country | undefined {
+    if (this.uri2id.index.has(uri)) {
+      const record = this.records.get(this.uri2id.index.get(uri)!);
+      if (record === null) return undefined;
+      return record;
+    }
+    return undefined;
+  }
+
+  public getByName(name: string): Country | undefined | null {
+    if (this.records.size === 0) {
+      return undefined;
+    }
+    if (this.name2id.index.has(name)) {
+      return this.get(this.name2id.index.get(name)!)!;
+    }
+    return null;
   }
 
   async fetchAll(): Promise<void> {
@@ -27,7 +52,7 @@ export class CountryStore extends RStore<string, Country> {
 
   public deserialize(obj: any): Country {
     return {
-      id: obj.uri,
+      id: this.ns.MR.getID(obj.uri),
       uri: obj.uri,
       name: obj.name,
     };

@@ -1,26 +1,30 @@
 import { RStore, FetchResponse, SingleKeyUniqueIndex } from "gena-app";
 import { SERVER } from "env";
-import { InternalID } from "models/typing";
+import { InternalID, IRI } from "models/typing";
+import { NamespaceManager } from "models/Namespace";
 
 export interface DepositType {
-  id: InternalID; // it is the URI
-  uri: string;
+  id: InternalID;
+  uri: IRI;
   name: string;
   environment: string;
   group: string;
 }
 
 export class DepositTypeStore extends RStore<InternalID, DepositType> {
-  constructor() {
+  ns: NamespaceManager;
+
+  constructor(ns: NamespaceManager) {
     super(`${SERVER}/api/v1/deposit-types`, undefined, false, [new SingleKeyUniqueIndex("name", "id"), new SingleKeyUniqueIndex("uri", "id")]);
+    this.ns = ns;
   }
 
   get name2id() {
-    return this.indices[0] as SingleKeyUniqueIndex<string, string, DepositType>;
+    return this.indices[0] as SingleKeyUniqueIndex<string, InternalID, DepositType>;
   }
 
   get uri2id() {
-    return this.indices[1] as SingleKeyUniqueIndex<string, string, DepositType>;
+    return this.indices[1] as SingleKeyUniqueIndex<IRI, InternalID, DepositType>;
   }
 
   public getByName(name: string): DepositType | undefined {
@@ -42,7 +46,7 @@ export class DepositTypeStore extends RStore<InternalID, DepositType> {
   public deserialize(obj: any): DepositType {
     return {
       ...obj,
-      id: obj.uri,
+      id: this.ns.MR.getID(obj.uri),
     };
   }
 

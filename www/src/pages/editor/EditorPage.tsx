@@ -13,6 +13,7 @@ export const EditorPage = observer(() => {
       newMineralSiteFormRef.current.open();
     }
   };
+
   return (
     <Flex vertical={true} gap="small">
       <div
@@ -27,11 +28,8 @@ export const EditorPage = observer(() => {
           Add Mineral Site
         </Button>
       </div>
-      <DedupMineralSiteTable commodity={normSearchArgs.commodity} />
-      <NewMineralSiteModal
-        ref={newMineralSiteFormRef}
-        commodity={normSearchArgs.commodity}
-      />
+      <DedupMineralSiteTable commodity={normSearchArgs.commodity} country={normSearchArgs.country} stateOrProvince={normSearchArgs.stateOrProvince} />
+      <NewMineralSiteModal ref={newMineralSiteFormRef} commodity={normSearchArgs.commodity} />
     </Flex>
   );
 });

@@ -42,6 +42,8 @@ export const routes = {
     exact: true,
     querySchema: {
       commodity: "optionalstring",
+      country: "optionalstring",
+      stateOrProvince: "optionalstring",
     },
   }),
 };

@@ -17,7 +17,7 @@ export const LoginPage = () => {
 
   useEffect(() => {
     userStore.isLoggedIn().then((isLoggedIn) => {
-      if (isLoggedIn) routes.editor.path({ queryArgs: { commodity: undefined } }).open(navigate);
+      if (isLoggedIn) routes.editor.path({ queryArgs: { commodity: undefined, country: undefined, stateOrProvince: undefined } }).open(navigate);
     });
   }, [userStore, navigate]);
 
@@ -25,7 +25,7 @@ export const LoginPage = () => {
     if (values.username !== undefined && values.password !== undefined) {
       try {
         await userStore.login(values.username, values.password);
-        routes.editor.path({ queryArgs: { commodity: undefined } }).open(navigate);
+        routes.editor.path({ queryArgs: { commodity: undefined, country: undefined, stateOrProvince: undefined } }).open(navigate);
       } catch (err: any) {
         if (err.response?.status === 401) {
           setError("Username or password is wrong.");

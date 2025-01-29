@@ -7,6 +7,8 @@ import { action, makeObservable, runInAction } from "mobx";
 import { NamespaceManager } from "../Namespace";
 import { GradeTonnage } from "../mineralSite";
 import { InternalID } from "../typing";
+import { StateOrProvince } from "models/stateOrProvince";
+import { Country } from "models";
 
 export class DedupMineralSiteStore extends RStore<string, DedupMineralSite> {
   ns: NamespaceManager;
@@ -87,6 +89,26 @@ export class DedupMineralSiteStore extends RStore<string, DedupMineralSite> {
     }
   }
 
+  /**
+   *
+   * @param commodity
+   * @param country
+   * @param stateOrProvince
+   */
+  async search(commodity: Commodity, country?: Country, stateOrProvince?: StateOrProvince): Promise<FetchResult<DedupMineralSite>> {
+    const conditions: any = { commodity: commodity.id };
+    if (country !== undefined) {
+      conditions.country = country.id;
+    }
+    if (stateOrProvince !== undefined) {
+      conditions.stateOrProvince = stateOrProvince.id;
+    }
+
+    return await this.fetch({
+      conditions,
+    });
+  }
+
   async fetchByCommodity(commodity: Commodity): Promise<FetchResult<DedupMineralSite>> {
     if (!this.refetch && this.commodity2ids.index.has(commodity.id)) {
       return this.getByCommodity(commodity);
@@ -136,11 +158,11 @@ export class DedupMineralSiteStore extends RStore<string, DedupMineralSite> {
       location:
         record.location !== undefined
           ? new DedupMineralSiteLocation({
-            lat: record.location.lat,
-            lon: record.location.lon,
-            country: (record.location.country || []).map((country: string) => MR.getURI(country)),
-            stateOrProvince: (record.location.state_or_province || []).map((sop: string) => MR.getURI(sop)),
-          })
+              lat: record.location.lat,
+              lon: record.location.lon,
+              country: (record.location.country || []).map((country: string) => MR.getURI(country)),
+              stateOrProvince: (record.location.state_or_province || []).map((sop: string) => MR.getURI(sop)),
+            })
           : undefined,
       gradeTonnage: GradeTonnage.deserialize(record.grade_tonnage[0]),
       modifiedAt: record.modified_at,

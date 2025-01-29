@@ -19,12 +19,12 @@ const dedupMineralSiteStore = new DedupMineralSiteStore(namespaceManager);
 
 export const stores = {
   userStore: new UserStore(),
-  commodityStore: new CommodityStore(),
+  commodityStore: new CommodityStore(namespaceManager),
   dedupMineralSiteStore,
   mineralSiteStore: new MineralSiteStore(dedupMineralSiteStore),
-  depositTypeStore: new DepositTypeStore(),
-  stateOrProvinceStore: new StateOrProvinceStore(),
-  countryStore: new CountryStore(),
+  depositTypeStore: new DepositTypeStore(namespaceManager),
+  stateOrProvinceStore: new StateOrProvinceStore(namespaceManager),
+  countryStore: new CountryStore(namespaceManager),
   unitStore: new UnitStore(),
   sourceStore: new DataSourceStore(),
 };
@@ -43,7 +43,14 @@ export function initStores(): Promise<any> {
 }
 
 export function initNonCriticalStores(): Promise<any> {
-  return Promise.all([stores.depositTypeStore.fetchAll(), stores.countryStore.fetchAll(), stores.stateOrProvinceStore.fetchAll(), stores.sourceStore.fetchAll(), stores.unitStore.fetchAll()]);
+  return Promise.all([
+    stores.commodityStore.fetchAll(),
+    stores.depositTypeStore.fetchAll(),
+    stores.countryStore.fetchAll(),
+    stores.stateOrProvinceStore.fetchAll(),
+    stores.sourceStore.fetchAll(),
+    stores.unitStore.fetchAll(),
+  ]);
 }
 
 export const StoreContext = createContext<IStore>(stores);

@@ -12,6 +12,10 @@ export class BindedNamespace {
   getURI(id: InternalID): IRI {
     return `${this.namespace}${id}`;
   }
+
+  getID(uri: IRI): InternalID {
+    return uri.substring(this.namespace.length);
+  }
 }
 
 export class NamespaceManager {

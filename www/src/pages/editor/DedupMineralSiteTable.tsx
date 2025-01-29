@@ -1,4 +1,4 @@
-import { DedupMineralSite, useStores } from "models";
+import { Country, DedupMineralSite, StateOrProvince, useStores } from "models";
 import { useEffect, useMemo, useState } from "react";
 import { observer } from "mobx-react-lite";
 import { Commodity } from "models/commodity";
@@ -10,11 +10,13 @@ import { Empty, Grade, Tonnage } from "components/Primitive";
 
 interface DedupMineralSiteTableProps {
   commodity: Commodity | undefined;
+  country: Country | undefined;
+  stateOrProvince: StateOrProvince | undefined;
 }
 
 const emptyFetchResult = { records: [], total: 0 };
 
-export const DedupMineralSiteTable: React.FC<DedupMineralSiteTableProps> = observer(({ commodity }) => {
+export const DedupMineralSiteTable: React.FC<DedupMineralSiteTableProps> = observer(({ commodity, country, stateOrProvince }) => {
   const { dedupMineralSiteStore, depositTypeStore, countryStore, stateOrProvinceStore } = useStores();
   const [editingDedupSite, setEditingDedupSite] = useState<string | undefined>(undefined);
   const [selectedDedupSiteIds, setSelectedDedupSiteIds] = useState<Set<string>>(new Set());
@@ -195,13 +197,10 @@ export const DedupMineralSiteTable: React.FC<DedupMineralSiteTableProps> = obser
   }, [depositTypeStore, countryStore, stateOrProvinceStore, editingDedupSite]);
 
   useEffect(() => {
-    const fetchData = async () => {
-      if (commodity !== undefined) {
-        await dedupMineralSiteStore.fetchByCommodity(commodity);
-      }
-    };
-    fetchData();
-  }, [commodity, dedupMineralSiteStore]);
+    if (commodity !== undefined) {
+      dedupMineralSiteStore.search(commodity, country, stateOrProvince);
+    }
+  }, [commodity, country, stateOrProvince]);
 
   const toggleSelectSite = (site: DedupMineralSite) => {
     const newSelectedDedupSiteIds = new Set(selectedDedupSiteIds);

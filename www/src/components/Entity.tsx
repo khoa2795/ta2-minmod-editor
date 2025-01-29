@@ -8,7 +8,7 @@ export interface EntityProps {
 
 export const Entity: React.FC<EntityProps> = ({ uri, store }) => {
   const db = useStores()[store];
-  const record = db.get(uri);
+  const record = db.getByURI(uri);
 
   if (record === null) {
     return (
