@@ -6,6 +6,7 @@ import { Button, Checkbox, Divider, Space, Table, Typography, message } from "an
 import { EditOutlined, PlusOutlined, UngroupOutlined } from "@ant-design/icons";
 import { EditDedupMineralSite } from "./editDedupSite/EditDedupMineralSite";
 import { Entity } from "components/Entity";
+import { Empty, Grade, Tonnage } from "components/Primitive";
 
 interface DedupMineralSiteTableProps {
   commodity: Commodity | undefined;
@@ -27,7 +28,7 @@ export const DedupMineralSiteTable: React.FC<DedupMineralSiteTableProps> = obser
         render: (_: any, site: DedupMineralSite) => {
           return (
             <Typography.Link href={`/derived/${site.id}`} target="_blank">
-              {site.name || "᠆"}
+              {site.name || "␣"}
             </Typography.Link>
           );
         },
@@ -60,7 +61,7 @@ export const DedupMineralSiteTable: React.FC<DedupMineralSiteTableProps> = obser
               </Typography.Link>
             );
           }
-          return "᠆";
+          return <Empty />;
         },
         sorter: (a: DedupMineralSite, b: DedupMineralSite) => {
           const locA = a.location ? `${a.location.lat?.toFixed(3)},${a.location.lon?.toFixed(3)}` : "";
@@ -73,7 +74,7 @@ export const DedupMineralSiteTable: React.FC<DedupMineralSiteTableProps> = obser
         key: "country",
         render: (_: any, site: DedupMineralSite) => {
           if (site.location === undefined || site.location.country.length === 0) {
-            return "᠆";
+            return <Empty />;
           }
 
           return (
@@ -95,7 +96,7 @@ export const DedupMineralSiteTable: React.FC<DedupMineralSiteTableProps> = obser
         key: "state",
         render: (_: any, site: DedupMineralSite) => {
           if (site.location === undefined || site.location.stateOrProvince.length === 0) {
-            return "᠆";
+            return <Empty />;
           }
 
           return (
@@ -118,7 +119,7 @@ export const DedupMineralSiteTable: React.FC<DedupMineralSiteTableProps> = obser
         render: (_: any, site: DedupMineralSite) => {
           const dt = site.getTop1DepositType();
           if (dt === undefined) {
-            return "᠆";
+            return <Empty />;
           }
           return <Entity uri={dt.uri} store="depositTypeStore" />;
         },
@@ -136,7 +137,7 @@ export const DedupMineralSiteTable: React.FC<DedupMineralSiteTableProps> = obser
         render: (_: any, site: DedupMineralSite) => {
           const dt = site.getTop1DepositType();
           if (dt === undefined) {
-            return "᠆";
+            return <Empty />;
           }
           return dt.confidence.toFixed(4);
         },
@@ -145,10 +146,7 @@ export const DedupMineralSiteTable: React.FC<DedupMineralSiteTableProps> = obser
         title: "Tonnage (Mt)",
         dataIndex: "totalTonnage",
         render: (_: any, site: DedupMineralSite) => {
-          if (site.gradeTonnage !== undefined && site.gradeTonnage.totalTonnage !== undefined) {
-            return site.gradeTonnage.totalTonnage.toFixed(4);
-          }
-          return "᠆";
+          return <Tonnage tonnage={site.gradeTonnage?.totalTonnage} />;
         },
         sorter: (a: DedupMineralSite, b: DedupMineralSite) => {
           const tonnageA = a.gradeTonnage?.totalTonnage || 0;
@@ -160,10 +158,7 @@ export const DedupMineralSiteTable: React.FC<DedupMineralSiteTableProps> = obser
         title: "Grade (%)",
         dataIndex: "totalGrade",
         render: (_: any, site: DedupMineralSite) => {
-          if (site.gradeTonnage !== undefined && site.gradeTonnage.totalGrade !== undefined) {
-            return site.gradeTonnage.totalGrade.toFixed(6);
-          }
-          return "᠆";
+          return <Grade grade={site.gradeTonnage?.totalGrade} />;
         },
         sorter: (a: DedupMineralSite, b: DedupMineralSite) => {
           const gradeA = a.gradeTonnage?.totalGrade || 0;

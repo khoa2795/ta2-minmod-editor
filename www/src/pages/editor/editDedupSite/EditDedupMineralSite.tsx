@@ -9,6 +9,7 @@ import styles from "./EditDedupMineralSite.module.css";
 import { Tooltip, Avatar } from "antd";
 import { ReferenceComponent } from "pages/editor/editDedupSite/ReferenceComponent";
 import { InternalID } from "models/typing";
+import { Empty, Grade, MayEmptyString, Tonnage } from "components/Primitive";
 
 const getUserColor = (username: string) => {
   let hash = 0;
@@ -199,7 +200,7 @@ export const EditDedupMineralSite = observer(({ dedupSite, commodity }: EditDedu
         render: (_: any, site: MineralSite) => {
           return (
             <Typography.Link href={`/resource/${site.id}`} target="_blank">
-              {site.name || "-"}
+              {site.name || "␣"}
             </Typography.Link>
           );
         },
@@ -224,7 +225,7 @@ export const EditDedupMineralSite = observer(({ dedupSite, commodity }: EditDedu
         title: "CRS",
         key: "crs",
         render: (_: any, site: MineralSite) => {
-          return <span>{site.locationInfo.crs?.observedName}</span>;
+          return <MayEmptyString value={site.locationInfo.crs?.observedName} />;
         },
       },
       {
@@ -268,7 +269,7 @@ export const EditDedupMineralSite = observer(({ dedupSite, commodity }: EditDedu
         key: "dep-type-confidence",
         render: (_: any, site: MineralSite) => {
           if (site.depositTypeCandidate.length === 0) {
-            return "-";
+            return <Empty />;
           }
           return site.depositTypeCandidate[0].confidence.toFixed(4);
         },
@@ -282,11 +283,7 @@ export const EditDedupMineralSite = observer(({ dedupSite, commodity }: EditDedu
         ),
         key: "tonnage",
         render: (_: any, site: MineralSite) => {
-          const gradeTonnage = site.gradeTonnage[commodity.id];
-          if (gradeTonnage === undefined || gradeTonnage.totalTonnage === undefined) {
-            return "-";
-          }
-          return gradeTonnage.totalTonnage.toFixed(4);
+          return <Tonnage tonnage={site.gradeTonnage[commodity.id]?.totalTonnage} />;
         },
       },
       {
@@ -298,11 +295,7 @@ export const EditDedupMineralSite = observer(({ dedupSite, commodity }: EditDedu
         ),
         key: "grade",
         render: (_: any, site: MineralSite) => {
-          const gradeTonnage = site.gradeTonnage[commodity.id];
-          if (gradeTonnage === undefined || gradeTonnage.totalGrade === undefined) {
-            return "-";
-          }
-          return gradeTonnage.totalGrade.toFixed(6);
+          return <Grade grade={site.gradeTonnage[commodity.id]?.totalGrade} />;
         },
       },
       {
