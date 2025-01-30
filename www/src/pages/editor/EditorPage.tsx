@@ -16,18 +16,7 @@ export const EditorPage = observer(() => {
 
   return (
     <Flex vertical={true} gap="small">
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <SearchBar searchArgs={searchArgs} setSearchArgs={setSearchArgs} />
-        <Button type="primary" onClick={handleOpenNewMineralSiteForm}>
-          Add Mineral Site
-        </Button>
-      </div>
+      <SearchBar searchArgs={searchArgs} setSearchArgs={setSearchArgs} onOpenNewMineralSiteForm={handleOpenNewMineralSiteForm} />
       <DedupMineralSiteTable commodity={normSearchArgs.commodity} country={normSearchArgs.country} stateOrProvince={normSearchArgs.stateOrProvince} />
       <NewMineralSiteModal ref={newMineralSiteFormRef} commodity={normSearchArgs.commodity} />
     </Flex>

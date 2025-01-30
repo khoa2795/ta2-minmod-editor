@@ -1,12 +1,17 @@
 import { Country, DedupMineralSite, StateOrProvince, useStores } from "models";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { observer } from "mobx-react-lite";
 import { Commodity } from "models/commodity";
-import { Button, Checkbox, Divider, Space, Table, Typography, message } from "antd";
-import { EditOutlined, PlusOutlined, UngroupOutlined } from "@ant-design/icons";
+import { Button, Checkbox, Divider, Input, InputRef, Space, Table, TableColumnType, Typography, message } from "antd";
+import { EditOutlined, PlusOutlined, SearchOutlined, UngroupOutlined } from "@ant-design/icons";
 import { EditDedupMineralSite } from "./editDedupSite/EditDedupMineralSite";
 import { Entity } from "components/Entity";
 import { Empty, Grade, Tonnage } from "components/Primitive";
+import { filter } from "lodash";
+import { FilterDropdownProps } from "antd/es/table/interface";
+
+import Highlighter from "react-highlight-words";
+import Fuse from "fuse.js";
 
 interface DedupMineralSiteTableProps {
   commodity: Commodity | undefined;
@@ -16,10 +21,130 @@ interface DedupMineralSiteTableProps {
 
 const emptyFetchResult = { records: [], total: 0 };
 
+const getUniqueType = (sites: DedupMineralSite[]) => {
+  const values = new Set<string>();
+  sites.forEach((site) => {
+    if (site.type !== undefined) {
+      values.add(site.type);
+    }
+  });
+  return Array.from(values);
+};
+
+const getUniqueRank = (sites: DedupMineralSite[]) => {
+  const values = new Set<string>();
+  sites.forEach((site) => {
+    if (site.rank !== undefined) {
+      values.add(site.rank);
+    }
+  });
+  return Array.from(values);
+};
+
+type DataIndex = keyof DedupMineralSite;
+
+const getColumnSearchProps = (
+  dataIndex: DataIndex,
+  searchText: string,
+  searchedColumn: string,
+  searchInput: React.RefObject<InputRef>,
+  setSearchText: (text: string) => void,
+  setSearchedColumn: (column: DataIndex) => void,
+  handleSearch: (selectedKeys: string[], confirm: FilterDropdownProps["confirm"], dataIndex: DataIndex) => void,
+  handleReset: (clearFilters: () => void) => void
+): TableColumnType<DedupMineralSite> => ({
+  filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters, close }: FilterDropdownProps) => (
+    <div style={{ padding: 8 }} onKeyDown={(e) => e.stopPropagation()}>
+      <Input
+        ref={searchInput}
+        placeholder={`Search ${dataIndex}`}
+        value={selectedKeys[0]}
+        onChange={(e) => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+        onPressEnter={() => handleSearch(selectedKeys as string[], confirm, dataIndex)}
+        style={{ marginBottom: 8, display: "block" }}
+      />
+      <Space>
+        <Button type="primary" onClick={() => handleSearch(selectedKeys as string[], confirm, dataIndex)} icon={<SearchOutlined />} size="small" style={{ width: 90 }}>
+          Search
+        </Button>
+        <Button onClick={() => clearFilters && handleReset(clearFilters)} size="small" style={{ width: 90 }}>
+          Reset
+        </Button>
+        <Button
+          type="link"
+          size="small"
+          onClick={() => {
+            confirm({ closeDropdown: false });
+            setSearchText((selectedKeys as string[])[0]);
+            setSearchedColumn(dataIndex);
+          }}
+        >
+          Filter
+        </Button>
+        <Button
+          type="link"
+          size="small"
+          onClick={() => {
+            close();
+          }}
+        >
+          close
+        </Button>
+      </Space>
+    </div>
+  ),
+  filterIcon: (filtered: boolean) => <SearchOutlined style={{ color: filtered ? "#1677ff" : undefined }} />,
+  onFilter: (value, record) =>
+    (record as any)[dataIndex]
+      .toString()
+      .toLowerCase()
+      .includes((value as string).toLowerCase()),
+  filterDropdownProps: {
+    onOpenChange(open) {
+      if (open) {
+        setTimeout(() => searchInput.current?.select(), 100);
+      }
+    },
+  },
+  render: (text) =>
+    searchedColumn === dataIndex ? (
+      <Highlighter highlightStyle={{ backgroundColor: "#ffc069", padding: 0 }} searchWords={[searchText]} autoEscape textToHighlight={text ? text.toString() : ""} />
+    ) : (
+      text
+    ),
+});
+
 export const DedupMineralSiteTable: React.FC<DedupMineralSiteTableProps> = observer(({ commodity, country, stateOrProvince }) => {
   const { dedupMineralSiteStore, depositTypeStore, countryStore, stateOrProvinceStore } = useStores();
   const [editingDedupSite, setEditingDedupSite] = useState<string | undefined>(undefined);
   const [selectedDedupSiteIds, setSelectedDedupSiteIds] = useState<Set<string>>(new Set());
+
+  const [nameSearchText, nameFilterFn, nameFilterProps] = useTextSearch("name");
+  const [typeSearchText, typeFilterFn, typeFilterProps] = useTextSearch("type");
+  const [rankSearchText, rankFilterFn, rankFilterProps] = useTextSearch("rank");
+
+  useEffect(() => {
+    if (commodity !== undefined) {
+      dedupMineralSiteStore.searchAndCache(commodity, country, stateOrProvince);
+    }
+  }, [commodity, country, stateOrProvince]);
+
+  const isLoading = dedupMineralSiteStore.state.value === "updating";
+  const dedupMineralSites = commodity === undefined || isLoading ? emptyFetchResult : dedupMineralSiteStore.getCacheSearchResult(commodity, country, stateOrProvince);
+
+  const filteredDedupMineralSites = useMemo(() => {
+    let lstdms = dedupMineralSites.records;
+    if (nameFilterFn !== undefined) {
+      lstdms = nameFilterFn(lstdms);
+    }
+    if (typeFilterFn !== undefined) {
+      lstdms = typeFilterFn(lstdms);
+    }
+    if (rankFilterFn !== undefined) {
+      lstdms = rankFilterFn(lstdms);
+    }
+    return { records: lstdms, total: dedupMineralSites.total };
+  }, [dedupMineralSites, nameFilterFn, typeFilterFn, rankFilterFn]);
 
   let columns = useMemo(() => {
     return [
@@ -27,10 +152,11 @@ export const DedupMineralSiteTable: React.FC<DedupMineralSiteTableProps> = obser
         title: "Name",
         dataIndex: "name",
         key: "name",
+        ...nameFilterProps,
         render: (_: any, site: DedupMineralSite) => {
           return (
             <Typography.Link href={`/derived/${site.id}`} target="_blank">
-              {site.name || "␣"}
+              <Highlight text={site.name || "␣"} searchText={nameSearchText} />
             </Typography.Link>
           );
         },
@@ -39,16 +165,26 @@ export const DedupMineralSiteTable: React.FC<DedupMineralSiteTableProps> = obser
       {
         title: "Type",
         key: "type",
+        ...typeFilterProps,
         render: (_: any, site: DedupMineralSite) => {
-          return <span className="font-small">{site.type}</span>;
+          return (
+            <span className="font-small">
+              <Highlight text={site.type} searchText={typeSearchText} />
+            </span>
+          );
         },
         sorter: (a: DedupMineralSite, b: DedupMineralSite) => a.type.localeCompare(b.type),
       },
       {
         title: "Rank",
         key: "rank",
+        ...rankFilterProps,
         render: (_: any, site: DedupMineralSite) => {
-          return <span className="font-small">{site.rank}</span>;
+          return (
+            <span className="font-small">
+              <Highlight text={site.rank} searchText={rankSearchText} />
+            </span>
+          );
         },
         sorter: (a: DedupMineralSite, b: DedupMineralSite) => a.rank.localeCompare(b.rank),
       },
@@ -194,13 +330,7 @@ export const DedupMineralSiteTable: React.FC<DedupMineralSiteTableProps> = obser
         },
       },
     ];
-  }, [depositTypeStore, countryStore, stateOrProvinceStore, editingDedupSite]);
-
-  useEffect(() => {
-    if (commodity !== undefined) {
-      dedupMineralSiteStore.searchAndCache(commodity, country, stateOrProvince);
-    }
-  }, [commodity, country, stateOrProvince]);
+  }, [depositTypeStore, countryStore, stateOrProvinceStore, editingDedupSite, nameSearchText, typeSearchText, rankSearchText]);
 
   const toggleSelectSite = (site: DedupMineralSite) => {
     const newSelectedDedupSiteIds = new Set(selectedDedupSiteIds);
@@ -240,9 +370,6 @@ export const DedupMineralSiteTable: React.FC<DedupMineralSiteTableProps> = obser
     }
   };
 
-  const isLoading = dedupMineralSiteStore.state.value === "updating";
-  const dedupMineralSites = commodity === undefined || isLoading ? emptyFetchResult : dedupMineralSiteStore.getCacheSearchResult(commodity, country, stateOrProvince);
-
   const selectedDedupSites = useMemo(() => {
     return Array.from(selectedDedupSiteIds)
       .map((id) => dedupMineralSiteStore.get(id))
@@ -268,7 +395,7 @@ export const DedupMineralSiteTable: React.FC<DedupMineralSiteTableProps> = obser
         size="small"
         rowKey="id"
         columns={columns}
-        dataSource={dedupMineralSites.records}
+        dataSource={filteredDedupMineralSites.records}
         loading={isLoading ? { size: "large" } : false}
         showSorterTooltip={false}
         expandable={{
@@ -285,3 +412,72 @@ export const DedupMineralSiteTable: React.FC<DedupMineralSiteTableProps> = obser
     </>
   );
 });
+
+const Highlight = ({ text, searchText }: { text: string; searchText: string }) => {
+  if (searchText.length > 0) {
+    return <Highlighter highlightStyle={{ backgroundColor: "#ffc069", padding: 0 }} searchWords={searchText.split(" ")} autoEscape textToHighlight={text} />;
+  }
+  return <>{text}</>;
+};
+
+const useTextSearch = (property: "name" | "type" | "rank"): [string, ((dms: DedupMineralSite[]) => DedupMineralSite[]) | undefined, TableColumnType<DedupMineralSite>] => {
+  const [searchText, setSearchText] = useState("");
+  const searchInput = useRef<InputRef>(null);
+
+  // somehow handle reset doesn't work. It doesn't disable the filter mode and the filter icon is still colored
+  // if we pass selectedKeys as empty array, it will reset the filter mode
+  const handleSearch = (selectedKeys: string[], confirm: FilterDropdownProps["confirm"]) => {
+    confirm();
+    setSearchText(selectedKeys[0] || "");
+  };
+
+  const columnProps = {
+    filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters, close }: FilterDropdownProps) => (
+      <div style={{ padding: 8 }} onKeyDown={(e) => e.stopPropagation()}>
+        <Input
+          ref={searchInput}
+          placeholder={`Search ${property}`}
+          value={selectedKeys[0]}
+          allowClear={true}
+          onChange={(e) => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+          onClear={() => handleSearch([], confirm)}
+          onPressEnter={() => handleSearch(selectedKeys as string[], confirm)}
+          style={{ width: 200 }}
+        />
+      </div>
+    ),
+    filterIcon: (filtered: boolean) => <SearchOutlined style={{ color: filtered ? "#1677ff" : undefined }} />,
+    filterDropdownProps: {
+      onOpenChange(open: boolean) {
+        if (open) {
+          setTimeout(() => searchInput.current?.select(), 100);
+        }
+      },
+    },
+  };
+
+  const filterFn = useMemo(() => {
+    let filterFn = undefined;
+    if (searchText !== "") {
+      if (property === "rank" || property === "type") {
+        const query = searchText.toLowerCase();
+        filterFn = (lst: DedupMineralSite[]) => {
+          return filter(lst, (site) => {
+            return (site[property] || "").toLowerCase().includes(query);
+          });
+        };
+      } else {
+        filterFn = (lst: DedupMineralSite[]) => {
+          const fuse = new Fuse(lst, {
+            minMatchCharLength: 2,
+            keys: [property],
+          });
+          return fuse.search(searchText).map((r) => r.item);
+        };
+      }
+    }
+    return filterFn;
+  }, [searchText]);
+
+  return [searchText, filterFn, columnProps];
+};

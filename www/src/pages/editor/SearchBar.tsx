@@ -1,4 +1,4 @@
-import { Select, Space, Typography } from "antd";
+import { Button, Flex, Input, Select, Space, Typography } from "antd";
 import _ from "lodash";
 import { useStores, Commodity, IStore, Country, StateOrProvince } from "models";
 import { useEffect, useMemo, useState } from "react";
@@ -6,10 +6,12 @@ import { useNavigate } from "react-router";
 import { routes } from "routes";
 import { useQueryParams } from "gena-app";
 import { observer } from "mobx-react-lite";
+import styles from "./SearchBar.module.css";
 
 interface SearchBarProps {
   searchArgs: SearchArgs;
   setSearchArgs: (args: SearchArgs) => void;
+  onOpenNewMineralSiteForm: () => void;
 }
 
 interface SearchArgs {
@@ -84,12 +86,11 @@ export function useSearchArgs(): [SearchArgs, NormSearchArgs, (newArgs: SearchAr
     };
 
     // commodity is a required field
-    if (args.commodity === undefined) {
-      return output;
-    }
-    const commodity = commodityStore.getByName(args.commodity);
-    if (commodity !== null && commodity !== undefined) {
-      output.commodity = commodity;
+    if (args.commodity !== undefined) {
+      const commodity = commodityStore.getByName(args.commodity);
+      if (commodity !== null && commodity !== undefined) {
+        output.commodity = commodity;
+      }
     }
 
     if (args.country !== undefined) {
@@ -112,7 +113,7 @@ export function useSearchArgs(): [SearchArgs, NormSearchArgs, (newArgs: SearchAr
   return [args, normArgs, updateSearchArgs];
 }
 
-export const SearchBar: React.FC<SearchBarProps> = observer(({ searchArgs, setSearchArgs }) => {
+export const SearchBar: React.FC<SearchBarProps> = observer(({ searchArgs, setSearchArgs, onOpenNewMineralSiteForm }) => {
   const { commodityStore, countryStore, stateOrProvinceStore } = useStores();
 
   const commodityOptions = useMemo(() => {
@@ -143,43 +144,46 @@ export const SearchBar: React.FC<SearchBarProps> = observer(({ searchArgs, setSe
   }, [stateOrProvinceStore.records.size]);
 
   return (
-    <Space>
-      <Typography.Text>
-        Commodity<span style={{ color: "red" }}>*</span>:
-      </Typography.Text>
-      <Select
-        style={{ width: 200 }}
-        value={searchArgs.commodity}
-        placeholder="Select a commodity"
-        showSearch={true}
-        optionFilterProp="label"
-        onChange={(id: string) => setSearchArgs({ ...searchArgs, commodity: commodityStore.get(id)!.name })}
-        options={commodityOptions}
-      />
-      <Typography.Text>Country:</Typography.Text>
-      <Select
-        style={{ width: 150 }}
-        allowClear={true}
-        disabled={searchArgs.commodity === undefined}
-        value={searchArgs.country}
-        placeholder="Select a country"
-        showSearch={true}
-        optionFilterProp="label"
-        onChange={(id?: string) => setSearchArgs({ ...searchArgs, country: id === undefined ? undefined : countryStore.get(id)!.name })}
-        options={countryOptions}
-      />
-      <Typography.Text>State/Province:</Typography.Text>
-      <Select
-        style={{ width: 150 }}
-        allowClear={true}
-        disabled={searchArgs.commodity === undefined}
-        value={searchArgs.stateOrProvince}
-        placeholder="Select a state/province"
-        showSearch={true}
-        optionFilterProp="label"
-        onChange={(id?: string) => setSearchArgs({ ...searchArgs, stateOrProvince: id === undefined ? undefined : stateOrProvinceStore.get(id)!.name })}
-        options={stateOrProvinceOptions}
-      />
-    </Space>
+    <Flex gap="small" justify="space-between" align="center">
+      <Space>
+        <Typography.Text className={styles.label}>
+          Commodity<span style={{ color: "red" }}>*</span>:
+        </Typography.Text>
+        <Select
+          style={{ width: 200 }}
+          value={searchArgs.commodity}
+          placeholder="Select a commodity"
+          showSearch={true}
+          optionFilterProp="label"
+          onChange={(id: string) => setSearchArgs({ ...searchArgs, commodity: commodityStore.get(id)!.name })}
+          options={commodityOptions}
+        />
+        <Typography.Text className={styles.label}>Country:</Typography.Text>
+        <Select
+          style={{ width: 150 }}
+          allowClear={true}
+          value={searchArgs.country}
+          placeholder="Select a country"
+          showSearch={true}
+          optionFilterProp="label"
+          onChange={(id?: string) => setSearchArgs({ ...searchArgs, country: id === undefined ? undefined : countryStore.get(id)!.name })}
+          options={countryOptions}
+        />
+        <Typography.Text className={styles.label}>State/Province:</Typography.Text>
+        <Select
+          style={{ width: 150 }}
+          allowClear={true}
+          value={searchArgs.stateOrProvince}
+          placeholder="Select a state/province"
+          showSearch={true}
+          optionFilterProp="label"
+          onChange={(id?: string) => setSearchArgs({ ...searchArgs, stateOrProvince: id === undefined ? undefined : stateOrProvinceStore.get(id)!.name })}
+          options={stateOrProvinceOptions}
+        />
+      </Space>
+      <Button type="primary" onClick={onOpenNewMineralSiteForm}>
+        Add Mineral Site
+      </Button>
+    </Flex>
   );
 });
