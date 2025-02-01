@@ -41,79 +41,6 @@ const getUniqueRank = (sites: DedupMineralSite[]) => {
   return Array.from(values);
 };
 
-type DataIndex = keyof DedupMineralSite;
-
-const getColumnSearchProps = (
-  dataIndex: DataIndex,
-  searchText: string,
-  searchedColumn: string,
-  searchInput: React.RefObject<InputRef>,
-  setSearchText: (text: string) => void,
-  setSearchedColumn: (column: DataIndex) => void,
-  handleSearch: (selectedKeys: string[], confirm: FilterDropdownProps["confirm"], dataIndex: DataIndex) => void,
-  handleReset: (clearFilters: () => void) => void
-): TableColumnType<DedupMineralSite> => ({
-  filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters, close }: FilterDropdownProps) => (
-    <div style={{ padding: 8 }} onKeyDown={(e) => e.stopPropagation()}>
-      <Input
-        ref={searchInput}
-        placeholder={`Search ${dataIndex}`}
-        value={selectedKeys[0]}
-        onChange={(e) => setSelectedKeys(e.target.value ? [e.target.value] : [])}
-        onPressEnter={() => handleSearch(selectedKeys as string[], confirm, dataIndex)}
-        style={{ marginBottom: 8, display: "block" }}
-      />
-      <Space>
-        <Button type="primary" onClick={() => handleSearch(selectedKeys as string[], confirm, dataIndex)} icon={<SearchOutlined />} size="small" style={{ width: 90 }}>
-          Search
-        </Button>
-        <Button onClick={() => clearFilters && handleReset(clearFilters)} size="small" style={{ width: 90 }}>
-          Reset
-        </Button>
-        <Button
-          type="link"
-          size="small"
-          onClick={() => {
-            confirm({ closeDropdown: false });
-            setSearchText((selectedKeys as string[])[0]);
-            setSearchedColumn(dataIndex);
-          }}
-        >
-          Filter
-        </Button>
-        <Button
-          type="link"
-          size="small"
-          onClick={() => {
-            close();
-          }}
-        >
-          close
-        </Button>
-      </Space>
-    </div>
-  ),
-  filterIcon: (filtered: boolean) => <SearchOutlined style={{ color: filtered ? "#1677ff" : undefined }} />,
-  onFilter: (value, record) =>
-    (record as any)[dataIndex]
-      .toString()
-      .toLowerCase()
-      .includes((value as string).toLowerCase()),
-  filterDropdownProps: {
-    onOpenChange(open) {
-      if (open) {
-        setTimeout(() => searchInput.current?.select(), 100);
-      }
-    },
-  },
-  render: (text) =>
-    searchedColumn === dataIndex ? (
-      <Highlighter highlightStyle={{ backgroundColor: "#ffc069", padding: 0 }} searchWords={[searchText]} autoEscape textToHighlight={text ? text.toString() : ""} />
-    ) : (
-      text
-    ),
-});
-
 export const DedupMineralSiteTable: React.FC<DedupMineralSiteTableProps> = observer(({ commodity, country, stateOrProvince }) => {
   const { dedupMineralSiteStore, depositTypeStore, countryStore, stateOrProvinceStore } = useStores();
   const [editingDedupSite, setEditingDedupSite] = useState<string | undefined>(undefined);
@@ -130,7 +57,7 @@ export const DedupMineralSiteTable: React.FC<DedupMineralSiteTableProps> = obser
   }, [commodity, country, stateOrProvince]);
 
   const isLoading = dedupMineralSiteStore.state.value === "updating";
-  const dedupMineralSites = commodity === undefined || isLoading ? emptyFetchResult : dedupMineralSiteStore.getCacheSearchResult(commodity, country, stateOrProvince);
+  const dedupMineralSites = commodity === undefined ? emptyFetchResult : dedupMineralSiteStore.getCacheSearchResult(commodity, country, stateOrProvince);
 
   const filteredDedupMineralSites = useMemo(() => {
     let lstdms = dedupMineralSites.records;
@@ -361,7 +288,6 @@ export const DedupMineralSiteTable: React.FC<DedupMineralSiteTableProps> = obser
       },
     ];
     const newIds = await dedupMineralSiteStore.updateSameAsGroup(newSiteGroups);
-
     if (commodity && commodity.id) {
       const commodityId = commodity.id;
       message.success("Grouping was successful", 3);
@@ -381,11 +307,20 @@ export const DedupMineralSiteTable: React.FC<DedupMineralSiteTableProps> = obser
       {selectedDedupSites.length > 0 ? (
         <>
           <div>
-            <Button type="primary" onClick={handleGroup} disabled={selectedDedupSiteIds.size === 1}>
+            <Button type="primary" onClick={handleGroup} disabled={selectedDedupSiteIds.size === 1 || isLoading} loading={isLoading}>
               Group selected sites
             </Button>
           </div>
-          <Table<DedupMineralSite> bordered={true} size="small" rowKey="id" pagination={false} columns={columns} showSorterTooltip={false} dataSource={selectedDedupSites} />
+          <Table<DedupMineralSite>
+            loading={isLoading ? { size: "large" } : false}
+            bordered={true}
+            size="small"
+            rowKey="id"
+            pagination={false}
+            columns={columns}
+            showSorterTooltip={false}
+            dataSource={selectedDedupSites}
+          />
         </>
       ) : (
         <></>

@@ -76,7 +76,7 @@ export function useSearchArgs(): [SearchArgs, NormSearchArgs, (newArgs: SearchAr
     if (!_.isEqual(newArgs, args)) {
       updateSearchArgs(newArgs);
     }
-  }, [commodityStore.records.size, queryParams?.commodity, queryParams?.country, queryParams?.stateOrProvince]);
+  }, [commodityStore.records.size, stateOrProvinceStore.records.size, countryStore.records.size, queryParams?.commodity, queryParams?.country, queryParams?.stateOrProvince]);
 
   const normArgs: NormSearchArgs = useMemo(() => {
     const output: NormSearchArgs = {
@@ -84,6 +84,11 @@ export function useSearchArgs(): [SearchArgs, NormSearchArgs, (newArgs: SearchAr
       country: undefined,
       stateOrProvince: undefined,
     };
+
+    // wait till all stores are loaded to prevent firing multiple queries with partial conditions to the server
+    if (commodityStore.records.size === 0 || countryStore.records.size === 0 || stateOrProvinceStore.records.size === 0) {
+      return output;
+    }
 
     // commodity is a required field
     if (args.commodity !== undefined) {

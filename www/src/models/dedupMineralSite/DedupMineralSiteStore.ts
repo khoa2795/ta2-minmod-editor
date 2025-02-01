@@ -23,6 +23,13 @@ class CacheSearchResult {
   public constructor({ condition, results }: { condition: SearchCondition; results: FetchResult<InternalID> }) {
     this.condition = condition;
     this.results = results;
+
+    makeObservable(this, {
+      condition: observable,
+      results: observable,
+      replaceSites: action,
+      insertSites: action,
+    });
   }
 
   public static getCondition(commodity: Commodity, country?: Country, stateOrProvince?: StateOrProvince) {
@@ -35,6 +42,34 @@ class CacheSearchResult {
 
   public matchCondition(condition: SearchCondition): boolean {
     return this.condition.commodity === condition.commodity && this.condition.country === condition.country && this.condition.state_or_province === condition.state_or_province;
+  }
+
+  public replaceSites(prevIds: Set<InternalID>, newIds: InternalID[]): number {
+    const newRecords = [];
+    let firstMatch = -1;
+    for (const [i, record] of this.results.records.entries()) {
+      if (prevIds.has(record)) {
+        if (firstMatch >= 0) {
+          continue;
+        }
+        firstMatch = i;
+        newRecords.push(...newIds);
+      } else {
+        newRecords.push(record);
+      }
+    }
+
+    if (firstMatch >= 0) {
+      this.results.records = newRecords;
+      this.results.total += newIds.length - prevIds.size;
+    }
+
+    return firstMatch;
+  }
+
+  public insertSites(newIds: InternalID[], insertAt: number): void {
+    this.results.records.splice(insertAt, 0, ...newIds);
+    this.results.total += newIds.length;
   }
 }
 
@@ -54,11 +89,12 @@ export class DedupMineralSiteStore extends RStore<string, DedupMineralSite> {
       forceFetchByURI: action,
       deleteByIds: action,
       replaceSites: action,
+      updateSameAsGroup: action,
     });
   }
 
   /**
-   * Delete dedup mineral sites by their Ids
+   * (private function) Delete dedup mineral sites by their Ids
    * @param ids
    */
   deleteByIds(ids: InternalID[]): void {
@@ -74,14 +110,28 @@ export class DedupMineralSiteStore extends RStore<string, DedupMineralSite> {
   }
 
   /**
-   * Replace given dedup sites with new sites
+   * Replace given dedup sites with new sites -- update the search results with it.
    *
    * @param prevIds previous sites to delete
    * @param newIds new sites to add
    */
   async replaceSites(prevIds: InternalID[], newIds: InternalID[], commodity: Object): Promise<void> {
-    this.deleteByIds(prevIds);
-    await this.fetchByIds(newIds, true, { commodity });
+    // first, fetch the new sites data -- this will override the old one as we choose force.
+    const newDedupSites = await this.fetchByIds(newIds, true, { commodity });
+
+    // run in action as it is after async.
+    runInAction(() => {
+      // only delete sites that are not in newIds
+      const deleteIds = prevIds.filter((id) => !newDedupSites.hasOwnProperty(id));
+      this.deleteByIds(deleteIds);
+
+      // then we update the search results
+      const setPrevIds = new Set(prevIds);
+      const newDedupSiteIds = Array.from(Object.keys(newDedupSites));
+      for (const results of this.searchResults) {
+        results.replaceSites(setPrevIds, newDedupSiteIds);
+      }
+    });
   }
 
   async forceFetchByURI(uri: string, commodity: string): Promise<DedupMineralSite | undefined> {
@@ -209,7 +259,11 @@ export class DedupMineralSiteStore extends RStore<string, DedupMineralSite> {
   }
 
   async updateSameAsGroup(groups: { sites: InternalID[] }[]): Promise<InternalID[]> {
+    this.state.value = "updating";
     const resp = await axios.post("/api/v1/same-as", groups);
+    runInAction(() => {
+      this.state.value = "updated";
+    });
     return resp.data.map((dedupSite: any) => dedupSite.id);
   }
 
