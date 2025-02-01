@@ -82,9 +82,15 @@ export const DedupMineralSiteTable: React.FC<DedupMineralSiteTableProps> = obser
         ...nameFilterProps,
         render: (_: any, site: DedupMineralSite) => {
           return (
-            <Typography.Link href={`/derived/${site.id}`} target="_blank">
-              <Highlight text={site.name || "␣"} searchText={nameSearchText} />
-            </Typography.Link>
+            <>
+              <Typography.Link href={`/derived/${site.id}`} target="_blank">
+                <Highlight text={site.name || "␣"} searchText={nameSearchText} />
+              </Typography.Link>
+              &nbsp;
+              <Typography.Text type="secondary" className="font-small" title="Number of duplicated mineral sites">
+                #{site.sites.length}
+              </Typography.Text>
+            </>
           );
         },
         sorter: (a: DedupMineralSite, b: DedupMineralSite) => a.name.localeCompare(b.name),
