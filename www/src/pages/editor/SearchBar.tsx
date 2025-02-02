@@ -1,6 +1,6 @@
 import { Button, Flex, Input, Select, Space, Typography } from "antd";
 import _ from "lodash";
-import { useStores, Commodity, IStore, Country, StateOrProvince } from "models";
+import { useStores, Commodity, IStore, Country, StateOrProvince, DepositType } from "models";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { routes } from "routes";
@@ -16,12 +16,14 @@ interface SearchBarProps {
 
 interface SearchArgs {
   commodity?: string;
+  depositType?: string;
   country?: string;
   stateOrProvince?: string;
 }
 
 interface NormSearchArgs {
   commodity?: Commodity;
+  depositType?: DepositType;
   country?: Country;
   stateOrProvince?: StateOrProvince;
 }
@@ -33,19 +35,21 @@ export function useSearchArgs(): [SearchArgs, NormSearchArgs, (newArgs: SearchAr
 
   const [args, setArgs] = useState<SearchArgs>({
     commodity: undefined,
+    depositType: undefined,
     country: undefined,
     stateOrProvince: undefined,
   });
 
   const updateSearchArgs = (newArgs: SearchArgs) => {
     setArgs(newArgs);
-    routes.editor.path({ queryArgs: { commodity: newArgs.commodity, stateOrProvince: newArgs.stateOrProvince, country: newArgs.country } }).open(navigate);
+    routes.editor.path({ queryArgs: { commodity: newArgs.commodity, depositType: newArgs.depositType, stateOrProvince: newArgs.stateOrProvince, country: newArgs.country } }).open(navigate);
   };
 
   // sync with queries in the URL
   useEffect(() => {
     const newArgs = {
       commodity: queryParams?.commodity,
+      depositType: queryParams?.depositType,
       country: queryParams?.country,
       stateOrProvince: queryParams?.stateOrProvince,
     };
@@ -55,6 +59,14 @@ export function useSearchArgs(): [SearchArgs, NormSearchArgs, (newArgs: SearchAr
       if (commodity === null) {
         // does not exist
         newArgs.commodity = undefined;
+      }
+    }
+
+    if (newArgs.depositType !== undefined) {
+      const depositType = depositTypeStore.getByName(newArgs.depositType);
+      if (depositType === null) {
+        // does not exist
+        newArgs.depositType = undefined;
       }
     }
 
@@ -76,17 +88,27 @@ export function useSearchArgs(): [SearchArgs, NormSearchArgs, (newArgs: SearchAr
     if (!_.isEqual(newArgs, args)) {
       updateSearchArgs(newArgs);
     }
-  }, [commodityStore.records.size, stateOrProvinceStore.records.size, countryStore.records.size, queryParams?.commodity, queryParams?.country, queryParams?.stateOrProvince]);
+  }, [
+    commodityStore.records.size,
+    depositTypeStore.records.size,
+    countryStore.records.size,
+    stateOrProvinceStore.records.size,
+    queryParams?.commodity,
+    queryParams?.depositType,
+    queryParams?.country,
+    queryParams?.stateOrProvince,
+  ]);
 
   const normArgs: NormSearchArgs = useMemo(() => {
     const output: NormSearchArgs = {
       commodity: undefined,
+      depositType: undefined,
       country: undefined,
       stateOrProvince: undefined,
     };
 
     // wait till all stores are loaded to prevent firing multiple queries with partial conditions to the server
-    if (commodityStore.records.size === 0 || countryStore.records.size === 0 || stateOrProvinceStore.records.size === 0) {
+    if (commodityStore.records.size === 0 || depositTypeStore.records.size === 0 || countryStore.records.size === 0 || stateOrProvinceStore.records.size === 0) {
       return output;
     }
 
@@ -95,6 +117,13 @@ export function useSearchArgs(): [SearchArgs, NormSearchArgs, (newArgs: SearchAr
       const commodity = commodityStore.getByName(args.commodity);
       if (commodity !== null && commodity !== undefined) {
         output.commodity = commodity;
+      }
+    }
+
+    if (args.depositType !== undefined) {
+      const depositType = depositTypeStore.getByName(args.depositType);
+      if (depositType !== null && depositType !== undefined) {
+        output.depositType = depositType;
       }
     }
 
@@ -113,7 +142,7 @@ export function useSearchArgs(): [SearchArgs, NormSearchArgs, (newArgs: SearchAr
     }
 
     return output;
-  }, [commodityStore.records.size, countryStore.records.size, stateOrProvinceStore.records.size, args]);
+  }, [commodityStore.records.size, depositTypeStore.records.size, countryStore.records.size, stateOrProvinceStore.records.size, args]);
 
   return [args, normArgs, updateSearchArgs];
 }
@@ -173,7 +202,16 @@ export const SearchBar: React.FC<SearchBarProps> = observer(({ searchArgs, setSe
           options={commodityOptions}
         />
         <Typography.Text className={styles.label}>Deposit Type:</Typography.Text>
-        <Select style={{ width: 200 }} allowClear={true} placeholder="Select a deposit type" showSearch={true} optionFilterProp="label" options={depositTypeOptions} />
+        <Select
+          style={{ width: 200 }}
+          allowClear={true}
+          value={searchArgs.depositType}
+          placeholder="Select a deposit type"
+          showSearch={true}
+          optionFilterProp="label"
+          onChange={(id?: string) => setSearchArgs({ ...searchArgs, depositType: id === undefined ? undefined : depositTypeStore.get(id)!.name })}
+          options={depositTypeOptions}
+        />
         <Typography.Text className={styles.label}>Country:</Typography.Text>
         <Select
           style={{ width: 150 }}

@@ -1,4 +1,4 @@
-import { Country, DedupMineralSite, StateOrProvince, useStores } from "models";
+import { Country, DedupMineralSite, DepositType, StateOrProvince, useStores } from "models";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { observer } from "mobx-react-lite";
 import { Commodity } from "models/commodity";
@@ -14,9 +14,10 @@ import Highlighter from "react-highlight-words";
 import Fuse from "fuse.js";
 
 interface DedupMineralSiteTableProps {
-  commodity: Commodity | undefined;
-  country: Country | undefined;
-  stateOrProvince: StateOrProvince | undefined;
+  commodity?: Commodity;
+  depositType?: DepositType;
+  country?: Country;
+  stateOrProvince?: StateOrProvince;
 }
 
 const emptyFetchResult = { records: [], total: 0 };
@@ -41,7 +42,7 @@ const getUniqueRank = (sites: DedupMineralSite[]) => {
   return Array.from(values);
 };
 
-export const DedupMineralSiteTable: React.FC<DedupMineralSiteTableProps> = observer(({ commodity, country, stateOrProvince }) => {
+export const DedupMineralSiteTable: React.FC<DedupMineralSiteTableProps> = observer(({ commodity, depositType, country, stateOrProvince }) => {
   const { dedupMineralSiteStore, depositTypeStore, countryStore, stateOrProvinceStore } = useStores();
   const [editingDedupSite, setEditingDedupSite] = useState<string | undefined>(undefined);
   const [selectedDedupSiteIds, setSelectedDedupSiteIds] = useState<Set<string>>(new Set());
@@ -52,12 +53,12 @@ export const DedupMineralSiteTable: React.FC<DedupMineralSiteTableProps> = obser
 
   useEffect(() => {
     if (commodity !== undefined) {
-      dedupMineralSiteStore.searchAndCache(commodity, country, stateOrProvince);
+      dedupMineralSiteStore.searchAndCache(commodity, depositType, country, stateOrProvince);
     }
-  }, [commodity, country, stateOrProvince]);
+  }, [commodity, depositType, country, stateOrProvince]);
 
   const isLoading = dedupMineralSiteStore.state.value === "updating";
-  const dedupMineralSites = commodity === undefined ? emptyFetchResult : dedupMineralSiteStore.getCacheSearchResult(commodity, country, stateOrProvince);
+  const dedupMineralSites = commodity === undefined ? emptyFetchResult : dedupMineralSiteStore.getCacheSearchResult(commodity, depositType, country, stateOrProvince);
 
   const filteredDedupMineralSites = useMemo(() => {
     let lstdms = dedupMineralSites.records;

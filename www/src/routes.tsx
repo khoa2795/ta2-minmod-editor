@@ -42,6 +42,7 @@ export const routes = {
     exact: true,
     querySchema: {
       commodity: "optionalstring",
+      depositType: "optionalstring",
       country: "optionalstring",
       stateOrProvince: "optionalstring",
     },
