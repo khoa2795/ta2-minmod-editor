@@ -1,9 +1,9 @@
-import { Button, Flex, Space, Table, Typography, message, Checkbox } from "antd";
+import { Button, Flex, Space, Table, Typography, message, Checkbox, Tag, Descriptions } from "antd";
 import { observer } from "mobx-react-lite";
 import { useStores, Commodity, DedupMineralSite, MineralSite, Reference, DraftCreateMineralSite, FieldEdit, EditableField, DraftUpdateMineralSite } from "models";
 import { useEffect, useMemo, useState } from "react";
 import { CanEntComponent, ListCanEntComponent } from "./CandidateEntity";
-import { EditOutlined, InfoCircleOutlined } from "@ant-design/icons";
+import { EditOutlined, InfoCircleOutlined, MoreOutlined, PlusOutlined, PlusSquareOutlined } from "@ant-design/icons";
 import { EditSiteField } from "./EditSiteField";
 import styles from "./EditDedupMineralSite.module.css";
 import { Tooltip, Avatar } from "antd";
@@ -11,17 +11,14 @@ import { ReferenceComponent } from "pages/editor/editDedupSite/ReferenceComponen
 import { InternalID } from "models/typing";
 import { Empty, Grade, MayEmptyString, Tonnage } from "components/Primitive";
 
+const colors = ["magenta", "red", "volcano", "orange", "gold", "lime", "green", "cyan", "blue", "geekblue", "purple"];
 const getUserColor = (username: string) => {
-  let hash = 0;
+  let hash = 1;
   for (let i = 0; i < username.length; i++) {
     hash = username.charCodeAt(i) + ((hash << 5) - hash);
     hash = hash & hash;
   }
-  const hue = Math.abs(hash % 360);
-  const saturation = 70;
-  const lightness = 50;
-
-  return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+  return colors[hash % colors.length];
 };
 
 interface EditDedupMineralSiteProps {
@@ -90,6 +87,7 @@ export const EditDedupMineralSite = observer(({ dedupSite, commodity }: EditDedu
 
   const [editField, setEditField] = useState<EditableField | undefined>(undefined);
   const [selectedRows, setSelectedRows] = useState<SelectedSites>(new SelectedSites());
+  const [expandedRowKeys, setExpandedRowKeys] = useState<Set<InternalID>>(new Set());
 
   const [fetchedSites, siteGroups] = useMemo(() => {
     const tmpLst: (MineralSite | null | undefined)[] = dedupSite.sites.map((site) => mineralSiteStore.get(site.id));
@@ -149,44 +147,36 @@ export const EditDedupMineralSite = observer(({ dedupSite, commodity }: EditDedu
   const columns = useMemo(() => {
     return [
       {
-        title: "User",
-        key: "user",
-        render: (_: any, site: MineralSite, index: number) => {
-          const createdBy = site.createdBy.split("/").pop()!;
-          const fullName = createdBy;
-          const username = createdBy;
-
-          const color = getUserColor(username);
-          const confidence = dedupSite.sites[index].score;
-
-          return (
-            <Flex align="center" gap={8}>
-              <Tooltip title={fullName}>
-                <Avatar style={{ backgroundColor: color, verticalAlign: "middle" }}>{username[0].toUpperCase()}</Avatar>
-              </Tooltip>
-              <Tooltip title={`Confidence: ${confidence}`}>
-                <Avatar>{confidence}</Avatar>
-              </Tooltip>
-            </Flex>
-          );
-        },
-      },
-
-      {
-        title: "Select",
+        title: "",
         key: "select",
         hidden: siteGroups.sites.length === 1,
         render: (_: any, site: MineralSite) => (
-          <Checkbox
-            checked={selectedRows.has(site.id, siteGroups)}
-            onChange={(e) => {
-              if (e.target.checked) {
-                setSelectedRows(selectedRows.add(site.id, siteGroups));
-              } else {
-                setSelectedRows(selectedRows.delete(site.id, siteGroups));
-              }
-            }}
-          />
+          <Space size="small">
+            <Checkbox
+              checked={selectedRows.has(site.id, siteGroups)}
+              onChange={(e) => {
+                if (e.target.checked) {
+                  setSelectedRows(selectedRows.add(site.id, siteGroups));
+                } else {
+                  setSelectedRows(selectedRows.delete(site.id, siteGroups));
+                }
+              }}
+            />
+            <button
+              type="button"
+              className={"ant-table-row-expand-icon " + (expandedRowKeys.has(site.id) ? "ant-table-row-expand-icon-expanded" : "ant-table-row-expand-icon-collapsed")}
+              style={{ borderRadius: 4, borderColor: "#bbb", opacity: 0.8 }}
+              onClick={() => {
+                const newExpandedRowKeys = new Set(expandedRowKeys);
+                if (newExpandedRowKeys.has(site.id)) {
+                  newExpandedRowKeys.delete(site.id);
+                } else {
+                  newExpandedRowKeys.add(site.id);
+                }
+                setExpandedRowKeys(newExpandedRowKeys);
+              }}
+            />
+          </Space>
         ),
       },
       {
@@ -197,11 +187,30 @@ export const EditDedupMineralSite = observer(({ dedupSite, commodity }: EditDedu
           </Flex>
         ),
         key: "name",
-        render: (_: any, site: MineralSite) => {
+        render: (_: any, site: MineralSite, index: number) => {
+          const createdBy = site.createdBy.split("/").pop()!;
+          const fullName = createdBy;
+          const username = createdBy;
+
+          const color = getUserColor(username);
+          const confidence = dedupSite.sites[index].score;
+
           return (
-            <Typography.Link href={`/resource/${site.id}`} target="_blank">
-              {site.name || "␣"}
-            </Typography.Link>
+            <Flex align="left" vertical={true} gap={4}>
+              <Typography.Link href={`/resource/${site.id}`} target="_blank">
+                {site.name || "␣"}
+              </Typography.Link>
+              <Space size={"small"}>
+                <Tooltip title={fullName}>
+                  <Tag color={color} style={{ margin: 0 }}>
+                    {username}
+                  </Tag>
+                </Tooltip>
+                <Tooltip title={`Confidence: ${confidence}`} style={{ textAlign: "center" }}>
+                  <Tag>{confidence}</Tag>
+                </Tooltip>
+              </Space>
+            </Flex>
           );
         },
       },
@@ -216,7 +225,7 @@ export const EditDedupMineralSite = observer(({ dedupSite, commodity }: EditDedu
         render: (_: any, site: MineralSite) => {
           return (
             <Typography.Text className="font-small" ellipsis={true} style={{ maxWidth: 200 }}>
-              {site.locationInfo.location}
+              {site.locationInfo?.location}
             </Typography.Text>
           );
         },
@@ -225,7 +234,7 @@ export const EditDedupMineralSite = observer(({ dedupSite, commodity }: EditDedu
         title: "CRS",
         key: "crs",
         render: (_: any, site: MineralSite) => {
-          return <MayEmptyString value={site.locationInfo.crs?.observedName} />;
+          return <MayEmptyString value={site.locationInfo?.crs?.observedName} />;
         },
       },
       {
@@ -237,7 +246,7 @@ export const EditDedupMineralSite = observer(({ dedupSite, commodity }: EditDedu
         ),
         key: "country",
         render: (_: any, site: MineralSite) => {
-          return <ListCanEntComponent entities={site.locationInfo.country} store="countryStore" />;
+          return <ListCanEntComponent entities={site.locationInfo?.country || []} store="countryStore" />;
         },
       },
       {
@@ -249,7 +258,7 @@ export const EditDedupMineralSite = observer(({ dedupSite, commodity }: EditDedu
         ),
         key: "state/province",
         render: (_: any, site: MineralSite) => {
-          return <ListCanEntComponent entities={site.locationInfo.stateOrProvince} store="stateOrProvinceStore" />;
+          return <ListCanEntComponent entities={site.locationInfo?.stateOrProvince || []} store="stateOrProvinceStore" />;
         },
       },
       {
@@ -303,7 +312,7 @@ export const EditDedupMineralSite = observer(({ dedupSite, commodity }: EditDedu
         key: "reference",
         render: (_: any, site: MineralSite) => {
           return (
-            <>
+            <div style={{ maxWidth: 200, display: "inline-block" }}>
               <ReferenceComponent site={site} />
               <Tooltip
                 trigger="click"
@@ -313,7 +322,7 @@ export const EditDedupMineralSite = observer(({ dedupSite, commodity }: EditDedu
                   &nbsp;({siteGroups.groups[siteGroups.site2groupKey[site.id]].label})
                 </Typography.Text>
               </Tooltip>
-            </>
+            </div>
           );
         },
       },
@@ -404,6 +413,90 @@ export const EditDedupMineralSite = observer(({ dedupSite, commodity }: EditDedu
         loading={isLoading}
         rowClassName={(site) => {
           return site.createdBy.includes(userStore.getCurrentUser()!.url) ? styles.myEditedRow : "";
+        }}
+        expandable={{
+          expandedRowRender: (site) => {
+            return (
+              <Descriptions
+                size={"small"}
+                bordered={true}
+                items={[
+                  {
+                    key: "mineral-form",
+                    label: "Mineral Forms",
+                    children: site.mineralForm.join(", "),
+                    span: 3,
+                  },
+                  {
+                    key: "geology-info",
+                    label: "Geology Info",
+                    span: 3,
+                    children:
+                      site.geologyInfo === undefined ? undefined : (
+                        <Descriptions
+                          size={"small"}
+                          bordered={true}
+                          items={[
+                            {
+                              key: "alternation",
+                              label: "Alternation",
+                              children: site.geologyInfo.alternation,
+                            },
+                            {
+                              key: "concentration-process",
+                              label: "Concentration Process",
+                              children: site.geologyInfo.concentrationProcess,
+                            },
+                            {
+                              key: "ore-control",
+                              label: "Ore Control",
+                              children: site.geologyInfo.oreControl,
+                            },
+                            {
+                              key: "host-rock-unit",
+                              label: "Host Rock Unit",
+                              children: site.geologyInfo.hostRock?.unit,
+                            },
+                            {
+                              key: "host-rock-type",
+                              label: "Host Rock Type",
+                              children: site.geologyInfo.hostRock?.type,
+                            },
+                            {
+                              key: "associated-rock-unit",
+                              label: "Associated Rock Unit",
+                              children: site.geologyInfo.associatedRock?.unit,
+                            },
+                            {
+                              key: "associated-rock-type",
+                              label: "Associated Rock Type",
+                              children: site.geologyInfo.associatedRock?.type,
+                            },
+                            {
+                              key: "structure",
+                              label: "Structure",
+                              children: site.geologyInfo.structure,
+                            },
+                            {
+                              key: "tectonic",
+                              label: "Tectonic",
+                              children: site.geologyInfo.tectonic,
+                            },
+                          ]}
+                        />
+                      ),
+                  },
+                  {
+                    key: "discovered-year",
+                    label: "Discovered Year",
+                    children: site.discoveredYear,
+                  },
+                ]}
+              />
+            );
+          },
+          showExpandColumn: false,
+          expandedRowKeys: Array.from(expandedRowKeys),
         }}
       />
       <EditSiteField key={editField} sites={siteGroups.sites} currentSite={currentSite} editField={editField} onFinish={onEditFinish} commodity={commodity.id} />

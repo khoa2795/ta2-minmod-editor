@@ -27,7 +27,7 @@ interface NormSearchArgs {
 }
 
 export function useSearchArgs(): [SearchArgs, NormSearchArgs, (newArgs: SearchArgs) => void] {
-  const { commodityStore, countryStore, stateOrProvinceStore } = useStores();
+  const { commodityStore, countryStore, stateOrProvinceStore, depositTypeStore } = useStores();
   const navigate = useNavigate();
   const queryParams = useQueryParams(routes.editor);
 
@@ -119,7 +119,7 @@ export function useSearchArgs(): [SearchArgs, NormSearchArgs, (newArgs: SearchAr
 }
 
 export const SearchBar: React.FC<SearchBarProps> = observer(({ searchArgs, setSearchArgs, onOpenNewMineralSiteForm }) => {
-  const { commodityStore, countryStore, stateOrProvinceStore } = useStores();
+  const { commodityStore, countryStore, stateOrProvinceStore, depositTypeStore } = useStores();
 
   const commodityOptions = useMemo(() => {
     return commodityStore.getCriticalCommodities().map((comm) => {
@@ -129,6 +129,15 @@ export const SearchBar: React.FC<SearchBarProps> = observer(({ searchArgs, setSe
       };
     });
   }, [commodityStore.records.size]);
+
+  const depositTypeOptions = useMemo(() => {
+    return depositTypeStore.list.map((ent) => {
+      return {
+        value: ent.id,
+        label: ent.name,
+      };
+    });
+  }, [depositTypeStore.records.size]);
 
   const countryOptions = useMemo(() => {
     return countryStore.list.map((ent) => {
@@ -163,6 +172,8 @@ export const SearchBar: React.FC<SearchBarProps> = observer(({ searchArgs, setSe
           onChange={(id: string) => setSearchArgs({ ...searchArgs, commodity: commodityStore.get(id)!.name })}
           options={commodityOptions}
         />
+        <Typography.Text className={styles.label}>Deposit Type:</Typography.Text>
+        <Select style={{ width: 200 }} allowClear={true} placeholder="Select a deposit type" showSearch={true} optionFilterProp="label" options={depositTypeOptions} />
         <Typography.Text className={styles.label}>Country:</Typography.Text>
         <Select
           style={{ width: 150 }}

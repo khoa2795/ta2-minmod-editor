@@ -30,4 +30,23 @@ export class LocationInfo {
       crs: this.crs ? this.crs.clone() : undefined,
     });
   }
+
+  public serialize() {
+    return {
+      location: this.location,
+      country: this.country.map((country) => country.serialize()),
+      state_or_province: this.stateOrProvince.map((stateOrProvince) => stateOrProvince.serialize()),
+      crs: this.crs?.serialize(),
+    };
+  }
+}
+
+export class Coordinates {
+  lat: number;
+  lon: number;
+
+  public constructor({ lat, lon }: { lat: number; lon: number }) {
+    this.lat = lat;
+    this.lon = lon;
+  }
 }

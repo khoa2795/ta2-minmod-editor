@@ -1,6 +1,6 @@
 import { CandidateEntity } from "./CandidateEntity";
 import { GradeTonnage } from "./GradeTonnage";
-import { LocationInfo } from "./LocationInfo";
+import { Coordinates, LocationInfo } from "./LocationInfo";
 import { Reference, Document } from "./Reference";
 import { DedupMineralSite } from "../dedupMineralSite";
 import { DepositTypeStore } from "models/depositType";
@@ -9,6 +9,7 @@ import { CountryStore } from "models/country";
 import { MineralInventory } from "./MineralInventory";
 import { IStore, User } from "models";
 import { InternalID } from "models/typing";
+import { GeologyInfo } from "./GeologyInfo";
 
 export type EditableField = "name" | "location" | "country" | "stateOrProvince" | "depositType" | "grade" | "tonnage";
 export type FieldEdit =
@@ -26,17 +27,26 @@ export type FieldEdit =
 
 export type MineralSiteConstructorArgs = {
   id: InternalID;
-  recordId: string;
   sourceId: string;
+  recordId: string;
   dedupSiteURI: string;
-  createdBy: string;
   name?: string;
-  locationInfo: LocationInfo;
+  createdBy: string;
+  aliases: string[];
+  siteRank?: string;
+  siteType?: string;
+  locationInfo?: LocationInfo;
   depositTypeCandidate: CandidateEntity[];
-  reference: Reference[];
-  sameAs: string[];
-  gradeTonnage: { [commodity: string]: GradeTonnage };
+
+  mineralForm: string[];
+  geologyInfo?: GeologyInfo;
   mineralInventory: MineralInventory[];
+  discoveredYear?: number;
+  reference: Reference[];
+  modifiedAt?: string;
+
+  coordinates?: Coordinates;
+  gradeTonnage: { [commodity: string]: GradeTonnage };
 };
 
 export class MineralSite {
@@ -44,28 +54,62 @@ export class MineralSite {
   sourceId: string;
   recordId: string;
   dedupSiteURI: string;
-  createdBy: string;
   name?: string;
-  locationInfo: LocationInfo;
+  createdBy: string;
+  aliases: string[];
+  siteRank?: string;
+  siteType?: string;
+  locationInfo?: LocationInfo;
   depositTypeCandidate: CandidateEntity[];
-  reference: Reference[];
-  sameAs: string[];
-  gradeTonnage: { [commodity: string]: GradeTonnage };
+  mineralForm: string[];
+  geologyInfo?: GeologyInfo;
   mineralInventory: MineralInventory[];
+  discoveredYear?: number;
+  reference: Reference[];
+  modifiedAt?: string;
+  coordinates?: Coordinates;
+  gradeTonnage: { [commodity: string]: GradeTonnage };
 
-  public constructor({ id, recordId, sourceId, createdBy, name, locationInfo, depositTypeCandidate, reference, sameAs, gradeTonnage, dedupSiteURI, mineralInventory }: MineralSiteConstructorArgs) {
+  public constructor({
+    id,
+    sourceId,
+    recordId,
+    dedupSiteURI,
+    name,
+    createdBy,
+    aliases,
+    siteRank,
+    siteType,
+    locationInfo,
+    depositTypeCandidate,
+    mineralForm,
+    geologyInfo,
+    mineralInventory,
+    discoveredYear,
+    reference,
+    modifiedAt,
+    coordinates,
+    gradeTonnage,
+  }: MineralSiteConstructorArgs) {
     this.id = id;
-    this.recordId = recordId;
     this.sourceId = sourceId;
+    this.recordId = recordId;
     this.dedupSiteURI = dedupSiteURI;
-    this.createdBy = createdBy;
     this.name = name;
+    this.createdBy = createdBy;
+    this.aliases = aliases;
+    this.siteRank = siteRank;
+    this.siteType = siteType;
     this.locationInfo = locationInfo;
     this.depositTypeCandidate = depositTypeCandidate;
-    this.reference = reference;
-    this.sameAs = sameAs;
-    this.gradeTonnage = gradeTonnage;
+    this.mineralForm = mineralForm;
+    this.geologyInfo = geologyInfo;
     this.mineralInventory = mineralInventory;
+    this.discoveredYear = discoveredYear;
+    this.reference = reference;
+    this.modifiedAt = modifiedAt;
+    this.coordinates = coordinates;
+    this.gradeTonnage = gradeTonnage;
   }
 
   get uri(): string {
@@ -90,10 +134,14 @@ export class MineralSite {
         this.name = edit.value;
         break;
       case "location":
-        this.locationInfo.location = edit.value;
+        if (this.locationInfo === undefined) {
+          this.locationInfo = new LocationInfo({ location: edit.value, country: [], stateOrProvince: [] });
+        } else {
+          this.locationInfo.location = edit.value;
+        }
         break;
       case "country":
-        this.locationInfo.country = [
+        const country = [
           new CandidateEntity({
             source: this.createdBy, // this works because createdBy is a single item array for experts
             confidence: 1.0,
@@ -101,9 +149,15 @@ export class MineralSite {
             observedName: edit.observedName,
           }),
         ];
+
+        if (this.locationInfo === undefined) {
+          this.locationInfo = new LocationInfo({ country, stateOrProvince: [] });
+        } else {
+          this.locationInfo.country = country;
+        }
         break;
       case "stateOrProvince":
-        this.locationInfo.stateOrProvince = [
+        const stateOrProvince = [
           new CandidateEntity({
             source: this.createdBy, // this works because createdBy is a single item array for experts
             confidence: 1.0,
@@ -111,6 +165,12 @@ export class MineralSite {
             observedName: edit.observedName,
           }),
         ];
+
+        if (this.locationInfo === undefined) {
+          this.locationInfo = new LocationInfo({ country: [], stateOrProvince });
+        } else {
+          this.locationInfo.stateOrProvince = stateOrProvince;
+        }
         break;
       case "depositType":
         this.depositTypeCandidate = [
@@ -159,8 +219,7 @@ export class MineralSite {
         throw new Error(`Unknown edit: ${edit}`);
     }
 
-    // TODO: fix me, we need to avoid duplicated reference
-    this.reference.push(reference);
+    this.reference = [reference];
   }
 }
 
@@ -187,14 +246,19 @@ export class DraftCreateMineralSite extends MineralSite {
       sourceId: baseSite.sourceId,
       recordId: baseSite.recordId,
       dedupSiteURI: dedupMineralSite.uri,
-      createdBy: user.url,
       name: undefined,
-      locationInfo: new LocationInfo({ country: [], stateOrProvince: [] }),
+      createdBy: user.url,
+      aliases: [],
+      locationInfo: undefined,
       depositTypeCandidate: [],
-      reference: [reference],
-      sameAs: dedupMineralSite.sites.map((site) => site.id),
-      gradeTonnage: {},
+      mineralForm: [],
+      geologyInfo: undefined,
       mineralInventory: [],
+      discoveredYear: undefined,
+      reference: [reference],
+      modifiedAt: new Date().toLocaleString(),
+      coordinates: undefined,
+      gradeTonnage: {},
     });
   }
 }

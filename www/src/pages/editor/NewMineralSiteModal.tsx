@@ -185,11 +185,14 @@ const NewMineralSiteForm = ({ commodity }: NewMineralSiteModalProps, ref: Forwar
       dedupSiteURI: "",
       createdBy: currentUserUrl,
       name: values.name,
+      aliases: [],
       locationInfo: new LocationInfo({
         country: countries,
         stateOrProvince: statesOrProvinces,
         location: location,
       }),
+      mineralForm: [],
+      geologyInfo: undefined,
       depositTypeCandidate: [
         new CandidateEntity({
           source: currentUserUrl,
@@ -199,7 +202,6 @@ const NewMineralSiteForm = ({ commodity }: NewMineralSiteModalProps, ref: Forwar
         }),
       ],
       reference: [reference],
-      sameAs: [],
       gradeTonnage: {
         [commodity1 as string]: new GradeTonnage({
           commodity: commodity1 ?? "",

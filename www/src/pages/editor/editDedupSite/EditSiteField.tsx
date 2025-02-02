@@ -190,12 +190,12 @@ const getNameConfig = ({ currentSite, sites, setFieldProvenance }: GetFieldConfi
 };
 
 const getLocationConfig = ({ currentSite, sites, setFieldProvenance }: GetFieldConfig): [React.ReactElement, FormFields] => {
-  const options = sites.filter((site) => site.locationInfo.location !== undefined).map((site) => ({ key: site.id, label: site.locationInfo.location! }));
+  const options = sites.filter((site) => site.locationInfo?.location !== undefined).map((site) => ({ key: site.id, label: site.locationInfo!.location! }));
   const component = <EditableSelect onProvenanceChange={setFieldProvenance} options={options} />;
   const initialValues =
     currentSite !== undefined
       ? {
-          fieldValue: currentSite.locationInfo.location || "",
+          fieldValue: currentSite.locationInfo?.location || "",
           refDoc: currentSite.getFirstReferencedDocument(),
           refComment: currentSite.reference[0].comment,
           refAppliedToAll: false,
@@ -206,7 +206,7 @@ const getLocationConfig = ({ currentSite, sites, setFieldProvenance }: GetFieldC
 
 const getCountryConfig = ({ currentSite, sites, setFieldProvenance, stores }: GetFieldConfig): [React.ReactElement, FormFields] => {
   let options = _.uniqBy(
-    sites.flatMap((site) => site.locationInfo.country).filter((country) => country.normalizedURI !== undefined),
+    sites.flatMap((site) => site.locationInfo?.country || []).filter((country) => country.normalizedURI !== undefined),
     "normalizedURI"
   )
     .sort((a, b) => a.confidence - b.confidence)
@@ -216,9 +216,9 @@ const getCountryConfig = ({ currentSite, sites, setFieldProvenance, stores }: Ge
 
   const component = <Select showSearch={true} options={options} optionFilterProp="label" />;
   const initialValues =
-    currentSite !== undefined && currentSite.locationInfo.country.length > 0
+    currentSite !== undefined && (currentSite.locationInfo?.country || []).length > 0
       ? {
-          fieldValue: currentSite.locationInfo.country[0].normalizedURI!,
+          fieldValue: currentSite.locationInfo!.country[0].normalizedURI!,
           refDoc: currentSite.getFirstReferencedDocument(),
           refComment: currentSite.reference[0].comment,
           refAppliedToAll: false,
@@ -229,7 +229,7 @@ const getCountryConfig = ({ currentSite, sites, setFieldProvenance, stores }: Ge
 
 const getStateOrProvinceConfig = ({ currentSite, sites, setFieldProvenance, stores }: GetFieldConfig): [React.ReactElement, FormFields] => {
   let options = _.uniqBy(
-    sites.flatMap((site) => site.locationInfo.stateOrProvince).filter((stateOrProvince) => stateOrProvince.normalizedURI !== undefined),
+    sites.flatMap((site) => site.locationInfo?.stateOrProvince || []).filter((stateOrProvince) => stateOrProvince.normalizedURI !== undefined),
     "normalizedURI"
   )
     .sort((a, b) => a.confidence - b.confidence)
@@ -239,9 +239,9 @@ const getStateOrProvinceConfig = ({ currentSite, sites, setFieldProvenance, stor
 
   const component = <Select showSearch={true} options={options} optionFilterProp="label" />;
   const initialValues =
-    currentSite !== undefined && currentSite.locationInfo.stateOrProvince.length > 0
+    currentSite !== undefined && (currentSite.locationInfo?.stateOrProvince || []).length > 0
       ? {
-          fieldValue: currentSite.locationInfo.stateOrProvince[0].normalizedURI!,
+          fieldValue: currentSite.locationInfo!.stateOrProvince[0].normalizedURI!,
           refDoc: currentSite.getFirstReferencedDocument(),
           refComment: currentSite.reference[0].comment,
           refAppliedToAll: false,

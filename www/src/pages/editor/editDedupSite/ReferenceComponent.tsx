@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { Space, Typography } from "antd";
-import { MineralSite, useStores } from "models";
+import { MineralSite, useStores, Document } from "models";
 import { observer } from "mobx-react-lite";
 import { ExportOutlined } from "@ant-design/icons";
 
@@ -40,28 +40,35 @@ export const ReferenceComponent: React.FC<ReferenceComponentProps> = observer(({
 
   const docs = useMemo(() => Object.values(site.getReferencedDocuments()), [site]);
   let content;
+
   if (connection !== undefined) {
     // TODO: fix me, we can solve this bug merging source & docs
     const doc = docs[0];
     content = (
-      <Typography.Link target="_blank" href={connection} title={doc.title || doc.uri}>
-        {doc.title || doc.uri}
+      <Typography.Link target="_blank" href={connection} title={doc.title || doc.uri} className="font-small">
+        {getDocTitle(doc)}
       </Typography.Link>
     );
   } else {
     content = docs.map((doc, index) => (
       <React.Fragment key={doc.uri}>
-        <Typography.Link target="_blank" href={doc.uri} title={doc.title || doc.uri}>
-          {doc.title || doc.uri}
+        <Typography.Link target="_blank" href={doc.uri} title={doc.title || doc.uri} className="font-small">
+          {getDocTitle(doc)}
         </Typography.Link>
         {index < docs.length - 1 && <span>&nbsp;·&nbsp;</span>}
       </React.Fragment>
     ));
   }
 
-  return (
-    <Typography.Text ellipsis={true} style={{ maxWidth: 150 }}>
-      {content}
-    </Typography.Text>
-  );
+  return <Typography.Text>{content}</Typography.Text>;
 });
+
+const getDocTitle = (doc: Document) => {
+  if (doc.title !== undefined) {
+    return doc.title;
+  }
+  if (doc.uri.length > 70) {
+    return doc.uri.substring(0, 70) + "...";
+  }
+  return doc.uri;
+};
