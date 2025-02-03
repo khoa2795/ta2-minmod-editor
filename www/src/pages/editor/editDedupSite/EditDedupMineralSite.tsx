@@ -463,6 +463,11 @@ export const EditDedupMineralSite = observer(({ dedupSite, commodity }: EditDedu
                               children: site.geologyInfo.hostRock?.type,
                             },
                             {
+                              key: "structure",
+                              label: "Structure",
+                              children: site.geologyInfo.structure,
+                            },
+                            {
                               key: "associated-rock-unit",
                               label: "Associated Rock Unit",
                               children: site.geologyInfo.associatedRock?.unit,
@@ -471,11 +476,6 @@ export const EditDedupMineralSite = observer(({ dedupSite, commodity }: EditDedu
                               key: "associated-rock-type",
                               label: "Associated Rock Type",
                               children: site.geologyInfo.associatedRock?.type,
-                            },
-                            {
-                              key: "structure",
-                              label: "Structure",
-                              children: site.geologyInfo.structure,
                             },
                             {
                               key: "tectonic",
