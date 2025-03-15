@@ -1,4 +1,5 @@
 import React, { ForwardedRef, forwardRef, useImperativeHandle } from "react";
+import { isValidUrl } from "misc";
 import {
   Button,
   Form,
@@ -55,14 +56,7 @@ interface FormValues {
   tonnageUnit?: string;
   commodity: string;
 }
-function isValidUrl(inputURL: string) {
-  try {
-    new URL(inputURL);
-    return true && !/\s/.test(inputURL);
-  } catch (err) {
-    return false;
-  }
-}
+
 const NewMineralSiteForm = (
   { commodity }: NewMineralSiteModalProps,
   ref: ForwardedRef<NewMineralSiteFormRef>
