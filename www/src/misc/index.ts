@@ -10,3 +10,13 @@ export function join<T>(arr: T[], separator: (index: number) => T): T[] {
   }
   return result;
 }
+
+// Validate the input reference whether an URl or not
+export function isValidUrl(inputURL: string): boolean {
+  try {
+    new URL(inputURL);
+    return !/\s/.test(inputURL);
+  } catch (err) {
+    return false;
+  }
+}

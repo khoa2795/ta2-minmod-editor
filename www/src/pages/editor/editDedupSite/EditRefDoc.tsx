@@ -1,5 +1,5 @@
 import { Document } from "models";
-import { Input, Select, Typography } from "antd";
+import { Form, Input, Select, Typography } from "antd";
 import { useState } from "react";
 import { CloseCircleOutlined } from "@ant-design/icons";
 export interface EditRefDocProps {
@@ -7,6 +7,7 @@ export interface EditRefDocProps {
   value?: Document | null;
   onChange?: (doc: Document | null) => void;
 }
+
 
 const UNSELECT_VALUE = "e269e284cd592d703cb477fc2075cfde6ebfa9299e06deb0850f6061f72a6a9f";
 
@@ -29,29 +30,33 @@ export const EditRefDoc: React.FC<EditRefDocProps> = ({ availableDocs, value: do
 
   if (selectingValue) {
     return (
-      <Input
-        value={doc?.uri}
-        onChange={(e) => {
-          const uri = e.target.value;
-          if (uri === "") {
-            if (onChange !== undefined) onChange(null);
-          } else {
-            if (onChange !== undefined) onChange(new Document({ uri, title: "" }));
+        <Input
+          value={doc?.uri}
+          onChange={(e) => {
+            const uri = e.target.value;
+            if (uri !== "") {
+              if (onChange !== undefined) {
+                onChange(new Document({ uri, title: "" }));
+              }
+            } else {
+              if (onChange !== undefined) {
+                onChange(null);
+              }
+            }
+          }}
+          placeholder={"Enter URL of a document"}
+          suffix={
+            <CloseCircleOutlined
+              style={{ color: "rgba(0,0,0,.25)" }}
+              onClick={() => {
+                setSelectingValue(false);
+                if (onChange !== undefined) onChange(null);
+              }}
+            />
           }
-        }}
-        placeholder={"Enter URL of a document"}
-        suffix={
-          <CloseCircleOutlined
-            style={{ color: "rgba(0,0,0,.25)" }}
-            onClick={() => {
-              setSelectingValue(false);
-              if (onChange !== undefined) onChange(null);
-            }}
-          />
-        }
-      />
+        />
+
     );
   }
-
   return <Select options={options} value={doc === null || doc === undefined ? undefined : doc.uri} onChange={(uri) => onUpdateOption(uri)} />;
 };

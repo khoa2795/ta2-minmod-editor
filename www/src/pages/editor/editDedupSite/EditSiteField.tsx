@@ -8,6 +8,7 @@ import { InternalID } from "models/typing";
 import { DepositTypeStore } from "models/depositType";
 import { CountryStore } from "models/country";
 import { StateOrProvinceStore } from "models/stateOrProvince";
+import { isValidUrl } from "misc";
 
 interface EditSiteFieldProps {
   sites: MineralSite[];
@@ -130,12 +131,50 @@ export const EditSiteField: React.FC<EditSiteFieldProps> = ({ currentSite, sites
   };
 
   return (
-    <Modal title="Edit Mineral Site" width="70%" open={editField !== undefined} onCancel={() => onFinish()} footer={null}>
-      <Form form={form} onFinish={onSave} layout="vertical" style={{ marginTop: 24, marginBottom: 24 }} requiredMark={true} initialValues={initialValues}>
-        <Form.Item<FormFields> name="fieldValue" label={title} required={true} tooltip="This is a required field" rules={[{ required: true, message: "Value cannot be empty" }]}>
+    <Modal
+      title="Edit Mineral Site"
+      width="70%"
+      open={editField !== undefined}
+      onCancel={() => onFinish()}
+      footer={null}
+    >
+      <Form
+        form={form}
+        onFinish={onSave}
+        layout="vertical"
+        style={{ marginTop: 24, marginBottom: 24 }}
+        requiredMark={true}
+        initialValues={initialValues}
+      >
+        <Form.Item<FormFields>
+          name="fieldValue"
+          label={title}
+          required={true}
+          tooltip="This is a required field"
+          rules={[{ required: true, message: "Value cannot be empty" }]}
+        >
           {editFieldComponent}
         </Form.Item>
-        <Form.Item<FormFields> name="refDoc" label="Reference" required={true} tooltip="This is a required field" rules={[{ required: true, message: "Document URL" }]}>
+        <Form.Item<FormFields>
+          name="refDoc"
+          label="Reference"
+          required={true}
+          tooltip="This is a required field"
+          rules={[
+            {
+              required: true,
+              validator: (_, value: Document | null) => {
+                if (value === null) {
+                  return Promise.reject(new Error("Document URL is required"));
+                }
+                if (isValidUrl(value.uri)) {
+                  return Promise.resolve();
+                }
+                return Promise.reject(new Error("Invalid URL"));
+              },
+            },
+          ]}
+        >
           <EditRefDoc availableDocs={docs} />
         </Form.Item>
         <Form.Item<FormFields> name="refComment" label="Comment">
