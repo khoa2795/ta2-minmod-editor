@@ -536,16 +536,18 @@ const NewMineralSiteForm = (
                 rules={[
                   {
                     required: true,
-                    message: "Reference Document URL is required",
-                  },
-                  ({ getFieldValue }) => ({
-                    validator(_) {
-                      if (isValidUrl(getFieldValue("refDoc"))) {
+                    validator: (_, value: string) => {
+                      if (value === null) {
+                        return Promise.reject(
+                          new Error("Document URL is required")
+                        );
+                      }
+                      if (isValidUrl(value)) {
                         return Promise.resolve();
                       }
-                      return Promise.reject(new Error("Please enter an URL"));
+                      return Promise.reject(new Error("Invalid URL"));
                     },
-                  }),
+                  },
                 ]}
               >
                 <Input placeholder="Enter reference document URL" />
