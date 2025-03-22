@@ -1,0 +1,9 @@
+.requiredLabel::before {
+  color: #ff4d4f;
+  content: "*";
+  font-family: SimSun, sans-serif;
+  display: inline-block;
+  margin-inline-end: 4px;
+  line-height: 1px;
+  font-size: 14px;
+}

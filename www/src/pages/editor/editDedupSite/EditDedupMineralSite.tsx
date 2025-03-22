@@ -350,8 +350,9 @@ export const EditDedupMineralSite = observer(({ dedupSite, commodity }: EditDedu
     const currentUser = userStore.getCurrentUser()!;
     const existingSite = siteGroups.sites.find((site) => site.createdBy.includes(currentUser.url));
     let cb;
-    if (existingSite === undefined) {
-      const draftSite = DraftCreateMineralSite.fromMineralSite(stores, dedupSite, siteGroups.sites, currentUser, change.reference);
+    if (existingSite === undefined || existingSite.reference.document.uri !== change.reference.document.uri) {
+      // when reference change, it will be a new site
+      const draftSite = DraftCreateMineralSite.fromMineralSite(dedupSite, currentUser, change.reference);
       draftSite.updateField(stores, change.edit, change.reference);
       cb = mineralSiteStore.createAndUpdateDedup(dedupSite.commodity, draftSite);
     } else {
@@ -499,7 +500,14 @@ export const EditDedupMineralSite = observer(({ dedupSite, commodity }: EditDedu
           expandedRowKeys: Array.from(expandedRowKeys),
         }}
       />
-      <EditSiteField key={editField} sites={siteGroups.sites} currentSite={currentSite} editField={editField} onFinish={onEditFinish} commodity={commodity.id} />
+      <EditSiteField
+        key={`${editField}:${editField !== undefined && currentSite?.getFieldValue(editField, commodity.id)}`}
+        sites={siteGroups.sites}
+        currentSite={currentSite}
+        editField={editField}
+        onFinish={onEditFinish}
+        commodity={commodity.id}
+      />
     </Flex>
   );
 }) as React.FC<EditDedupMineralSiteProps>;

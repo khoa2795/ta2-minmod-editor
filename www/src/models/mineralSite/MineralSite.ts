@@ -1,7 +1,7 @@
 import { CandidateEntity } from "./CandidateEntity";
 import { GradeTonnage } from "./GradeTonnage";
 import { Coordinates, LocationInfo } from "./LocationInfo";
-import { Reference, Document } from "./Reference";
+import { Reference, Document, CDR_DOCUMENT_URL_PREFIX } from "./Reference";
 import { DedupMineralSite } from "../dedupMineralSite";
 import { DepositTypeStore } from "models/depositType";
 import { StateOrProvinceStore } from "models/stateOrProvince";
@@ -10,6 +10,7 @@ import { MineralInventory } from "./MineralInventory";
 import { IStore, User } from "models";
 import { InternalID } from "models/typing";
 import { GeologyInfo } from "./GeologyInfo";
+import { v4 as uuidv4 } from "uuid";
 
 export type EditableField = "name" | "location" | "country" | "stateOrProvince" | "depositType" | "grade" | "tonnage";
 export type FieldEdit =
@@ -42,7 +43,7 @@ export type MineralSiteConstructorArgs = {
   geologyInfo?: GeologyInfo;
   mineralInventory: MineralInventory[];
   discoveredYear?: number;
-  reference: Reference[];
+  reference: Reference;
   modifiedAt?: string;
 
   coordinates?: Coordinates;
@@ -65,7 +66,7 @@ export class MineralSite {
   geologyInfo?: GeologyInfo;
   mineralInventory: MineralInventory[];
   discoveredYear?: number;
-  reference: Reference[];
+  reference: Reference;
   modifiedAt?: string;
   coordinates?: Coordinates;
   gradeTonnage: { [commodity: string]: GradeTonnage };
@@ -116,16 +117,8 @@ export class MineralSite {
     return `https://minmod.isi.edu/resource/${this.id}`;
   }
 
-  getReferencedDocuments(): { [uri: string]: Document } {
-    const docs: { [uri: string]: Document } = {};
-    for (const ref of this.reference) {
-      docs[ref.document.uri] = ref.document;
-    }
-    return docs;
-  }
-
-  getFirstReferencedDocument(): Document {
-    return this.reference[0].document;
+  getDocument(): Document {
+    return this.reference.document;
   }
 
   updateField(stores: IStore, edit: FieldEdit, reference: Reference) {
@@ -219,7 +212,29 @@ export class MineralSite {
         throw new Error(`Unknown edit: ${edit}`);
     }
 
-    this.reference = [reference];
+    if (this.reference.document.uri !== reference.document.uri) {
+      throw new Error(`Reference document URI mismatch: ${this.reference.document.uri} !== ${reference.document.uri}. A mineral Site should not reference to multiple documents.`);
+    }
+    this.reference = reference;
+  }
+
+  getFieldValue(field: EditableField, commodity: InternalID): string | undefined {
+    switch (field) {
+      case "name":
+        return this.name;
+      case "location":
+        return this.locationInfo?.location;
+      case "country":
+        return this.locationInfo?.country[0]?.normalizedURI;
+      case "stateOrProvince":
+        return this.locationInfo?.stateOrProvince[0]?.normalizedURI;
+      case "depositType":
+        return this.depositTypeCandidate[0]?.normalizedURI;
+      case "grade":
+        return this.gradeTonnage[commodity]?.totalGrade?.toString();
+      case "tonnage":
+        return this.gradeTonnage[commodity]?.totalTonnage?.toString();
+    }
   }
 }
 
@@ -231,20 +246,22 @@ export class DraftCreateMineralSite extends MineralSite {
     this.draftID = draftID;
   }
 
-  public static fromMineralSite(
-    stores: { depositTypeStore: DepositTypeStore; stateOrProvinceStore: StateOrProvinceStore; countryStore: CountryStore },
-    dedupMineralSite: DedupMineralSite,
-    sites: MineralSite[],
-    user: User,
-    reference: Reference
-  ): DraftCreateMineralSite {
-    const baseSite = sites[0].id === dedupMineralSite.sites[0].id ? sites[0] : sites.filter((site) => site.id === dedupMineralSite.sites[0].id)[0];
+  public static fromMineralSite(dedupMineralSite: DedupMineralSite, user: User, reference: Reference): DraftCreateMineralSite {
+    // source id and record id is derived from the reference
+    let sourceId, recordId;
+    if (reference.document.isCDRDocument()) {
+      sourceId = CDR_DOCUMENT_URL_PREFIX;
+      recordId = reference.document.getCDRDocumentId();
+    } else {
+      sourceId = reference.document.uri;
+      recordId = uuidv4();
+    }
 
     return new DraftCreateMineralSite({
       draftID: `draft-${dedupMineralSite.id}`,
       id: "", // backend does not care about uri as they will recalculate it
-      sourceId: baseSite.sourceId,
-      recordId: baseSite.recordId,
+      sourceId,
+      recordId,
       dedupSiteURI: dedupMineralSite.uri,
       name: undefined,
       createdBy: user.url,
@@ -255,7 +272,7 @@ export class DraftCreateMineralSite extends MineralSite {
       geologyInfo: undefined,
       mineralInventory: [],
       discoveredYear: undefined,
-      reference: [reference],
+      reference: reference,
       modifiedAt: new Date().toLocaleString(),
       coordinates: undefined,
       gradeTonnage: {},

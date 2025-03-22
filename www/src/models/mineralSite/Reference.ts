@@ -1,20 +1,14 @@
+import { isValidUrl } from "misc";
+
+export const CDR_DOCUMENT_URL_PREFIX = "https://api.cdr.land/v1/docs/documents";
+
 export class Reference {
   document: Document;
   comment: string;
   property?: string;
   pageInfo: PageInfo[];
 
-  public constructor({
-    document,
-    comment,
-    property,
-    pageInfo
-  }: {
-    document: Document;
-    comment: string;
-    property?: string;
-    pageInfo: PageInfo[]
-  }) {
+  public constructor({ document, comment, property, pageInfo }: { document: Document; comment: string; property?: string; pageInfo: PageInfo[] }) {
     this.document = document;
     this.comment = comment;
     this.property = property;
@@ -26,18 +20,19 @@ export class Reference {
       document: this.document.clone(),
       comment: this.comment,
       property: this.property,
-      pageInfo: this.pageInfo.map((info) =>
-        new PageInfo({
-          page: info.page,
-          boundingBox: info.boundingBox
-            ? new BoundingBox({
-              xMax: info.boundingBox.xMax,
-              xMin: info.boundingBox.xMin,
-              yMax: info.boundingBox.yMax,
-              yMin: info.boundingBox.yMin,
-            })
-            : undefined,
-        })
+      pageInfo: this.pageInfo.map(
+        (info) =>
+          new PageInfo({
+            page: info.page,
+            boundingBox: info.boundingBox
+              ? new BoundingBox({
+                  xMax: info.boundingBox.xMax,
+                  xMin: info.boundingBox.xMin,
+                  yMax: info.boundingBox.yMax,
+                  yMin: info.boundingBox.yMin,
+                })
+              : undefined,
+          })
       ),
     });
   }
@@ -91,20 +86,50 @@ export class Document {
     this.title = title;
   }
 
+  public isCDRDocument(): boolean {
+    return this.uri.startsWith(CDR_DOCUMENT_URL_PREFIX);
+  }
+
+  public static cdrDocument(id: string, title: string): Document {
+    return new Document({ uri: `${CDR_DOCUMENT_URL_PREFIX}/${id}`, title });
+  }
+
   public clone(): Document {
     return new Document({ uri: this.uri, title: this.title });
   }
+
   public static deserialize(obj: any): Document {
     return new Document({
       uri: obj.uri,
       title: obj.title,
     });
   }
+
   public serialize(): object {
     return {
       uri: this.uri,
       title: this.title,
     };
+  }
+
+  public getCDRDocumentId(): string {
+    if (!this.isCDRDocument()) {
+      throw new Error("Not a CDR document");
+    }
+    return this.uri.substring(CDR_DOCUMENT_URL_PREFIX.length + 1);
+  }
+
+  public isValidCDRDocumentId(): boolean {
+    return this.isCDRDocument() && this.getCDRDocumentId().length > 8 && isValidUrl(this.uri);
+  }
+
+  /** Check whether this is a valid document */
+  public isValid(): boolean {
+    if (this.isCDRDocument()) {
+      return this.isValidCDRDocumentId();
+    } else {
+      return isValidUrl(this.uri);
+    }
   }
 }
 
@@ -112,13 +137,7 @@ export class PageInfo {
   page: number;
   boundingBox?: BoundingBox;
 
-  public constructor({
-    page,
-    boundingBox,
-  }: {
-    page: number;
-    boundingBox?: BoundingBox;
-  }) {
+  public constructor({ page, boundingBox }: { page: number; boundingBox?: BoundingBox }) {
     this.page = page;
     this.boundingBox = boundingBox;
   }
@@ -126,9 +145,7 @@ export class PageInfo {
   public static deserialize(obj: any): PageInfo {
     return new PageInfo({
       page: obj.page,
-      boundingBox: obj.bounding_box
-        ? BoundingBox.deserialize(obj.bounding_box)
-        : undefined,
+      boundingBox: obj.bounding_box ? BoundingBox.deserialize(obj.bounding_box) : undefined,
     });
   }
 
@@ -146,17 +163,7 @@ export class BoundingBox {
   yMax: number;
   yMin: number;
 
-  public constructor({
-    xMax,
-    xMin,
-    yMax,
-    yMin,
-  }: {
-    xMax: number;
-    xMin: number;
-    yMax: number;
-    yMin: number;
-  }) {
+  public constructor({ xMax, xMin, yMax, yMin }: { xMax: number; xMin: number; yMax: number; yMin: number }) {
     this.xMax = xMax;
     this.xMin = xMin;
     this.yMax = yMax;

@@ -44,7 +44,7 @@ export class MineralSiteStore extends CRUDStore<string, DraftCreateMineralSite, 
       geologyInfo: record.geology_info !== undefined ? GeologyInfo.deserialize(record.geology_info) : undefined,
       mineralInventory: (record.mineral_inventory || []).map(MineralInventory.deserialize),
       discoveredYear: record.discovered_year,
-      reference: (record.reference || []).map(Reference.deserialize),
+      reference: (record.reference || []).map(Reference.deserialize)[0],
       modifiedAt: record.modified_at,
       coordinates: record.coordinates === undefined ? undefined : new Coordinates(record.coordinates),
       gradeTonnage: Object.fromEntries(
@@ -73,7 +73,7 @@ export class MineralSiteStore extends CRUDStore<string, DraftCreateMineralSite, 
       location_info: record.locationInfo?.serialize(),
       deposit_type_candidate: record.depositTypeCandidate.map((depositTypeCandidate) => depositTypeCandidate.serialize()),
       mineral_inventory: record.mineralInventory.map((mineralInventory) => mineralInventory.serialize()),
-      reference: record.reference.map((ref) => ref.serialize()),
+      reference: [record.reference.serialize()],
       discovered_year: record.discoveredYear,
     };
   }

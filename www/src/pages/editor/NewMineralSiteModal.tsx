@@ -1,34 +1,13 @@
 import React, { ForwardedRef, forwardRef, useImperativeHandle } from "react";
 import { isValidUrl } from "misc";
-import {
-  Button,
-  Form,
-  Input,
-  Modal,
-  Space,
-  message,
-  Row,
-  Col,
-  Select,
-  Divider,
-  Radio,
-  RadioChangeEvent,
-} from "antd";
-import {
-  useStores,
-  Commodity,
-  DraftCreateMineralSite,
-  CandidateEntity,
-} from "models";
+import { Button, Form, Input, Modal, Space, message, Row, Col, Select, Divider, Radio, RadioChangeEvent } from "antd";
+import { useStores, Commodity, DraftCreateMineralSite, CandidateEntity } from "models";
 import { LocationInfo } from "../../models/mineralSite/LocationInfo";
 import { Reference, Document } from "../../models/mineralSite/Reference";
 import { GradeTonnage } from "../../models/mineralSite/GradeTonnage";
 import { useState } from "react";
 import { v4 as uuidv4 } from "uuid";
-import {
-  MineralInventory,
-  Measure,
-} from "../../models/mineralSite/MineralInventory";
+import { MineralInventory, Measure } from "../../models/mineralSite/MineralInventory";
 import { useMemo } from "react";
 import { observer } from "mobx-react-lite";
 
@@ -57,24 +36,10 @@ interface FormValues {
   commodity: string;
 }
 
-const NewMineralSiteForm = (
-  { commodity }: NewMineralSiteModalProps,
-  ref: ForwardedRef<NewMineralSiteFormRef>
-) => {
-  const {
-    mineralSiteStore,
-    dedupMineralSiteStore,
-    userStore,
-    commodityStore,
-    countryStore,
-    stateOrProvinceStore,
-    depositTypeStore,
-    unitStore,
-  } = useStores();
+const NewMineralSiteForm = ({ commodity }: NewMineralSiteModalProps, ref: ForwardedRef<NewMineralSiteFormRef>) => {
+  const { mineralSiteStore, dedupMineralSiteStore, userStore, commodityStore, countryStore, stateOrProvinceStore, depositTypeStore, unitStore } = useStores();
   const [form] = Form.useForm();
-  const [selectedSourceType, setSelectedSourceType] = useState<string | null>(
-    null
-  );
+  const [selectedSourceType, setSelectedSourceType] = useState<string | null>(null);
   const [visible, setVisible] = useState(false);
   useImperativeHandle(ref, () => ({
     open: () => setVisible(true),
@@ -122,9 +87,7 @@ const NewMineralSiteForm = (
   const handleSave = async (values: FormValues) => {
     const currentUserUrl = userStore.getCurrentUser()!.url;
     const selectedCommodity = commodityStore.get(values.commodity);
-    const commodityName = selectedCommodity
-      ? selectedCommodity.name
-      : undefined;
+    const commodityName = selectedCommodity ? selectedCommodity.name : undefined;
     const commodityUri = selectedCommodity ? selectedCommodity.uri : undefined;
 
     let location = undefined;
@@ -145,8 +108,7 @@ const NewMineralSiteForm = (
     const statesOrProvinces = values.stateOrProvince
       ? [
           new CandidateEntity({
-            observedName: stateOrProvinceStore.getByURI(values.stateOrProvince)!
-              .name,
+            observedName: stateOrProvinceStore.getByURI(values.stateOrProvince)!.name,
             source: currentUserUrl,
             normalizedURI: values.stateOrProvince,
             confidence: 1.0,
@@ -240,7 +202,7 @@ const NewMineralSiteForm = (
           normalizedURI: values.depositType,
         }),
       ],
-      reference: [reference],
+      reference: reference,
       gradeTonnage: {
         [commodity1 as string]: new GradeTonnage({
           commodity: commodity1 ?? "",
@@ -252,24 +214,13 @@ const NewMineralSiteForm = (
     });
     const newMineralSite = await mineralSiteStore.create(draft);
     const dedup_site_uri = newMineralSite.dedupSiteURI;
-    const dedupSite = await dedupMineralSiteStore.forceFetchByURI(
-      dedup_site_uri,
-      commodity1 ?? ""
-    );
-    message.success(
-      "Mineral site created and dedup store updated successfully!"
-    );
+    const dedupSite = await dedupMineralSiteStore.forceFetchByURI(dedup_site_uri, commodity1 ?? "");
+    message.success("Mineral site created and dedup store updated successfully!");
     setVisible(false);
   };
 
   return (
-    <Modal
-      title="Add New Mineral Site"
-      open={visible}
-      onCancel={() => setVisible(false)}
-      footer={null}
-      width="70%"
-    >
+    <Modal title="Add New Mineral Site" open={visible} onCancel={() => setVisible(false)} footer={null} width="70%">
       <Form
         form={form}
         layout="vertical"
@@ -325,38 +276,24 @@ const NewMineralSiteForm = (
         <Divider orientation="left">Location</Divider>
         <Row gutter={24}>
           <Col span={12}>
-            <Form.Item
-              name="country"
-              label="Country"
-              rules={[{ required: true }]}
-            >
+            <Form.Item name="country" label="Country" rules={[{ required: true }]}>
               <Select
                 placeholder="Select a country"
                 options={countryOptions}
                 showSearch
                 optionFilterProp="label"
-                filterOption={(input, option) =>
-                  option?.label?.toLowerCase().includes(input.toLowerCase()) ??
-                  false
-                }
+                filterOption={(input, option) => option?.label?.toLowerCase().includes(input.toLowerCase()) ?? false}
               />
             </Form.Item>
           </Col>
           <Col span={12}>
-            <Form.Item
-              name="stateOrProvince"
-              label="State or Province"
-              rules={[{ required: true }]}
-            >
+            <Form.Item name="stateOrProvince" label="State or Province" rules={[{ required: true }]}>
               <Select
                 placeholder="Select a state or province"
                 options={stateOptions}
                 showSearch
                 optionFilterProp="label"
-                filterOption={(input, option) =>
-                  option?.label?.toLowerCase().includes(input.toLowerCase()) ??
-                  false
-                }
+                filterOption={(input, option) => option?.label?.toLowerCase().includes(input.toLowerCase()) ?? false}
               />
             </Form.Item>
           </Col>
@@ -364,20 +301,12 @@ const NewMineralSiteForm = (
         <Row gutter={24}>
           <Col span={12}>
             <Form.Item name="latitude" label="Latitude">
-              <Input
-                type="number"
-                placeholder="Enter latitude in decimal"
-                step="0.0001"
-              />
+              <Input type="number" placeholder="Enter latitude in decimal" step="0.0001" />
             </Form.Item>
           </Col>
           <Col span={12}>
             <Form.Item name="longitude" label="Longitude">
-              <Input
-                type="number"
-                placeholder="Enter longitude in decimal"
-                step="0.0001"
-              />
+              <Input type="number" placeholder="Enter longitude in decimal" step="0.0001" />
             </Form.Item>
           </Col>
         </Row>
@@ -386,20 +315,13 @@ const NewMineralSiteForm = (
         <Divider orientation="left">Deposit Info</Divider>
         <Row gutter={24}>
           <Col span={12}>
-            <Form.Item
-              name="depositType"
-              label="Deposit Type"
-              rules={[{ required: true }]}
-            >
+            <Form.Item name="depositType" label="Deposit Type" rules={[{ required: true }]}>
               <Select
                 placeholder="Select a deposit type"
                 options={depositTypeOptions}
                 showSearch
                 optionFilterProp="label"
-                filterOption={(input, option) =>
-                  option?.label?.toLowerCase().includes(input.toLowerCase()) ??
-                  false
-                }
+                filterOption={(input, option) => option?.label?.toLowerCase().includes(input.toLowerCase()) ?? false}
               />
             </Form.Item>
           </Col>
@@ -410,12 +332,7 @@ const NewMineralSiteForm = (
               rules={[
                 { required: true, message: "Confidence value is required" },
                 {
-                  validator: (_, value) =>
-                    value >= 0 && value <= 1
-                      ? Promise.resolve()
-                      : Promise.reject(
-                          new Error("Confidence must be between 0 and 1")
-                        ),
+                  validator: (_, value) => (value >= 0 && value <= 1 ? Promise.resolve() : Promise.reject(new Error("Confidence must be between 0 and 1"))),
                 },
               ]}
             >
@@ -430,28 +347,16 @@ const NewMineralSiteForm = (
             <Form.Item label="Grade">
               <Space.Compact>
                 <Form.Item name="grade" noStyle>
-                  <Input
-                    type="number"
-                    placeholder="Enter grade value"
-                    style={{ width: "60%" }}
-                  />
+                  <Input type="number" placeholder="Enter grade value" style={{ width: "60%" }} />
                 </Form.Item>
-                <Form.Item
-                  name="gradeUnit"
-                  noStyle
-                  rules={[{ required: true, message: "Unit is required" }]}
-                >
+                <Form.Item name="gradeUnit" noStyle rules={[{ required: true, message: "Unit is required" }]}>
                   <Select
                     placeholder="Select unit"
                     options={unitOptions}
                     style={{ width: "40%" }}
                     showSearch
                     optionFilterProp="label"
-                    filterOption={(input, option) =>
-                      option?.label
-                        ?.toLowerCase()
-                        .includes(input.toLowerCase()) ?? false
-                    }
+                    filterOption={(input, option) => option?.label?.toLowerCase().includes(input.toLowerCase()) ?? false}
                   />
                 </Form.Item>
               </Space.Compact>
@@ -462,11 +367,7 @@ const NewMineralSiteForm = (
             <Form.Item label="Tonnage">
               <Space.Compact>
                 <Form.Item name="tonnage" noStyle>
-                  <Input
-                    type="number"
-                    placeholder="Enter tonnage value"
-                    style={{ width: "60%" }}
-                  />
+                  <Input type="number" placeholder="Enter tonnage value" style={{ width: "60%" }} />
                 </Form.Item>
                 <Form.Item name="tonnageUnit" noStyle>
                   <Select
@@ -475,11 +376,7 @@ const NewMineralSiteForm = (
                     style={{ width: "40%" }}
                     showSearch
                     optionFilterProp="label"
-                    filterOption={(input, option) =>
-                      option?.label
-                        ?.toLowerCase()
-                        .includes(input.toLowerCase()) ?? false
-                    }
+                    filterOption={(input, option) => option?.label?.toLowerCase().includes(input.toLowerCase()) ?? false}
                   />
                 </Form.Item>
               </Space.Compact>
@@ -490,17 +387,8 @@ const NewMineralSiteForm = (
         <Row gutter={24}>
           {/* Commodity */}
           <Col span={12}>
-            <Form.Item
-              name="commodity"
-              label="Commodity"
-              rules={[{ required: true }]}
-            >
-              <Select
-                placeholder="Select commodity"
-                options={commodityOptions}
-                showSearch
-                optionFilterProp="label"
-              />
+            <Form.Item name="commodity" label="Commodity" rules={[{ required: true }]}>
+              <Select placeholder="Select commodity" options={commodityOptions} showSearch optionFilterProp="label" />
             </Form.Item>
           </Col>
         </Row>
@@ -509,13 +397,7 @@ const NewMineralSiteForm = (
         <Divider orientation="left">Source & Reference</Divider>
         <Row gutter={[16, 16]}>
           <Col span={24}>
-            <Form.Item
-              name="sourceType"
-              label="Source"
-              rules={[
-                { required: true, message: "Please select a source type" },
-              ]}
-            >
+            <Form.Item name="sourceType" label="Source" rules={[{ required: true, message: "Please select a source type" }]}>
               <Radio.Group onChange={handleSourceTypeChange}>
                 <Radio value="database">Database</Radio>
                 <Radio value="article">Technical Article</Radio>
@@ -536,9 +418,7 @@ const NewMineralSiteForm = (
                     required: true,
                     validator: (_, value: string) => {
                       if (value === null) {
-                        return Promise.reject(
-                          new Error("Document URL is required")
-                        );
+                        return Promise.reject(new Error("Document URL is required"));
                       }
                       if (isValidUrl(value)) {
                         return Promise.resolve();
@@ -556,10 +436,7 @@ const NewMineralSiteForm = (
           {/* Reference Comments */}
           <Col span={24}>
             <Form.Item name="refComment" label="Reference Comments">
-              <Input.TextArea
-                placeholder="Enter any comments about the reference"
-                autoSize={{ minRows: 1, maxRows: 4 }}
-              />
+              <Input.TextArea placeholder="Enter any comments about the reference" autoSize={{ minRows: 1, maxRows: 4 }} />
             </Form.Item>
           </Col>
         </Row>
@@ -578,8 +455,4 @@ const NewMineralSiteForm = (
   );
 };
 
-export const NewMineralSiteModal = observer(
-  forwardRef<NewMineralSiteFormRef, NewMineralSiteModalProps>(
-    NewMineralSiteForm
-  )
-);
+export const NewMineralSiteModal = observer(forwardRef<NewMineralSiteFormRef, NewMineralSiteModalProps>(NewMineralSiteForm));

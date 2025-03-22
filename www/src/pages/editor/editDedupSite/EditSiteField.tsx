@@ -1,14 +1,15 @@
-import { Button, Checkbox, Form, Input, Modal, Select, Space } from "antd";
+import { Button, Checkbox, Flex, Form, Input, Modal, Select, Space } from "antd";
 import { EditableSelect } from "components/EditableSelect";
 import _ from "lodash";
 import { MineralSite, Reference, Document, FieldEdit, EditableField, useStores } from "models";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { EditRefDoc } from "./EditRefDoc";
 import { InternalID } from "models/typing";
 import { DepositTypeStore } from "models/depositType";
 import { CountryStore } from "models/country";
 import { StateOrProvinceStore } from "models/stateOrProvince";
 import { isValidUrl } from "misc";
+import { FormItem } from "components/FormItem";
 
 interface EditSiteFieldProps {
   sites: MineralSite[];
@@ -20,14 +21,23 @@ interface EditSiteFieldProps {
 
 type FormFields = {
   fieldValue: string | undefined;
-  refDoc: Document | null;
+  refDoc: Document | undefined;
   refComment: string;
-  refAppliedToAll: boolean;
+};
+
+const defaultInitialValues: FormFields = {
+  fieldValue: undefined,
+  refDoc: undefined,
+  refComment: "",
 };
 
 export const EditSiteField: React.FC<EditSiteFieldProps> = ({ currentSite, sites, editField, commodity, onFinish }) => {
   const { depositTypeStore, stateOrProvinceStore, countryStore } = useStores();
-  const [form] = Form.useForm<FormFields>();
+  const [editData, setEditData] = useState<FormFields>({
+    fieldValue: currentSite === undefined || editField === undefined ? undefined : currentSite.getFieldValue(editField, commodity),
+    refDoc: currentSite === undefined ? undefined : currentSite.getDocument(),
+    refComment: currentSite === undefined ? "" : currentSite.reference.comment,
+  });
 
   const title = useMemo(() => {
     switch (editField) {
@@ -51,24 +61,38 @@ export const EditSiteField: React.FC<EditSiteFieldProps> = ({ currentSite, sites
   }, [editField]);
 
   const setFieldProvenance = (key: string | undefined) => {
+    if (currentSite !== undefined) {
+      // if the current site is undefined, the reference is not set and can be changed
+      // however, if the current site is defined, we don't modify the reference
+      return;
+    }
+
     if (key !== undefined) {
       const site = sites.filter((site) => site.id === key)[0];
-      // there can be multiple docs per site, we choose the first one and
-      // users can correct it.
-      form.setFieldValue("refDoc", site.getFirstReferencedDocument());
+      setEditData((prev) => ({ ...prev, refDoc: site.getDocument() }));
     } else {
-      form.setFieldValue("refDoc", null);
+      setEditData((prev) => ({ ...prev, refDoc: undefined }));
     }
   };
 
   const docs = _.uniqBy(
-    sites.flatMap((site) => Object.values(site.getReferencedDocuments())),
+    sites.map((site) => site.getDocument()),
     "uri"
   );
 
   let editFieldComponent = undefined;
   let initialValues: FormFields = defaultInitialValues;
-  const configArgs = { currentSite, sites, setFieldProvenance, stores: { depositTypeStore, countryStore, stateOrProvinceStore }, commodity };
+  const configArgs = {
+    currentSite,
+    sites,
+    setFieldProvenance,
+    stores: { depositTypeStore, countryStore, stateOrProvinceStore },
+    commodity,
+    value: editData.fieldValue,
+    setValue: (value: string) => {
+      setEditData((prev) => ({ ...prev, fieldValue: value }));
+    },
+  };
   switch (editField) {
     case "name":
       [editFieldComponent, initialValues] = getNameConfig(configArgs);
@@ -97,16 +121,25 @@ export const EditSiteField: React.FC<EditSiteFieldProps> = ({ currentSite, sites
       throw new Error(`Unknown field ${editField}`);
   }
 
+  const isDataValid = () => {
+    if (editField === undefined) return false;
+    const val = editData;
+    if (val.refDoc === undefined || val.fieldValue === undefined || !val.refDoc.isValid()) {
+      return false;
+    }
+    return true;
+  };
+
   const onSave = (values: any) => {
     if (editField === undefined) return;
-    const val = form.getFieldsValue();
-    if (val.refDoc === null || val.fieldValue === undefined) {
+    const val = editData;
+    if (val.refDoc === undefined || val.fieldValue === undefined || !val.refDoc.isValid()) {
       return;
     }
 
-    let edit;
+    let edit: FieldEdit;
     if (editField === "name" || editField === "location") {
-      edit = { field: editField, value: val.fieldValue };
+      edit = { field: editField, value: val.fieldValue as string };
     } else if (editField === "country") {
       edit = { field: editField, observedName: countryStore.getByURI(val.fieldValue)!.name, normalizedURI: val.fieldValue };
     } else if (editField === "stateOrProvince") {
@@ -124,85 +157,34 @@ export const EditSiteField: React.FC<EditSiteFieldProps> = ({ currentSite, sites
       reference: new Reference({
         document: val.refDoc,
         comment: val.refComment,
-        property: val.refAppliedToAll ? undefined : Reference.normalizeProperty(editField),
         pageInfo: [],
       }),
     });
   };
 
   return (
-    <Modal
-      title="Edit Mineral Site"
-      width="70%"
-      open={editField !== undefined}
-      onCancel={() => onFinish()}
-      footer={null}
-    >
-      <Form
-        form={form}
-        onFinish={onSave}
-        layout="vertical"
-        style={{ marginTop: 24, marginBottom: 24 }}
-        requiredMark={true}
-        initialValues={initialValues}
-      >
-        <Form.Item<FormFields>
-          name="fieldValue"
-          label={title}
-          required={true}
-          tooltip="This is a required field"
-          rules={[{ required: true, message: "Value cannot be empty" }]}
-        >
+    <Modal title="Edit Mineral Site" width="70%" open={editField !== undefined} onCancel={() => onFinish()} footer={null}>
+      <Flex gap={16} vertical={true}>
+        <FormItem label={title} name="fieldValue" tooltip="This is a required field" required={true}>
           {editFieldComponent}
-        </Form.Item>
-        <Form.Item<FormFields>
-          name="refDoc"
-          label="Reference"
-          required={true}
-          tooltip="This is a required field"
-          rules={[
-            {
-              required: true,
-              validator: (_, value: Document | null) => {
-                if (value === null) {
-                  return Promise.reject(new Error("Document URL is required"));
-                }
-                if (isValidUrl(value.uri)) {
-                  return Promise.resolve();
-                }
-                return Promise.reject(new Error("Invalid URL"));
-              },
-            },
-          ]}
-        >
-          <EditRefDoc availableDocs={docs} />
-        </Form.Item>
-        <Form.Item<FormFields> name="refComment" label="Comment">
+        </FormItem>
+        <FormItem label="Reference" name="refDoc" tooltip="Source of the information (required)" required={true}>
+          <EditRefDoc availableDocs={docs} value={editData.refDoc} onChange={(doc) => setEditData({ ...editData, refDoc: doc })} />
+        </FormItem>
+        <FormItem name="refComment" label="Comment">
           <Input.TextArea rows={3} />
-        </Form.Item>
-        <Form.Item<FormFields> name="refAppliedToAll" valuePropName="checked">
-          <Checkbox>This reference applies to all fields</Checkbox>
-        </Form.Item>
-        <Form.Item<FormFields>>
-          <Space>
-            <Button type="primary" htmlType="submit">
-              Save
-            </Button>
-            <Button htmlType="button" onClick={() => onFinish()}>
-              Cancel
-            </Button>
-          </Space>
-        </Form.Item>
-      </Form>
+        </FormItem>
+        <Space>
+          <Button type="primary" htmlType="submit" onClick={onSave} disabled={!isDataValid()}>
+            Save
+          </Button>
+          <Button htmlType="button" onClick={() => onFinish()}>
+            Cancel
+          </Button>
+        </Space>
+      </Flex>
     </Modal>
   );
-};
-
-const defaultInitialValues: FormFields = {
-  fieldValue: undefined,
-  refDoc: null,
-  refComment: "",
-  refAppliedToAll: false,
 };
 
 interface GetFieldConfig {
@@ -211,39 +193,41 @@ interface GetFieldConfig {
   setFieldProvenance: (key: string | undefined) => void;
   stores: { depositTypeStore: DepositTypeStore; countryStore: CountryStore; stateOrProvinceStore: StateOrProvinceStore };
   commodity: InternalID;
+  value?: string;
+  setValue: (value: string) => void;
 }
 
-const getNameConfig = ({ currentSite, sites, setFieldProvenance }: GetFieldConfig): [React.ReactElement, FormFields] => {
+const getNameConfig = ({ currentSite, sites, setFieldProvenance, value, setValue }: GetFieldConfig): [React.ReactElement, FormFields] => {
   const options = sites.filter((site) => site.name !== undefined).map((site) => ({ key: site.id, label: site.name! }));
-  const component = <EditableSelect onProvenanceChange={setFieldProvenance} options={options} />;
+  const component = <EditableSelect onProvenanceChange={setFieldProvenance} options={options} value={value} onChange={(value) => setValue(value)} />;
   const initialValues =
     currentSite !== undefined
       ? {
           fieldValue: currentSite.name,
-          refDoc: currentSite.getFirstReferencedDocument(),
-          refComment: currentSite.reference[0].comment,
+          refDoc: currentSite.getDocument(),
+          refComment: currentSite.reference.comment,
           refAppliedToAll: false,
         }
       : defaultInitialValues;
   return [component, initialValues];
 };
 
-const getLocationConfig = ({ currentSite, sites, setFieldProvenance }: GetFieldConfig): [React.ReactElement, FormFields] => {
+const getLocationConfig = ({ currentSite, sites, setFieldProvenance, value, setValue }: GetFieldConfig): [React.ReactElement, FormFields] => {
   const options = sites.filter((site) => site.locationInfo?.location !== undefined).map((site) => ({ key: site.id, label: site.locationInfo!.location! }));
-  const component = <EditableSelect onProvenanceChange={setFieldProvenance} options={options} />;
+  const component = <EditableSelect onProvenanceChange={setFieldProvenance} options={options} value={value} onChange={(value) => setValue(value)} />;
   const initialValues =
     currentSite !== undefined
       ? {
           fieldValue: currentSite.locationInfo?.location || "",
-          refDoc: currentSite.getFirstReferencedDocument(),
-          refComment: currentSite.reference[0].comment,
+          refDoc: currentSite.getDocument(),
+          refComment: currentSite.reference.comment,
           refAppliedToAll: false,
         }
       : defaultInitialValues;
   return [component, initialValues];
 };
 
-const getCountryConfig = ({ currentSite, sites, setFieldProvenance, stores }: GetFieldConfig): [React.ReactElement, FormFields] => {
+const getCountryConfig = ({ currentSite, sites, setFieldProvenance, stores, value, setValue }: GetFieldConfig): [React.ReactElement, FormFields] => {
   let options = _.uniqBy(
     sites.flatMap((site) => site.locationInfo?.country || []).filter((country) => country.normalizedURI !== undefined),
     "normalizedURI"
@@ -253,20 +237,20 @@ const getCountryConfig = ({ currentSite, sites, setFieldProvenance, stores }: Ge
   const predictedCountries = new Set(options.map((ent) => ent.value));
   options = options.concat(stores.countryStore.filter((ent) => !predictedCountries.has(ent.uri)).map((type) => ({ value: type.uri, label: type.name })));
 
-  const component = <Select showSearch={true} options={options} optionFilterProp="label" />;
+  const component = <Select showSearch={true} options={options} optionFilterProp="label" value={value} onChange={(value) => setValue(value)} />;
   const initialValues =
     currentSite !== undefined && (currentSite.locationInfo?.country || []).length > 0
       ? {
           fieldValue: currentSite.locationInfo!.country[0].normalizedURI!,
-          refDoc: currentSite.getFirstReferencedDocument(),
-          refComment: currentSite.reference[0].comment,
+          refDoc: currentSite.getDocument(),
+          refComment: currentSite.reference.comment,
           refAppliedToAll: false,
         }
       : defaultInitialValues;
   return [component, initialValues];
 };
 
-const getStateOrProvinceConfig = ({ currentSite, sites, setFieldProvenance, stores }: GetFieldConfig): [React.ReactElement, FormFields] => {
+const getStateOrProvinceConfig = ({ currentSite, sites, setFieldProvenance, stores, value, setValue }: GetFieldConfig): [React.ReactElement, FormFields] => {
   let options = _.uniqBy(
     sites.flatMap((site) => site.locationInfo?.stateOrProvince || []).filter((stateOrProvince) => stateOrProvince.normalizedURI !== undefined),
     "normalizedURI"
@@ -276,20 +260,20 @@ const getStateOrProvinceConfig = ({ currentSite, sites, setFieldProvenance, stor
   const predictedSOP = new Set(options.map((ent) => ent.value));
   options = options.concat(stores.stateOrProvinceStore.filter((ent) => !predictedSOP.has(ent.uri)).map((type) => ({ value: type.uri, label: type.name })));
 
-  const component = <Select showSearch={true} options={options} optionFilterProp="label" />;
+  const component = <Select showSearch={true} options={options} optionFilterProp="label" value={value} onChange={(value) => setValue(value)} />;
   const initialValues =
     currentSite !== undefined && (currentSite.locationInfo?.stateOrProvince || []).length > 0
       ? {
           fieldValue: currentSite.locationInfo!.stateOrProvince[0].normalizedURI!,
-          refDoc: currentSite.getFirstReferencedDocument(),
-          refComment: currentSite.reference[0].comment,
+          refDoc: currentSite.getDocument(),
+          refComment: currentSite.reference.comment,
           refAppliedToAll: false,
         }
       : defaultInitialValues;
   return [component, initialValues];
 };
 
-const getDepositTypeConfig = ({ currentSite, sites, setFieldProvenance, stores }: GetFieldConfig): [React.ReactElement, FormFields] => {
+const getDepositTypeConfig = ({ currentSite, sites, setFieldProvenance, stores, value, setValue }: GetFieldConfig): [React.ReactElement, FormFields] => {
   let options = _.uniqBy(
     sites.flatMap((site) => site.depositTypeCandidate).filter((deptype) => deptype.normalizedURI !== undefined),
     "normalizedURI"
@@ -299,41 +283,41 @@ const getDepositTypeConfig = ({ currentSite, sites, setFieldProvenance, stores }
   const predictedDepTypes = new Set(options.map((type) => type.value));
   options = options.concat(stores.depositTypeStore.filter((type) => !predictedDepTypes.has(type.uri)).map((type) => ({ value: type.uri, label: type.name })));
 
-  const component = <Select showSearch={true} options={options} optionFilterProp="label" />;
+  const component = <Select showSearch={true} options={options} optionFilterProp="label" value={value} onChange={(value) => setValue(value)} />;
   const initialValues =
     currentSite !== undefined && currentSite.depositTypeCandidate.length > 0
       ? {
           fieldValue: currentSite.depositTypeCandidate[0].normalizedURI!,
-          refDoc: currentSite.getFirstReferencedDocument(),
-          refComment: currentSite.reference[0].comment,
+          refDoc: currentSite.getDocument(),
+          refComment: currentSite.reference.comment,
           refAppliedToAll: false,
         }
       : defaultInitialValues;
   return [component, initialValues];
 };
 
-const getTonnageConfig = ({ currentSite, sites, setFieldProvenance, stores, commodity }: GetFieldConfig): [React.ReactElement, FormFields] => {
-  const component = <Input type="number" />;
+const getTonnageConfig = ({ currentSite, sites, setFieldProvenance, stores, commodity, value, setValue }: GetFieldConfig): [React.ReactElement, FormFields] => {
+  const component = <Input type="number" value={value} onChange={(e) => setValue(e.target.value)} />;
   const initialValues =
     currentSite !== undefined && currentSite.depositTypeCandidate.length > 0
       ? {
           fieldValue: currentSite.gradeTonnage[commodity]?.totalTonnage?.toFixed(4) || "",
-          refDoc: currentSite.getFirstReferencedDocument(),
-          refComment: currentSite.reference[0].comment,
+          refDoc: currentSite.getDocument(),
+          refComment: currentSite.reference.comment,
           refAppliedToAll: false,
         }
       : defaultInitialValues;
   return [component, initialValues];
 };
 
-const getGradeConfig = ({ currentSite, sites, setFieldProvenance, stores, commodity }: GetFieldConfig): [React.ReactElement, FormFields] => {
-  const component = <Input type="number" />;
+const getGradeConfig = ({ currentSite, sites, setFieldProvenance, stores, commodity, value, setValue }: GetFieldConfig): [React.ReactElement, FormFields] => {
+  const component = <Input type="number" value={value} onChange={(e) => setValue(e.target.value)} />;
   const initialValues =
     currentSite !== undefined && currentSite.depositTypeCandidate.length > 0
       ? {
           fieldValue: currentSite.gradeTonnage[commodity]?.totalGrade?.toFixed(4) || "",
-          refDoc: currentSite.getFirstReferencedDocument(),
-          refComment: currentSite.reference[0].comment,
+          refDoc: currentSite.getDocument(),
+          refComment: currentSite.reference.comment,
           refAppliedToAll: false,
         }
       : defaultInitialValues;

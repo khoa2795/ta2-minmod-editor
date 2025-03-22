@@ -1,8 +1,7 @@
 import React, { useMemo } from "react";
-import { Space, Typography } from "antd";
+import { Typography } from "antd";
 import { MineralSite, useStores, Document } from "models";
 import { observer } from "mobx-react-lite";
-import { ExportOutlined } from "@ant-design/icons";
 
 interface ReferenceComponentProps {
   site: MineralSite;
@@ -14,7 +13,7 @@ function getRecordURL(site: MineralSite, richUrlTemplate: string): string | unde
     return undefined;
   }
 
-  const pageInfo = site.reference[0]?.pageInfo || [];
+  const pageInfo = site.reference.pageInfo || [];
   const page = pageInfo[0]?.page;
 
   return urlTemplate.replace(/\{(\w+)(=[^}]*)?\}/g, (match, key, _defaultMatch, defaultValue) => {
@@ -38,27 +37,12 @@ export const ReferenceComponent: React.FC<ReferenceComponentProps> = observer(({
     return getRecordURL(site, rawConnection);
   }, [site, sourceStore.records.size]);
 
-  const docs = useMemo(() => Object.values(site.getReferencedDocuments()), [site]);
-  let content;
-
-  if (connection !== undefined) {
-    // TODO: fix me, we can solve this bug merging source & docs
-    const doc = docs[0];
-    content = (
-      <Typography.Link target="_blank" href={connection} title={doc.title || doc.uri} className="font-small">
-        {getDocTitle(doc)}
-      </Typography.Link>
-    );
-  } else {
-    content = docs.map((doc, index) => (
-      <React.Fragment key={doc.uri}>
-        <Typography.Link target="_blank" href={doc.uri} title={doc.title || doc.uri} className="font-small">
-          {getDocTitle(doc)}
-        </Typography.Link>
-        {index < docs.length - 1 && <span>&nbsp;·&nbsp;</span>}
-      </React.Fragment>
-    ));
-  }
+  const doc = site.getDocument();
+  let content = (
+    <Typography.Link target="_blank" href={connection !== undefined ? connection : doc.uri} title={doc.title || doc.uri} className="font-small">
+      {getDocTitle(doc)}
+    </Typography.Link>
+  );
 
   return <Typography.Text>{content}</Typography.Text>;
 });
