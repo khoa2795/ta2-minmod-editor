@@ -13,6 +13,7 @@ import { FieldEdit, EditableField, Reference, Document, GradeTonnage, CandidateE
 import { NamespaceManager, BindedNamespace } from "./Namespace";
 import { DataSource, DataSourceStore } from "./dataSource";
 import { Unit, UnitStore } from "./units";
+import { SettingStore } from "./SettingStore";
 
 const namespaceManager = new NamespaceManager();
 const dedupMineralSiteStore = new DedupMineralSiteStore(namespaceManager);
@@ -27,6 +28,7 @@ export const stores = {
   countryStore: new CountryStore(namespaceManager),
   unitStore: new UnitStore(),
   sourceStore: new DataSourceStore(),
+  settingStore: new SettingStore(),
 };
 
 registerDefaultAxiosErrorHandler((error) => {

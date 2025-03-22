@@ -1,9 +1,35 @@
-import { Button, Flex, Space, Table, Typography, message, Checkbox, Tag, Descriptions } from "antd";
+import {
+  Button,
+  Flex,
+  Space,
+  Table,
+  Typography,
+  message,
+  Checkbox,
+  Tag,
+  Descriptions,
+} from "antd";
 import { observer } from "mobx-react-lite";
-import { useStores, Commodity, DedupMineralSite, MineralSite, Reference, DraftCreateMineralSite, FieldEdit, EditableField, DraftUpdateMineralSite } from "models";
+import {
+  useStores,
+  Commodity,
+  DedupMineralSite,
+  MineralSite,
+  Reference,
+  DraftCreateMineralSite,
+  FieldEdit,
+  EditableField,
+  DraftUpdateMineralSite,
+} from "models";
 import { useEffect, useMemo, useState } from "react";
 import { CanEntComponent, ListCanEntComponent } from "./CandidateEntity";
-import { EditOutlined, InfoCircleOutlined, MoreOutlined, PlusOutlined, PlusSquareOutlined } from "@ant-design/icons";
+import {
+  EditOutlined,
+  InfoCircleOutlined,
+  MoreOutlined,
+  PlusOutlined,
+  PlusSquareOutlined,
+} from "@ant-design/icons";
 import { EditSiteField } from "./EditSiteField";
 import styles from "./EditDedupMineralSite.module.css";
 import { Tooltip, Avatar } from "antd";
@@ -11,7 +37,19 @@ import { ReferenceComponent } from "pages/editor/editDedupSite/ReferenceComponen
 import { InternalID } from "models/typing";
 import { Empty, Grade, MayEmptyString, Tonnage } from "components/Primitive";
 
-const colors = ["magenta", "red", "volcano", "orange", "gold", "lime", "green", "cyan", "blue", "geekblue", "purple"];
+const colors = [
+  "magenta",
+  "red",
+  "volcano",
+  "orange",
+  "gold",
+  "lime",
+  "green",
+  "cyan",
+  "blue",
+  "geekblue",
+  "purple",
+];
 const getUserColor = (username: string) => {
   let hash = 1;
   for (let i = 0; i < username.length; i++) {
@@ -80,272 +118,490 @@ class SelectedSites {
   }
 }
 
-export const EditDedupMineralSite = observer(({ dedupSite, commodity }: EditDedupMineralSiteProps) => {
-  const stores = useStores();
-  const { mineralSiteStore, userStore, dedupMineralSiteStore } = stores;
-  const user = userStore.getCurrentUser()!;
+export const EditDedupMineralSite = observer(
+  ({ dedupSite, commodity }: EditDedupMineralSiteProps) => {
+    const stores = useStores();
+    const { mineralSiteStore, userStore, dedupMineralSiteStore, settingStore } =
+      stores;
+    const user = userStore.getCurrentUser()!;
 
-  const [editField, setEditField] = useState<EditableField | undefined>(undefined);
-  const [selectedRows, setSelectedRows] = useState<SelectedSites>(new SelectedSites());
-  const [expandedRowKeys, setExpandedRowKeys] = useState<Set<InternalID>>(new Set());
+    const [editField, setEditField] = useState<EditableField | undefined>(
+      undefined
+    );
+    const [selectedRows, setSelectedRows] = useState<SelectedSites>(
+      new SelectedSites()
+    );
 
-  const [fetchedSites, siteGroups] = useMemo(() => {
-    const tmpLst: (MineralSite | null | undefined)[] = dedupSite.sites.map((site) => mineralSiteStore.get(site.id));
-    // no idea why typescript compiler incorrectly complains about the incorrect type
-    const fetchedSites = tmpLst.filter((site) => site !== undefined) as (MineralSite | null)[];
-    const sites = fetchedSites.filter((site) => site !== null) as MineralSite[];
+    const [fetchedSites, siteGroups] = useMemo(() => {
+      const tmpLst: (MineralSite | null | undefined)[] = dedupSite.sites.map(
+        (site) => mineralSiteStore.get(site.id)
+      );
+      // no idea why typescript compiler incorrectly complains about the incorrect type
+      const fetchedSites = tmpLst.filter(
+        (site) => site !== undefined
+      ) as (MineralSite | null)[];
+      const sites = fetchedSites.filter(
+        (site) => site !== null
+      ) as MineralSite[];
 
-    return [fetchedSites, new GroupedSites(sites)];
-  }, [dedupSite.sites, mineralSiteStore.records.size]);
-  const isLoading = mineralSiteStore.state.value === "updating" || fetchedSites.length !== dedupSite.sites.length;
+      return [fetchedSites, new GroupedSites(sites)];
+    }, [dedupSite.sites, mineralSiteStore.records.size]);
+    const isLoading =
+      mineralSiteStore.state.value === "updating" ||
+      fetchedSites.length !== dedupSite.sites.length;
 
-  const ungroupTogether = async () => {
-    const ungroupPayload = [
-      {
-        sites: Array.from(selectedRows.groups).flatMap((grpKey) => {
-          return siteGroups.groups[grpKey].sites.map((site) => site.id);
-        }),
-      },
-    ];
-
-    const remainGroup = Object.keys(siteGroups.groups)
-      .filter((grpKey) => !selectedRows.groups.has(grpKey))
-      .flatMap((grpKey) => siteGroups.groups[grpKey].sites.map((site) => site.id));
-    if (remainGroup.length > 0) {
-      ungroupPayload.push({ sites: remainGroup });
-    }
-
-    const newIds = await dedupMineralSiteStore.updateSameAsGroup(ungroupPayload);
-    if (commodity && commodity.id) {
-      const commodityId = commodity.id;
-      await dedupMineralSiteStore.replaceSites([dedupSite.id], newIds, commodityId);
-      message.success("Ungrouping was successful!");
-    }
-  };
-
-  const ungroupSeparately = async () => {
-    const ungroupPayload = Array.from(selectedRows.groups).map((grpKey) => {
-      return { sites: siteGroups.groups[grpKey].sites.map((site) => site.id) };
-    });
-
-    const remainGroup = Object.keys(siteGroups.groups)
-      .filter((grpKey) => !selectedRows.groups.has(grpKey))
-      .flatMap((grpKey) => siteGroups.groups[grpKey].sites.map((site) => site.id));
-    if (remainGroup.length > 0) {
-      ungroupPayload.push({ sites: remainGroup });
-    }
-
-    const newIds = await dedupMineralSiteStore.updateSameAsGroup(ungroupPayload);
-
-    if (commodity && commodity.id) {
-      const commodityId = commodity.id;
-      await dedupMineralSiteStore.replaceSites([dedupSite.id], newIds, commodityId);
-      message.success("Ungrouping was successful!");
-    }
-  };
-
-  const columns = useMemo(() => {
-    return [
-      {
-        title: "",
-        key: "select",
-        hidden: siteGroups.sites.length === 1,
-        render: (_: any, site: MineralSite) => (
-          <Space size="small">
-            <Checkbox
-              checked={selectedRows.has(site.id, siteGroups)}
-              onChange={(e) => {
-                if (e.target.checked) {
-                  setSelectedRows(selectedRows.add(site.id, siteGroups));
-                } else {
-                  setSelectedRows(selectedRows.delete(site.id, siteGroups));
-                }
-              }}
-            />
-            <button
-              type="button"
-              className={"ant-table-row-expand-icon " + (expandedRowKeys.has(site.id) ? "ant-table-row-expand-icon-expanded" : "ant-table-row-expand-icon-collapsed")}
-              style={{ borderRadius: 4, borderColor: "#bbb", opacity: 0.8 }}
-              onClick={() => {
-                const newExpandedRowKeys = new Set(expandedRowKeys);
-                if (newExpandedRowKeys.has(site.id)) {
-                  newExpandedRowKeys.delete(site.id);
-                } else {
-                  newExpandedRowKeys.add(site.id);
-                }
-                setExpandedRowKeys(newExpandedRowKeys);
-              }}
-            />
-          </Space>
-        ),
-      },
-      {
-        title: (
-          <Flex justify="space-between">
-            <span>Name</span>
-            <EditOutlined className={styles.editButton} onClick={() => setEditField("name")} />
-          </Flex>
-        ),
-        key: "name",
-        render: (_: any, site: MineralSite, index: number) => {
-          const createdBy = site.createdBy.split("/").pop()!;
-          const fullName = createdBy;
-          const username = createdBy;
-
-          const color = getUserColor(username);
-          const confidence = dedupSite.sites[index].score;
-
-          return (
-            <Flex align="left" vertical={true} gap={4}>
-              <Typography.Link href={`/resource/${site.id}`} target="_blank">
-                {site.name || "␣"}
-              </Typography.Link>
-              <Space size={"small"}>
-                <Tooltip title={fullName}>
-                  <Tag color={color} style={{ margin: 0 }}>
-                    {username}
-                  </Tag>
-                </Tooltip>
-                <Tooltip title={`Confidence: ${confidence}`} style={{ textAlign: "center" }}>
-                  <Tag>{confidence}</Tag>
-                </Tooltip>
-              </Space>
-            </Flex>
-          );
+    const ungroupTogether = async () => {
+      const ungroupPayload = [
+        {
+          sites: Array.from(selectedRows.groups).flatMap((grpKey) => {
+            return siteGroups.groups[grpKey].sites.map((site) => site.id);
+          }),
         },
-      },
-      {
-        title: (
-          <Flex justify="space-between">
-            <span>Location</span>
-            <EditOutlined className={styles.editButton} onClick={() => setEditField("location")} />
-          </Flex>
-        ),
-        key: "location",
-        render: (_: any, site: MineralSite) => {
-          return (
-            <Typography.Text className="font-small" ellipsis={true} style={{ maxWidth: 200 }}>
-              {site.locationInfo?.location}
-            </Typography.Text>
-          );
-        },
-      },
-      {
-        title: "CRS",
-        key: "crs",
-        render: (_: any, site: MineralSite) => {
-          return <MayEmptyString value={site.locationInfo?.crs?.observedName} />;
-        },
-      },
-      {
-        title: (
-          <Flex justify="space-between">
-            <span>Country</span>
-            <EditOutlined className={styles.editButton} onClick={() => setEditField("country")} />
-          </Flex>
-        ),
-        key: "country",
-        render: (_: any, site: MineralSite) => {
-          return <ListCanEntComponent entities={site.locationInfo?.country || []} store="countryStore" />;
-        },
-      },
-      {
-        title: (
-          <Flex justify="space-between">
-            <span>State/Province</span>
-            <EditOutlined className={styles.editButton} onClick={() => setEditField("stateOrProvince")} />
-          </Flex>
-        ),
-        key: "state/province",
-        render: (_: any, site: MineralSite) => {
-          return <ListCanEntComponent entities={site.locationInfo?.stateOrProvince || []} store="stateOrProvinceStore" />;
-        },
-      },
-      {
-        title: (
-          <Flex justify="space-between">
-            <span>Dep. Type</span>
-            <EditOutlined className={styles.editButton} onClick={() => setEditField("depositType")} />
-          </Flex>
-        ),
-        key: "deposit-type",
-        render: (_: any, site: MineralSite) => {
-          return <CanEntComponent entity={site.depositTypeCandidate[0]} store="depositTypeStore" />;
-        },
-      },
-      {
-        title: "Dep. Confidence",
-        key: "dep-type-confidence",
-        render: (_: any, site: MineralSite) => {
-          if (site.depositTypeCandidate.length === 0) {
-            return <Empty />;
-          }
-          return site.depositTypeCandidate[0].confidence.toFixed(4);
-        },
-      },
-      {
-        title: (
-          <Flex justify="space-between">
-            <span>Tonnage (Mt)</span>
-            <EditOutlined className={styles.editButton} onClick={() => setEditField("tonnage")} />
-          </Flex>
-        ),
-        key: "tonnage",
-        render: (_: any, site: MineralSite) => {
-          return <Tonnage tonnage={site.gradeTonnage[commodity.id]?.totalTonnage} />;
-        },
-      },
-      {
-        title: (
-          <Flex justify="space-between">
-            <span>Grade (%)</span>
-            <EditOutlined className={styles.editButton} onClick={() => setEditField("grade")} />
-          </Flex>
-        ),
-        key: "grade",
-        render: (_: any, site: MineralSite) => {
-          return <Grade grade={site.gradeTonnage[commodity.id]?.totalGrade} />;
-        },
-      },
-      {
-        title: "Source",
-        key: "reference",
-        render: (_: any, site: MineralSite) => {
-          return (
-            <div style={{ maxWidth: 200, display: "inline-block" }}>
-              <ReferenceComponent site={site} />
-              <Tooltip
-                trigger="click"
-                title="This key identifies same deposits from the same record of a data source. When select/unselect a deposit, all deposits with the same key will be selected/unselected together."
-              >
-                <Typography.Text type="secondary" strong={true} className="font-small" style={{ cursor: "pointer" }}>
-                  &nbsp;({siteGroups.groups[siteGroups.site2groupKey[site.id]].label})
-                </Typography.Text>
-              </Tooltip>
-            </div>
-          );
-        },
-      },
-    ];
-  }, [commodity.id, siteGroups, selectedRows, ungroupTogether]);
+      ];
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        mineralSiteStore.fetchByIds(dedupSite.sites.map((site) => site.id));
-      } catch (error) {
-        console.error("Error in fetchData:", error);
+      const remainGroup = Object.keys(siteGroups.groups)
+        .filter((grpKey) => !selectedRows.groups.has(grpKey))
+        .flatMap((grpKey) =>
+          siteGroups.groups[grpKey].sites.map((site) => site.id)
+        );
+      if (remainGroup.length > 0) {
+        ungroupPayload.push({ sites: remainGroup });
+      }
+
+      const newIds = await dedupMineralSiteStore.updateSameAsGroup(
+        ungroupPayload
+      );
+      if (commodity && commodity.id) {
+        const commodityId = commodity.id;
+        await dedupMineralSiteStore.replaceSites(
+          [dedupSite.id],
+          newIds,
+          commodityId
+        );
+        message.success("Ungrouping was successful!");
       }
     };
 
-    fetchData();
-  }, [dedupSite.sites, mineralSiteStore]);
+    const ungroupSeparately = async () => {
+      const ungroupPayload = Array.from(selectedRows.groups).map((grpKey) => {
+        return {
+          sites: siteGroups.groups[grpKey].sites.map((site) => site.id),
+        };
+      });
 
-  const onEditFinish = (change?: { edit: FieldEdit; reference: Reference }) => {
-    if (change === undefined) {
-      setEditField(undefined);
-      return;
-    }
+      const remainGroup = Object.keys(siteGroups.groups)
+        .filter((grpKey) => !selectedRows.groups.has(grpKey))
+        .flatMap((grpKey) =>
+          siteGroups.groups[grpKey].sites.map((site) => site.id)
+        );
+      if (remainGroup.length > 0) {
+        ungroupPayload.push({ sites: remainGroup });
+      }
+
+      const newIds = await dedupMineralSiteStore.updateSameAsGroup(
+        ungroupPayload
+      );
+
+      if (commodity && commodity.id) {
+        const commodityId = commodity.id;
+        await dedupMineralSiteStore.replaceSites(
+          [dedupSite.id],
+          newIds,
+          commodityId
+        );
+        message.success("Ungrouping was successful!");
+      }
+    };
+    let dynamicColumns = useMemo(() => {
+      const dynamicCols = [];
+      if (settingStore.hasGeologyInfo()) {
+        dynamicCols.push({
+          title: "Geology Info",
+          key: "geologyInfo",
+          render: (_: any, site: MineralSite) => (
+            <Flex>
+              {site.geologyInfo === undefined ? undefined : (
+                <Descriptions
+                  className={styles.customDescriptions}
+                  bordered={true}
+                  size={"small"}
+                  column={1}
+                  items={[
+                    {
+                      key: "alternation",
+                      label: "Alternation",
+                      children: site.geologyInfo.alternation,
+                    },
+                    {
+                      key: "concentration-process",
+                      label: "Concentration Process",
+                      children: site.geologyInfo.concentrationProcess,
+                    },
+                    {
+                      key: "ore-control",
+                      label: "Ore Control",
+                      children: site.geologyInfo.oreControl,
+                    },
+                    {
+                      key: "host-rock-unit",
+                      label: "Host Rock Unit",
+                      children:
+                        site.geologyInfo.hostRock &&
+                        site.geologyInfo.hostRock.unit,
+                    },
+                    {
+                      key: "host-rock-type",
+                      label: "Host Rock Type",
+                      children:
+                        site.geologyInfo.hostRock &&
+                        site.geologyInfo.hostRock.type,
+                    },
+                    {
+                      key: "structure",
+                      label: "Structure",
+                      children: site.geologyInfo.structure,
+                    },
+                    {
+                      key: "associated-rock-unit",
+                      label: "Associated Rock Unit",
+                      children:
+                        site.geologyInfo.associatedRock &&
+                        site.geologyInfo.associatedRock.unit,
+                    },
+                    {
+                      key: "associated-rock-type",
+                      label: "Associated Rock Type",
+                      children:
+                        site.geologyInfo.associatedRock &&
+                        site.geologyInfo.associatedRock.type,
+                    },
+                    {
+                      key: "tectonic",
+                      label: "Tectonic",
+                      children: site.geologyInfo.tectonic,
+                    },
+                  ].filter((item) => item.children)}
+                />
+              )}
+            </Flex>
+          ),
+        });
+      }
+      if (settingStore.hasMineralForm()) {
+        dynamicCols.push({
+          title: "Mineral form",
+          key: "mineralForm",
+          render: (_: any, site: MineralSite) => (
+            <Flex>
+              <Descriptions
+                bordered={true}
+                size={"small"}
+                column={1}
+                items={[
+                  {
+                    key: "mineral-form",
+                    label: "Mineral Forms",
+                    children: site.mineralForm.join(", "),
+                    span: 3,
+                  },
+                ].filter((item) => item.children)}
+              />
+            </Flex>
+          ),
+        });
+      }
+      if (settingStore.hasDiscoverYear()) {
+        dynamicCols.push({
+          title: "Discover year",
+          key: "discoverYear",
+          render: (_: any, site: MineralSite) => (
+            <Flex>
+              <Descriptions
+                className={styles.customDescriptions}
+                bordered={true}
+                size={"small"}
+                column={1}
+                items={[
+                  {
+                    key: "discovered-year",
+                    label: "Discovered Year",
+                    children: site.discoveredYear,
+                  },
+                ].filter((item) => item.children)}
+              />
+            </Flex>
+          ),
+        });
+      }
+      return dynamicCols;
+    }, [
+      settingStore.hasGeologyInfo(),
+      settingStore.hasDiscoverYear(),
+      settingStore.hasMineralForm(),
+    ]);
+    const columns = useMemo(() => {
+      const defaultColumns = [
+        {
+          title: "",
+          key: "select",
+          hidden: siteGroups.sites.length === 1,
+          render: (_: any, site: MineralSite) => (
+            <Space size="small">
+              <Checkbox
+                checked={selectedRows.has(site.id, siteGroups)}
+                onChange={(e) => {
+                  if (e.target.checked) {
+                    setSelectedRows(selectedRows.add(site.id, siteGroups));
+                  } else {
+                    setSelectedRows(selectedRows.delete(site.id, siteGroups));
+                  }
+                }}
+              />
+            </Space>
+          ),
+        },
+        {
+          title: (
+            <Flex justify="space-between">
+              <span>Name</span>
+              <EditOutlined
+                className={styles.editButton}
+                onClick={() => setEditField("name")}
+              />
+            </Flex>
+          ),
+          key: "name",
+          render: (_: any, site: MineralSite, index: number) => {
+            const createdBy = site.createdBy.split("/").pop()!;
+            const fullName = createdBy;
+            const username = createdBy;
+
+            const color = getUserColor(username);
+            const confidence = dedupSite.sites[index].score;
+
+            return (
+              <Flex align="left" vertical={true} gap={4}>
+                <Typography.Link href={`/resource/${site.id}`} target="_blank">
+                  {site.name || "␣"}
+                </Typography.Link>
+                <Space size={"small"}>
+                  <Tooltip title={fullName}>
+                    <Tag color={color} style={{ margin: 0 }}>
+                      {username}
+                    </Tag>
+                  </Tooltip>
+                  <Tooltip
+                    title={`Confidence: ${confidence}`}
+                    style={{ textAlign: "center" }}
+                  >
+                    <Tag>{confidence}</Tag>
+                  </Tooltip>
+                </Space>
+              </Flex>
+            );
+          },
+        },
+        {
+          title: (
+            <Flex justify="space-between">
+              <span>Location</span>
+              <EditOutlined
+                className={styles.editButton}
+                onClick={() => setEditField("location")}
+              />
+            </Flex>
+          ),
+          key: "location",
+          render: (_: any, site: MineralSite) => {
+            return (
+              <Typography.Text
+                className="font-small"
+                ellipsis={true}
+                style={{ maxWidth: 200 }}
+              >
+                {site.locationInfo?.location}
+              </Typography.Text>
+            );
+          },
+        },
+        {
+          title: "CRS",
+          key: "crs",
+          render: (_: any, site: MineralSite) => {
+            return (
+              <MayEmptyString value={site.locationInfo?.crs?.observedName} />
+            );
+          },
+        },
+        {
+          title: (
+            <Flex justify="space-between">
+              <span>Country</span>
+              <EditOutlined
+                className={styles.editButton}
+                onClick={() => setEditField("country")}
+              />
+            </Flex>
+          ),
+          key: "country",
+          render: (_: any, site: MineralSite) => {
+            return (
+              <ListCanEntComponent
+                entities={site.locationInfo?.country || []}
+                store="countryStore"
+              />
+            );
+          },
+        },
+        {
+          title: (
+            <Flex justify="space-between">
+              <span>State/Province</span>
+              <EditOutlined
+                className={styles.editButton}
+                onClick={() => setEditField("stateOrProvince")}
+              />
+            </Flex>
+          ),
+          key: "state/province",
+          render: (_: any, site: MineralSite) => {
+            return (
+              <ListCanEntComponent
+                entities={site.locationInfo?.stateOrProvince || []}
+                store="stateOrProvinceStore"
+              />
+            );
+          },
+        },
+        {
+          title: (
+            <Flex justify="space-between">
+              <span>Dep. Type</span>
+              <EditOutlined
+                className={styles.editButton}
+                onClick={() => setEditField("depositType")}
+              />
+            </Flex>
+          ),
+          key: "deposit-type",
+          render: (_: any, site: MineralSite) => {
+            return (
+              <CanEntComponent
+                entity={site.depositTypeCandidate[0]}
+                store="depositTypeStore"
+              />
+            );
+          },
+        },
+        {
+          title: "Dep. Confidence",
+          key: "dep-type-confidence",
+          render: (_: any, site: MineralSite) => {
+            if (site.depositTypeCandidate.length === 0) {
+              return <Empty />;
+            }
+            return site.depositTypeCandidate[0].confidence.toFixed(4);
+          },
+        },
+        {
+          title: (
+            <Flex justify="space-between">
+              <span>Tonnage (Mt)</span>
+              <EditOutlined
+                className={styles.editButton}
+                onClick={() => setEditField("tonnage")}
+              />
+            </Flex>
+          ),
+          key: "tonnage",
+          render: (_: any, site: MineralSite) => {
+            return (
+              <Tonnage
+                tonnage={site.gradeTonnage[commodity.id]?.totalTonnage}
+              />
+            );
+          },
+        },
+        {
+          title: (
+            <Flex justify="space-between">
+              <span>Grade (%)</span>
+              <EditOutlined
+                className={styles.editButton}
+                onClick={() => setEditField("grade")}
+              />
+            </Flex>
+          ),
+          key: "grade",
+          render: (_: any, site: MineralSite) => {
+            return (
+              <Grade grade={site.gradeTonnage[commodity.id]?.totalGrade} />
+            );
+          },
+        },
+        {
+          title: "Source",
+          key: "reference",
+          render: (_: any, site: MineralSite) => {
+            return (
+              <div style={{ maxWidth: 200, display: "inline-block" }}>
+                <ReferenceComponent site={site} />
+                <Tooltip
+                  trigger="click"
+                  title="This key identifies same deposits from the same record of a data source. When select/unselect a deposit, all deposits with the same key will be selected/unselected together."
+                >
+                  <Typography.Text
+                    type="secondary"
+                    strong={true}
+                    className="font-small"
+                    style={{ cursor: "pointer" }}
+                  >
+                    &nbsp;(
+                    {siteGroups.groups[siteGroups.site2groupKey[site.id]].label}
+                    )
+                  </Typography.Text>
+                </Tooltip>
+              </div>
+            );
+          },
+        },
+      ];
+      const sourceIndex = defaultColumns.findIndex(
+        (col) => col.key === "reference"
+      );
+      return [
+        ...defaultColumns.slice(0, sourceIndex + 1),
+        ...dynamicColumns,
+        ...defaultColumns.slice(sourceIndex + 1),
+      ];
+    }, [
+      commodity.id,
+      siteGroups,
+      selectedRows,
+      ungroupTogether,
+      dynamicColumns,
+    ]);
+
+    useEffect(() => {
+      const fetchData = async () => {
+        try {
+          mineralSiteStore.fetchByIds(dedupSite.sites.map((site) => site.id));
+        } catch (error) {
+          console.error("Error in fetchData:", error);
+        }
+      };
+
+      fetchData();
+    }, [dedupSite.sites, mineralSiteStore]);
+
+    const onEditFinish = (change?: {
+      edit: FieldEdit;
+      reference: Reference;
+    }) => {
+      if (change === undefined) {
+        setEditField(undefined);
+        return;
+      }
 
     const currentUser = userStore.getCurrentUser()!;
     const existingSite = siteGroups.sites.find((site) => site.createdBy.includes(currentUser.url));
@@ -361,153 +617,74 @@ export const EditDedupMineralSite = observer(({ dedupSite, commodity }: EditDedu
       cb = mineralSiteStore.updateAndUpdateDedup(dedupSite.commodity, draftSite);
     }
 
-    cb.then(() => {
-      setEditField(undefined);
-    });
-  };
+      cb.then(() => {
+        setEditField(undefined);
+      });
+    };
 
-  const currentSite = siteGroups.sites.find((site) => site.createdBy == user.url);
+    const currentSite = siteGroups.sites.find(
+      (site) => site.createdBy == user.url
+    );
 
-  let groupBtns = undefined;
-  if (siteGroups.nGroups > 1 && selectedRows.groups.size > 0) {
-    const ungrpSepBtn = (
-      <Button key="separately" type="primary" onClick={ungroupSeparately}>
-        Ungroup Separately
-      </Button>
-    );
-    const ungrpTogBtn = (
-      <Button key="together" type="primary" onClick={ungroupTogether}>
-        Ungroup Together
-      </Button>
-    );
-    if (selectedRows.groups.size === 1) {
-      groupBtns = [ungrpTogBtn];
-    } else if (selectedRows.groups.size === siteGroups.nGroups) {
-      groupBtns = [ungrpSepBtn];
-    } else {
-      groupBtns = [ungrpSepBtn, ungrpTogBtn];
+    let groupBtns = undefined;
+    if (siteGroups.nGroups > 1 && selectedRows.groups.size > 0) {
+      const ungrpSepBtn = (
+        <Button key="separately" type="primary" onClick={ungroupSeparately}>
+          Ungroup Separately
+        </Button>
+      );
+      const ungrpTogBtn = (
+        <Button key="together" type="primary" onClick={ungroupTogether}>
+          Ungroup Together
+        </Button>
+      );
+      if (selectedRows.groups.size === 1) {
+        groupBtns = [ungrpTogBtn];
+      } else if (selectedRows.groups.size === siteGroups.nGroups) {
+        groupBtns = [ungrpSepBtn];
+      } else {
+        groupBtns = [ungrpSepBtn, ungrpTogBtn];
+      }
+      groupBtns = (
+        <Space>
+          {groupBtns}
+          <Tooltip
+            trigger={"click"}
+            title="“Ungroup Separately” creates N new groups, each containing one or more selected deposits from the same record of a data source. “Ungroup Together” creates a single new group containing all the selected deposits."
+          >
+            <InfoCircleOutlined />
+          </Tooltip>
+        </Space>
+      );
     }
-    groupBtns = (
-      <Space>
+
+    return (
+      <Flex vertical={true} gap="small">
         {groupBtns}
-        <Tooltip
-          trigger={"click"}
-          title="“Ungroup Separately” creates N new groups, each containing one or more selected deposits from the same record of a data source. “Ungroup Together” creates a single new group containing all the selected deposits."
-        >
-          <InfoCircleOutlined />
-        </Tooltip>
-      </Space>
+        <Table<MineralSite>
+          className={styles.table}
+          bordered={true}
+          pagination={false}
+          size="small"
+          rowKey="id"
+          columns={columns}
+          dataSource={siteGroups.sites}
+          loading={isLoading}
+          rowClassName={(site) => {
+            return site.createdBy.includes(userStore.getCurrentUser()!.url)
+              ? styles.myEditedRow
+              : "";
+          }}
+        />
+        <EditSiteField
+          key={editField}
+          sites={siteGroups.sites}
+          currentSite={currentSite}
+          editField={editField}
+          onFinish={onEditFinish}
+          commodity={commodity.id}
+        />
+      </Flex>
     );
   }
-
-  return (
-    <Flex vertical={true} gap="small">
-      {groupBtns}
-      <Table<MineralSite>
-        className={styles.table}
-        bordered={true}
-        pagination={false}
-        size="small"
-        rowKey="id"
-        columns={columns}
-        dataSource={siteGroups.sites}
-        loading={isLoading}
-        rowClassName={(site) => {
-          return site.createdBy.includes(userStore.getCurrentUser()!.url) ? styles.myEditedRow : "";
-        }}
-        expandable={{
-          expandedRowRender: (site) => {
-            return (
-              <Descriptions
-                size={"small"}
-                bordered={true}
-                items={[
-                  {
-                    key: "mineral-form",
-                    label: "Mineral Forms",
-                    children: site.mineralForm.join(", "),
-                    span: 3,
-                  },
-                  {
-                    key: "geology-info",
-                    label: "Geology Info",
-                    span: 3,
-                    children:
-                      site.geologyInfo === undefined ? undefined : (
-                        <Descriptions
-                          size={"small"}
-                          bordered={true}
-                          items={[
-                            {
-                              key: "alternation",
-                              label: "Alternation",
-                              children: site.geologyInfo.alternation,
-                            },
-                            {
-                              key: "concentration-process",
-                              label: "Concentration Process",
-                              children: site.geologyInfo.concentrationProcess,
-                            },
-                            {
-                              key: "ore-control",
-                              label: "Ore Control",
-                              children: site.geologyInfo.oreControl,
-                            },
-                            {
-                              key: "host-rock-unit",
-                              label: "Host Rock Unit",
-                              children: site.geologyInfo.hostRock?.unit,
-                            },
-                            {
-                              key: "host-rock-type",
-                              label: "Host Rock Type",
-                              children: site.geologyInfo.hostRock?.type,
-                            },
-                            {
-                              key: "structure",
-                              label: "Structure",
-                              children: site.geologyInfo.structure,
-                            },
-                            {
-                              key: "associated-rock-unit",
-                              label: "Associated Rock Unit",
-                              children: site.geologyInfo.associatedRock?.unit,
-                            },
-                            {
-                              key: "associated-rock-type",
-                              label: "Associated Rock Type",
-                              children: site.geologyInfo.associatedRock?.type,
-                            },
-                            {
-                              key: "tectonic",
-                              label: "Tectonic",
-                              children: site.geologyInfo.tectonic,
-                            },
-                          ]}
-                        />
-                      ),
-                  },
-                  {
-                    key: "discovered-year",
-                    label: "Discovered Year",
-                    children: site.discoveredYear,
-                  },
-                ]}
-              />
-            );
-          },
-          showExpandColumn: false,
-          expandedRowKeys: Array.from(expandedRowKeys),
-        }}
-      />
-      <EditSiteField
-        key={`${editField}:${editField !== undefined && currentSite?.getFieldValue(editField, commodity.id)}`}
-        sites={siteGroups.sites}
-        currentSite={currentSite}
-        editField={editField}
-        onFinish={onEditFinish}
-        commodity={commodity.id}
-      />
-    </Flex>
-  );
-}) as React.FC<EditDedupMineralSiteProps>;
+) as React.FC<EditDedupMineralSiteProps>;
