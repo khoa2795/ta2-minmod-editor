@@ -1,23 +1,6 @@
-import {
-  Button,
-  Flex,
-  Input,
-  Modal,
-  Select,
-  Space,
-  Typography,
-  Checkbox,
-  Form,
-} from "antd";
+import { Button, Flex, Input, Modal, Select, Space, Typography, Checkbox, Form } from "antd";
 import _ from "lodash";
-import {
-  useStores,
-  Commodity,
-  IStore,
-  Country,
-  StateOrProvince,
-  DepositType,
-} from "models";
+import { useStores, Commodity, IStore, Country, StateOrProvince, DepositType } from "models";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { routes } from "routes";
@@ -45,17 +28,8 @@ interface NormSearchArgs {
   stateOrProvince?: StateOrProvince;
 }
 
-export function useSearchArgs(): [
-  SearchArgs,
-  NormSearchArgs,
-  (newArgs: SearchArgs) => void
-] {
-  const {
-    commodityStore,
-    countryStore,
-    stateOrProvinceStore,
-    depositTypeStore,
-  } = useStores();
+export function useSearchArgs(): [SearchArgs, NormSearchArgs, (newArgs: SearchArgs) => void] {
+  const { commodityStore, countryStore, stateOrProvinceStore, depositTypeStore } = useStores();
   const navigate = useNavigate();
   const queryParams = useQueryParams(routes.editor);
 
@@ -114,9 +88,7 @@ export function useSearchArgs(): [
     }
 
     if (newArgs.stateOrProvince !== undefined) {
-      const stateOrProvince = stateOrProvinceStore.getByName(
-        newArgs.stateOrProvince
-      );
+      const stateOrProvince = stateOrProvinceStore.getByName(newArgs.stateOrProvince);
       if (stateOrProvince === null) {
         // does not exist
         newArgs.stateOrProvince = undefined;
@@ -145,12 +117,7 @@ export function useSearchArgs(): [
     };
 
     // wait till all stores are loaded to prevent firing multiple queries with partial conditions to the server
-    if (
-      commodityStore.records.size === 0 ||
-      depositTypeStore.records.size === 0 ||
-      countryStore.records.size === 0 ||
-      stateOrProvinceStore.records.size === 0
-    ) {
+    if (commodityStore.records.size === 0 || depositTypeStore.records.size === 0 || countryStore.records.size === 0 || stateOrProvinceStore.records.size === 0) {
       return output;
     }
 
@@ -177,210 +144,169 @@ export function useSearchArgs(): [
     }
 
     if (args.stateOrProvince !== undefined) {
-      const stateOrProvince = stateOrProvinceStore.getByName(
-        args.stateOrProvince
-      );
+      const stateOrProvince = stateOrProvinceStore.getByName(args.stateOrProvince);
       if (stateOrProvince !== null && stateOrProvince !== undefined) {
         output.stateOrProvince = stateOrProvince;
       }
     }
 
     return output;
-  }, [
-    commodityStore.records.size,
-    depositTypeStore.records.size,
-    countryStore.records.size,
-    stateOrProvinceStore.records.size,
-    args,
-  ]);
+  }, [commodityStore.records.size, depositTypeStore.records.size, countryStore.records.size, stateOrProvinceStore.records.size, args]);
 
   return [args, normArgs, updateSearchArgs];
 }
 
-export const SearchBar: React.FC<SearchBarProps> = observer(
-  ({ searchArgs, setSearchArgs, onOpenNewMineralSiteForm }) => {
-    const {
-      commodityStore,
-      countryStore,
-      stateOrProvinceStore,
-      depositTypeStore,
-      settingStore,
-    } = useStores();
+export const SearchBar: React.FC<SearchBarProps> = observer(({ searchArgs, setSearchArgs, onOpenNewMineralSiteForm }) => {
+  const { commodityStore, countryStore, stateOrProvinceStore, depositTypeStore, settingStore } = useStores();
 
-    const commodityOptions = useMemo(() => {
-      return commodityStore.getCriticalCommodities().map((comm) => {
-        return {
-          value: comm.id,
-          label: comm.name,
-        };
-      });
-    }, [commodityStore.records.size]);
+  const commodityOptions = useMemo(() => {
+    return commodityStore.getCriticalCommodities().map((comm) => {
+      return {
+        value: comm.id,
+        label: comm.name,
+      };
+    });
+  }, [commodityStore.records.size]);
 
-    const depositTypeOptions = useMemo(() => {
-      return depositTypeStore.list.map((ent) => {
-        return {
-          value: ent.id,
-          label: ent.name,
-        };
-      });
-    }, [depositTypeStore.records.size]);
+  const depositTypeOptions = useMemo(() => {
+    return depositTypeStore.list.map((ent) => {
+      return {
+        value: ent.id,
+        label: ent.name,
+      };
+    });
+  }, [depositTypeStore.records.size]);
 
-    const countryOptions = useMemo(() => {
-      return countryStore.list.map((ent) => {
-        return {
-          value: ent.id,
-          label: ent.name,
-        };
-      });
-    }, [countryStore.records.size]);
-    const [visible, setVisible] = useState(false);
-    const handleCheckboxChange = (values: string[]) => {
-      settingStore.setAddField(values);
-    };
-    const [addValue, setAddvalue] = useState<string[]>();
-    const stateOrProvinceOptions = useMemo(() => {
-      return stateOrProvinceStore.list.map((ent) => {
-        return {
-          value: ent.id,
-          label: ent.name,
-        };
-      });
-    }, [stateOrProvinceStore.records.size]);
-    return (
-      <div>
-        <Flex gap="small" justify="space-between" align="center">
-          <Space>
-            <Typography.Text className={styles.label}>
-              Commodity<span style={{ color: "red" }}>*</span>:
-            </Typography.Text>
-            <Select
-              style={{ width: 200 }}
-              value={searchArgs.commodity}
-              placeholder="Select a commodity"
-              showSearch={true}
-              optionFilterProp="label"
-              onChange={(id: string) =>
-                setSearchArgs({
-                  ...searchArgs,
-                  commodity: commodityStore.get(id)!.name,
-                })
-              }
-              options={commodityOptions}
-            />
-            <Typography.Text className={styles.label}>
-              Deposit Type:
-            </Typography.Text>
-            <Select
-              style={{ width: 200 }}
-              allowClear={true}
-              value={searchArgs.depositType}
-              placeholder="Select a deposit type"
-              showSearch={true}
-              optionFilterProp="label"
-              onChange={(id?: string) =>
-                setSearchArgs({
-                  ...searchArgs,
-                  depositType:
-                    id === undefined
-                      ? undefined
-                      : depositTypeStore.get(id)!.name,
-                })
-              }
-              options={depositTypeOptions}
-            />
-            <Typography.Text className={styles.label}>Country:</Typography.Text>
-            <Select
-              style={{ width: 150 }}
-              allowClear={true}
-              value={searchArgs.country}
-              placeholder="Select a country"
-              showSearch={true}
-              optionFilterProp="label"
-              onChange={(id?: string) =>
-                setSearchArgs({
-                  ...searchArgs,
-                  country:
-                    id === undefined ? undefined : countryStore.get(id)!.name,
-                })
-              }
-              options={countryOptions}
-            />
-            <Typography.Text className={styles.label}>
-              State/Province:
-            </Typography.Text>
-            <Select
-              style={{ width: 150 }}
-              allowClear={true}
-              value={searchArgs.stateOrProvince}
-              placeholder="Select a state/province"
-              showSearch={true}
-              optionFilterProp="label"
-              onChange={(id?: string) =>
-                setSearchArgs({
-                  ...searchArgs,
-                  stateOrProvince:
-                    id === undefined
-                      ? undefined
-                      : stateOrProvinceStore.get(id)!.name,
-                })
-              }
-              options={stateOrProvinceOptions}
-            />
-          </Space>
-          <Space>
-            <Button type="primary" onClick={onOpenNewMineralSiteForm}>
-              Add Mineral Site
-            </Button>
-            <Button
-              type="primary"
-              icon={<SettingOutlined />}
-              onClick={() => setVisible(true)}
-            ></Button>
+  const countryOptions = useMemo(() => {
+    return countryStore.list.map((ent) => {
+      return {
+        value: ent.id,
+        label: ent.name,
+      };
+    });
+  }, [countryStore.records.size]);
+  const [visible, setVisible] = useState(false);
+  const handleCheckboxChange = (values: string[]) => {
+    settingStore.setAddField(values);
+  };
+  const [addValue, setAddvalue] = useState<string[]>();
+  const stateOrProvinceOptions = useMemo(() => {
+    return stateOrProvinceStore.list.map((ent) => {
+      return {
+        value: ent.id,
+        label: ent.name,
+      };
+    });
+  }, [stateOrProvinceStore.records.size]);
+  return (
+    <div>
+      <Flex gap="small" justify="space-between" align="center">
+        <Space>
+          <Typography.Text className={styles.label}>
+            Commodity<span style={{ color: "red" }}>*</span>:
+          </Typography.Text>
+          <Select
+            style={{ width: 200 }}
+            value={searchArgs.commodity}
+            placeholder="Select a commodity"
+            showSearch={true}
+            optionFilterProp="label"
+            onChange={(id: string) =>
+              setSearchArgs({
+                ...searchArgs,
+                commodity: commodityStore.get(id)!.name,
+              })
+            }
+            options={commodityOptions}
+          />
+          <Typography.Text className={styles.label}>Deposit Type:</Typography.Text>
+          <Select
+            style={{ width: 200 }}
+            allowClear={true}
+            value={searchArgs.depositType}
+            placeholder="Select a deposit type"
+            showSearch={true}
+            optionFilterProp="label"
+            onChange={(id?: string) =>
+              setSearchArgs({
+                ...searchArgs,
+                depositType: id === undefined ? undefined : depositTypeStore.get(id)!.name,
+              })
+            }
+            options={depositTypeOptions}
+          />
+          <Typography.Text className={styles.label}>Country:</Typography.Text>
+          <Select
+            style={{ width: 150 }}
+            allowClear={true}
+            value={searchArgs.country}
+            placeholder="Select a country"
+            showSearch={true}
+            optionFilterProp="label"
+            onChange={(id?: string) =>
+              setSearchArgs({
+                ...searchArgs,
+                country: id === undefined ? undefined : countryStore.get(id)!.name,
+              })
+            }
+            options={countryOptions}
+          />
+          <Typography.Text className={styles.label}>State/Province:</Typography.Text>
+          <Select
+            style={{ width: 150 }}
+            allowClear={true}
+            value={searchArgs.stateOrProvince}
+            placeholder="Select a state/province"
+            showSearch={true}
+            optionFilterProp="label"
+            onChange={(id?: string) =>
+              setSearchArgs({
+                ...searchArgs,
+                stateOrProvince: id === undefined ? undefined : stateOrProvinceStore.get(id)!.name,
+              })
+            }
+            options={stateOrProvinceOptions}
+          />
+        </Space>
+        <Space>
+          <Button type="primary" onClick={onOpenNewMineralSiteForm}>
+            Add Mineral Site
+          </Button>
+          <Button type="primary" icon={<SettingOutlined />} onClick={() => setVisible(true)}></Button>
 
-            <Modal
-              title="Add new field"
-              open={visible}
-              onCancel={() => setVisible(false)}
-              footer={null}
-              width="70%"
-            >
-              <Checkbox.Group
-                value={addValue}
-                onChange={(values) => setAddvalue(values as string[])}
-                style={{ display: "flex", flexDirection: "column", gap: 8 }}
-              >
-                <Checkbox value="geology_info">Geology Info</Checkbox>
-                <Checkbox value="discover_year">Discover Year</Checkbox>
-                <Checkbox value="mineral_form">Mineral Form</Checkbox>
-              </Checkbox.Group>
+          <Modal title="Add new field" open={visible} onCancel={() => setVisible(false)} footer={null} width="70%">
+            <Checkbox.Group value={addValue} onChange={(values) => setAddvalue(values as string[])} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <Checkbox value="geology_info">Geology Info</Checkbox>
+              <Checkbox value="discover_year">Discover Year</Checkbox>
+              <Checkbox value="mineral_form">Mineral Form</Checkbox>
+            </Checkbox.Group>
 
-              <Form.Item style={{ textAlign: "left" }}>
-                <Space>
-                  <Button
-                    onClick={() => {
-                      settingStore.resetFields();
-                      setAddvalue([]);
-                      setVisible(false);
-                    }}
-                  >
-                    Reset
-                  </Button>
-                  <Button
-                    type="primary"
-                    htmlType="submit"
-                    onClick={() => {
-                      handleCheckboxChange(addValue as string[]);
-                      setVisible(false);
-                    }}
-                  >
-                    Save
-                  </Button>
-                </Space>
-              </Form.Item>
-            </Modal>
-          </Space>
-        </Flex>
-      </div>
-    );
-  }
-);
+            <Form.Item style={{ textAlign: "left" }}>
+              <Space>
+                <Button
+                  onClick={() => {
+                    settingStore.resetFields();
+                    setAddvalue([]);
+                    setVisible(false);
+                  }}
+                >
+                  Reset
+                </Button>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  onClick={() => {
+                    handleCheckboxChange(addValue as string[]);
+                    setVisible(false);
+                  }}
+                >
+                  Save
+                </Button>
+              </Space>
+            </Form.Item>
+          </Modal>
+        </Space>
+      </Flex>
+    </div>
+  );
+});
