@@ -175,9 +175,7 @@ const NewMineralSiteForm = ({ commodity }: NewMineralSiteModalProps, ref: Forwar
     let combinedSourceId = "";
     if (sourceType === "unpublished") {
       combinedSourceId = currentUserUrl;
-      combinedSourceId = currentUserUrl;
     } else {
-      combinedSourceId = refDocUrl;
       combinedSourceId = refDocUrl;
     }
     const draft = new DraftCreateMineralSite({
