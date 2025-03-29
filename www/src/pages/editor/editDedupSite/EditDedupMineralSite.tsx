@@ -87,6 +87,7 @@ export const EditDedupMineralSite = observer(({ dedupSite, commodity }: EditDedu
 
   const [editField, setEditField] = useState<EditableField | undefined>(undefined);
   const [selectedRows, setSelectedRows] = useState<SelectedSites>(new SelectedSites());
+  const [expandedRowKeys, setExpandedRowKeys] = useState<Set<InternalID>>(new Set());
 
   const [fetchedSites, siteGroups] = useMemo(() => {
     const tmpLst: (MineralSite | null | undefined)[] = dedupSite.sites.map((site) => mineralSiteStore.get(site.id));
@@ -144,121 +145,6 @@ export const EditDedupMineralSite = observer(({ dedupSite, commodity }: EditDedu
       message.success("Ungrouping was successful!");
     }
   };
-  let dynamicColumns = useMemo(() => {
-    const dynamicCols = [];
-    if (settingStore.hasGeologyInfo()) {
-      dynamicCols.push({
-        title: "Geology Info",
-        key: "geologyInfo",
-        render: (_: any, site: MineralSite) => (
-          <Flex>
-            {site.geologyInfo === undefined ? undefined : (
-              <Descriptions
-                className={styles.customDescriptions}
-                bordered={true}
-                size={"small"}
-                column={1}
-                items={[
-                  {
-                    key: "alternation",
-                    label: "Alternation",
-                    children: site.geologyInfo.alternation,
-                  },
-                  {
-                    key: "concentration-process",
-                    label: "Concentration Process",
-                    children: site.geologyInfo.concentrationProcess,
-                  },
-                  {
-                    key: "ore-control",
-                    label: "Ore Control",
-                    children: site.geologyInfo.oreControl,
-                  },
-                  {
-                    key: "host-rock-unit",
-                    label: "Host Rock Unit",
-                    children: site.geologyInfo.hostRock && site.geologyInfo.hostRock.unit,
-                  },
-                  {
-                    key: "host-rock-type",
-                    label: "Host Rock Type",
-                    children: site.geologyInfo.hostRock && site.geologyInfo.hostRock.type,
-                  },
-                  {
-                    key: "structure",
-                    label: "Structure",
-                    children: site.geologyInfo.structure,
-                  },
-                  {
-                    key: "associated-rock-unit",
-                    label: "Associated Rock Unit",
-                    children: site.geologyInfo.associatedRock && site.geologyInfo.associatedRock.unit,
-                  },
-                  {
-                    key: "associated-rock-type",
-                    label: "Associated Rock Type",
-                    children: site.geologyInfo.associatedRock && site.geologyInfo.associatedRock.type,
-                  },
-                  {
-                    key: "tectonic",
-                    label: "Tectonic",
-                    children: site.geologyInfo.tectonic,
-                  },
-                ].filter((item) => item.children)}
-              />
-            )}
-          </Flex>
-        ),
-      });
-    }
-    if (settingStore.hasMineralForm()) {
-      dynamicCols.push({
-        title: "Mineral form",
-        key: "mineralForm",
-        render: (_: any, site: MineralSite) => (
-          <Flex>
-            <Descriptions
-              bordered={true}
-              size={"small"}
-              column={1}
-              items={[
-                {
-                  key: "mineral-form",
-                  label: "Mineral Forms",
-                  children: site.mineralForm.join(", "),
-                  span: 3,
-                },
-              ].filter((item) => item.children)}
-            />
-          </Flex>
-        ),
-      });
-    }
-    if (settingStore.hasDiscoverYear()) {
-      dynamicCols.push({
-        title: "Discover year",
-        key: "discoverYear",
-        render: (_: any, site: MineralSite) => (
-          <Flex>
-            <Descriptions
-              className={styles.customDescriptions}
-              bordered={true}
-              size={"small"}
-              column={1}
-              items={[
-                {
-                  key: "discovered-year",
-                  label: "Discovered Year",
-                  children: site.discoveredYear,
-                },
-              ].filter((item) => item.children)}
-            />
-          </Flex>
-        ),
-      });
-    }
-    return dynamicCols;
-  }, [settingStore.hasGeologyInfo(), settingStore.hasDiscoverYear(), settingStore.hasMineralForm()]);
   const columns = useMemo(() => {
     const defaultColumns = [
       {
@@ -275,6 +161,20 @@ export const EditDedupMineralSite = observer(({ dedupSite, commodity }: EditDedu
                 } else {
                   setSelectedRows(selectedRows.delete(site.id, siteGroups));
                 }
+              }}
+            />
+            <button
+              type="button"
+              className={"ant-table-row-expand-icon " + (expandedRowKeys.has(site.id) ? "ant-table-row-expand-icon-expanded" : "ant-table-row-expand-icon-collapsed")}
+              style={{ borderRadius: 4, borderColor: "#bbb", opacity: 0.8 }}
+              onClick={() => {
+                const newExpandedRowKeys = new Set(expandedRowKeys);
+                if (newExpandedRowKeys.has(site.id)) {
+                  newExpandedRowKeys.delete(site.id);
+                } else {
+                  newExpandedRowKeys.add(site.id);
+                }
+                setExpandedRowKeys(newExpandedRowKeys);
               }}
             />
           </Space>
@@ -429,9 +329,119 @@ export const EditDedupMineralSite = observer(({ dedupSite, commodity }: EditDedu
         },
       },
     ];
-    const sourceIndex = defaultColumns.findIndex((col) => col.key === "reference");
-    return [...defaultColumns.slice(0, sourceIndex + 1), ...dynamicColumns, ...defaultColumns.slice(sourceIndex + 1)];
-  }, [commodity.id, siteGroups, selectedRows, ungroupTogether, dynamicColumns]);
+    if (settingStore.displayColumns.has("geology_info")) {
+      defaultColumns.push({
+        title: "Geology Info",
+        key: "geologyInfo",
+        render: (_: any, site: MineralSite) => (
+          <Flex>
+            {site.geologyInfo === undefined ? undefined : (
+              <Descriptions
+                className={styles.customDescriptions}
+                bordered={true}
+                size={"small"}
+                column={1}
+                items={[
+                  {
+                    key: "alternation",
+                    label: "Alternation",
+                    children: site.geologyInfo.alternation,
+                  },
+                  {
+                    key: "concentration-process",
+                    label: "Concentration Process",
+                    children: site.geologyInfo.concentrationProcess,
+                  },
+                  {
+                    key: "ore-control",
+                    label: "Ore Control",
+                    children: site.geologyInfo.oreControl,
+                  },
+                  {
+                    key: "host-rock-unit",
+                    label: "Host Rock Unit",
+                    children: site.geologyInfo.hostRock && site.geologyInfo.hostRock.unit,
+                  },
+                  {
+                    key: "host-rock-type",
+                    label: "Host Rock Type",
+                    children: site.geologyInfo.hostRock && site.geologyInfo.hostRock.type,
+                  },
+                  {
+                    key: "structure",
+                    label: "Structure",
+                    children: site.geologyInfo.structure,
+                  },
+                  {
+                    key: "associated-rock-unit",
+                    label: "Associated Rock Unit",
+                    children: site.geologyInfo.associatedRock && site.geologyInfo.associatedRock.unit,
+                  },
+                  {
+                    key: "associated-rock-type",
+                    label: "Associated Rock Type",
+                    children: site.geologyInfo.associatedRock && site.geologyInfo.associatedRock.type,
+                  },
+                  {
+                    key: "tectonic",
+                    label: "Tectonic",
+                    children: site.geologyInfo.tectonic,
+                  },
+                ].filter((item) => item.children)}
+              />
+            )}
+          </Flex>
+        ),
+      });
+    }
+    if (settingStore.displayColumns.has("mineral_form")) {
+      defaultColumns.push({
+        title: "Mineral form",
+        key: "mineralForm",
+        render: (_: any, site: MineralSite) => (
+          <Flex>
+            <Descriptions
+              bordered={true}
+              size={"small"}
+              column={1}
+              items={[
+                {
+                  key: "mineral-form",
+                  label: "Mineral Forms",
+                  children: site.mineralForm.join(", "),
+                  span: 3,
+                },
+              ].filter((item) => item.children)}
+            />
+          </Flex>
+        ),
+      });
+    }
+    if (settingStore.displayColumns.has("discover_year")) {
+      defaultColumns.push({
+        title: "Discover year",
+        key: "discoverYear",
+        render: (_: any, site: MineralSite) => (
+          <Flex>
+            <Descriptions
+              className={styles.customDescriptions}
+              bordered={true}
+              size={"small"}
+              column={1}
+              items={[
+                {
+                  key: "discovered-year",
+                  label: "Discovered Year",
+                  children: site.discoveredYear,
+                },
+              ].filter((item) => item.children)}
+            />
+          </Flex>
+        ),
+      });
+    }
+    return defaultColumns;
+  }, [commodity.id, siteGroups, selectedRows, ungroupTogether]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -518,6 +528,90 @@ export const EditDedupMineralSite = observer(({ dedupSite, commodity }: EditDedu
         loading={isLoading}
         rowClassName={(site) => {
           return site.createdBy.includes(userStore.getCurrentUser()!.url) ? styles.myEditedRow : "";
+        }}
+        expandable={{
+          expandedRowRender: (site) => {
+            return (
+              <Descriptions
+                size={"small"}
+                bordered={true}
+                items={[
+                  {
+                    key: "mineral-form",
+                    label: "Mineral Forms",
+                    children: site.mineralForm.join(", "),
+                    span: 3,
+                  },
+                  {
+                    key: "geology-info",
+                    label: "Geology Info",
+                    span: 3,
+                    children:
+                      site.geologyInfo === undefined ? undefined : (
+                        <Descriptions
+                          size={"small"}
+                          bordered={true}
+                          items={[
+                            {
+                              key: "alternation",
+                              label: "Alternation",
+                              children: site.geologyInfo.alternation,
+                            },
+                            {
+                              key: "concentration-process",
+                              label: "Concentration Process",
+                              children: site.geologyInfo.concentrationProcess,
+                            },
+                            {
+                              key: "ore-control",
+                              label: "Ore Control",
+                              children: site.geologyInfo.oreControl,
+                            },
+                            {
+                              key: "host-rock-unit",
+                              label: "Host Rock Unit",
+                              children: site.geologyInfo.hostRock?.unit,
+                            },
+                            {
+                              key: "host-rock-type",
+                              label: "Host Rock Type",
+                              children: site.geologyInfo.hostRock?.type,
+                            },
+                            {
+                              key: "structure",
+                              label: "Structure",
+                              children: site.geologyInfo.structure,
+                            },
+                            {
+                              key: "associated-rock-unit",
+                              label: "Associated Rock Unit",
+                              children: site.geologyInfo.associatedRock?.unit,
+                            },
+                            {
+                              key: "associated-rock-type",
+                              label: "Associated Rock Type",
+                              children: site.geologyInfo.associatedRock?.type,
+                            },
+                            {
+                              key: "tectonic",
+                              label: "Tectonic",
+                              children: site.geologyInfo.tectonic,
+                            },
+                          ]}
+                        />
+                      ),
+                  },
+                  {
+                    key: "discovered-year",
+                    label: "Discovered Year",
+                    children: site.discoveredYear,
+                  },
+                ]}
+              />
+            );
+          },
+          showExpandColumn: false,
+          expandedRowKeys: Array.from(expandedRowKeys),
         }}
       />
       <EditSiteField key={editField} sites={siteGroups.sites} currentSite={currentSite} editField={editField} onFinish={onEditFinish} commodity={commodity.id} />
