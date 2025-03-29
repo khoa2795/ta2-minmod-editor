@@ -1,27 +1,25 @@
 import { makeAutoObservable } from "mobx";
+type DisplayField = "geology_info" | "discover_year" | "mineral_form";
 export class SettingStore {
-  addField: string[] = [];
+  displayColumns: Set<DisplayField> = new Set();
+  isModalVisible: boolean = false;
 
   constructor() {
-    makeAutoObservable(this); 
+    makeAutoObservable(this);
   }
 
-  setAddField(fields: string[]) {
-    this.addField = fields;
+  setDisplayColumns(fields: DisplayField[]) {
+    this.displayColumns = new Set(fields);
   }
 
-  hasGeologyInfo() {
-    return this.addField.includes("geology_info");
-  }
-
-  hasDiscoverYear() {
-    return this.addField.includes("discover_year");
-  }
-
-  hasMineralForm() {
-    return this.addField.includes("mineral_form");
-  }
   resetFields() {
-    this.addField = [];
+    this.displayColumns.clear();
+  }
+  showModal() {
+    this.isModalVisible = true;
+  }
+
+  hideModal() {
+    this.isModalVisible = false;
   }
 }
