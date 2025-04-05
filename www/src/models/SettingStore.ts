@@ -1,5 +1,7 @@
 import { makeAutoObservable } from "mobx";
+
 export type DisplayField = "geology_info" | "discover_year" | "mineral_form";
+
 export class SettingStore {
   displayColumns: Set<DisplayField> = new Set();
   isModalVisible: boolean = false;
