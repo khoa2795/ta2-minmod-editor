@@ -330,83 +330,85 @@ export const EditDedupMineralSite = observer(({ dedupSite, commodity }: EditDedu
       },
     ];
     if (settingStore.displayColumns.has("geology_info")) {
-      if (siteGroups.sites.some((site) => site.geologyInfo?.alternation)) {
-        defaultColumns.push({
-          title: "Alternation",
-          key: "alternation",
-          render: (_: any, site: MineralSite) => site.geologyInfo?.alternation ?? "-",
-        });
-      }
+      defaultColumns.push({
+        title: "Alternation",
+        key: "alternation",
+        render: (_: any, site: MineralSite) => {
+          return <MayEmptyString value={site.geologyInfo?.alternation} />;
+        },
+      });
 
-      if (siteGroups.sites.some((site) => site.geologyInfo?.concentrationProcess)) {
-        defaultColumns.push({
-          title: "Concentration Process",
-          key: "concentration-process",
-          render: (_: any, site: MineralSite) => site.geologyInfo?.concentrationProcess ?? "-",
-        });
-      }
+      defaultColumns.push({
+        title: "Concentration Process",
+        key: "concentration-process",
+        render: (_: any, site: MineralSite) => {
+          return <MayEmptyString value={site.geologyInfo?.concentrationProcess} />;
+        },
+      });
 
-      if (siteGroups.sites.some((site) => site.geologyInfo?.oreControl)) {
-        defaultColumns.push({
-          title: "Ore Control",
-          key: "ore-control",
-          render: (_: any, site: MineralSite) => site.geologyInfo?.oreControl ?? "-",
-        });
-      }
+      defaultColumns.push({
+        title: "Ore Control",
+        key: "ore-control",
+        render: (_: any, site: MineralSite) => {
+          return <MayEmptyString value={site.geologyInfo?.oreControl} />;
+        },
+      });
 
-      if (siteGroups.sites.some((site) => site.geologyInfo?.hostRock?.unit)) {
-        defaultColumns.push({
-          title: "Host Rock Unit",
-          key: "host-rock-unit",
-          render: (_: any, site: MineralSite) => site.geologyInfo?.hostRock?.unit ?? "-",
-        });
-      }
+      defaultColumns.push({
+        title: "Host Rock Unit",
+        key: "host-rock-unit",
+        render: (_: any, site: MineralSite) => {
+          return <MayEmptyString value={site.geologyInfo?.hostRock?.unit} />;
+        },
+      });
 
-      if (siteGroups.sites.some((site) => site.geologyInfo?.hostRock?.type)) {
-        defaultColumns.push({
-          title: "Host Rock Type",
-          key: "host-rock-type",
-          render: (_: any, site: MineralSite) => site.geologyInfo?.hostRock?.type ?? "-",
-        });
-      }
+      defaultColumns.push({
+        title: "Host Rock Type",
+        key: "host-rock-type",
+        render: (_: any, site: MineralSite) => {
+          return <MayEmptyString value={site.geologyInfo?.hostRock?.type} />;
+        },
+      });
 
-      if (siteGroups.sites.some((site) => site.geologyInfo?.structure)) {
-        defaultColumns.push({
-          title: "Structure",
-          key: "structure",
-          render: (_: any, site: MineralSite) => site.geologyInfo?.structure ?? "-",
-        });
-      }
+      defaultColumns.push({
+        title: "Structure",
+        key: "structure",
+        render: (_: any, site: MineralSite) => {
+          return <MayEmptyString value={site.geologyInfo?.structure} />;
+        },
+      });
 
-      if (siteGroups.sites.some((site) => site.geologyInfo?.associatedRock?.unit)) {
-        defaultColumns.push({
-          title: "Associated Rock Unit",
-          key: "associated-rock-unit",
-          render: (_: any, site: MineralSite) => site.geologyInfo?.associatedRock?.unit ?? "-",
-        });
-      }
+      defaultColumns.push({
+        title: "Associated Rock Unit",
+        key: "associated-rock-unit",
+        render: (_: any, site: MineralSite) => {
+          return <MayEmptyString value={site.geologyInfo?.associatedRock?.unit} />;
+        },
+      });
 
-      if (siteGroups.sites.some((site) => site.geologyInfo?.associatedRock?.type)) {
-        defaultColumns.push({
-          title: "Associated Rock Type",
-          key: "associated-rock-type",
-          render: (_: any, site: MineralSite) => site.geologyInfo?.associatedRock?.type ?? "-",
-        });
-      }
+      defaultColumns.push({
+        title: "Associated Rock Type",
+        key: "associated-rock-type",
+        render: (_: any, site: MineralSite) => {
+          return <MayEmptyString value={site.geologyInfo?.associatedRock?.type} />;
+        },
+      });
 
-      if (siteGroups.sites.some((site) => site.geologyInfo?.tectonic)) {
-        defaultColumns.push({
-          title: "Tectonic",
-          key: "tectonic",
-          render: (_: any, site: MineralSite) => site.geologyInfo?.tectonic ?? "-",
-        });
-      }
+      defaultColumns.push({
+        title: "Tectonic",
+        key: "tectonic",
+        render: (_: any, site: MineralSite) => {
+          return <MayEmptyString value={site.geologyInfo?.tectonic} />;
+        },
+      });
     }
     if (settingStore.displayColumns.has("mineral_form")) {
       defaultColumns.push({
         title: "Mineral form",
         key: "mineralForm",
-        render: (_: any, site: MineralSite) => site.mineralForm.join(", "),
+        render: (_: any, site: MineralSite) => {
+          return <MayEmptyString value={site.mineralForm.join(", ")} />;
+        },
       });
     }
     if (settingStore.displayColumns.has("discover_year")) {
