@@ -8,12 +8,14 @@ import { useQueryParams } from "gena-app";
 import { observer } from "mobx-react-lite";
 import styles from "./SearchBar.module.css";
 import { AddFieldModal } from "./EditSetting";
-import { SettingOutlined, DownloadOutlined } from "@ant-design/icons";
+import { SettingOutlined } from "@ant-design/icons";
 import { DownloadButton } from "./EditDownload";
+
 interface SearchBarProps {
   searchArgs: SearchArgs;
   setSearchArgs: (args: SearchArgs) => void;
   onOpenNewMineralSiteForm: () => void;
+  normSearchArgs: NormSearchArgs;
 }
 
 interface SearchArgs {
@@ -23,7 +25,7 @@ interface SearchArgs {
   stateOrProvince?: string;
 }
 
-interface NormSearchArgs {
+export interface NormSearchArgs {
   commodity?: Commodity;
   depositType?: DepositType;
   country?: Country;
@@ -158,7 +160,7 @@ export function useSearchArgs(): [SearchArgs, NormSearchArgs, (newArgs: SearchAr
   return [args, normArgs, updateSearchArgs];
 }
 
-export const SearchBar: React.FC<SearchBarProps> = observer(({ searchArgs, setSearchArgs, onOpenNewMineralSiteForm }) => {
+export const SearchBar: React.FC<SearchBarProps> = observer(({ searchArgs, setSearchArgs, onOpenNewMineralSiteForm, normSearchArgs }) => {
   const { commodityStore, countryStore, stateOrProvinceStore, depositTypeStore, settingStore } = useStores();
 
   const commodityOptions = useMemo(() => {
@@ -187,6 +189,7 @@ export const SearchBar: React.FC<SearchBarProps> = observer(({ searchArgs, setSe
       };
     });
   }, [countryStore.records.size]);
+
   const stateOrProvinceOptions = useMemo(() => {
     return stateOrProvinceStore.list.map((ent) => {
       return {
@@ -195,6 +198,7 @@ export const SearchBar: React.FC<SearchBarProps> = observer(({ searchArgs, setSe
       };
     });
   }, [stateOrProvinceStore.records.size]);
+
   return (
     <Flex gap="small" justify="space-between" align="center">
       <Space>
@@ -268,11 +272,9 @@ export const SearchBar: React.FC<SearchBarProps> = observer(({ searchArgs, setSe
         <Button type="primary" onClick={onOpenNewMineralSiteForm}>
           Add Mineral Site
         </Button>
-        <Button type="primary" icon={<SettingOutlined />} onClick={() => settingStore.showModal()}></Button>
-        <Modal title="Add new field" open={settingStore.isModalVisible} onCancel={() => settingStore.hideModal()} footer={null} width="70%">
-          <AddFieldModal />
-        </Modal>
-        <DownloadButton />
+        <Button type="primary" icon={<SettingOutlined />} onClick={() => settingStore.showSetting()}></Button>
+        <AddFieldModal />
+        <DownloadButton normSearchArgs={normSearchArgs} />
       </Space>
     </Flex>
   );
