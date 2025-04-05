@@ -2,6 +2,7 @@ import { Checkbox, Form, Space, Button, Row, Col, Modal } from "antd";
 import { observer } from "mobx-react-lite";
 import { useStores } from "models";
 import { DisplayField } from "models/SettingStore";
+
 interface FormField {
   fields: DisplayField[];
 }
@@ -13,6 +14,7 @@ export const AddFieldModal: React.FC = observer(() => {
     { value: "discover_year", label: "Discover Year" },
     { value: "mineral_form", label: "Mineral Form" },
   ];
+  
   return (
       <Modal title="Add new field" open={settingStore.isModalVisible} onCancel={() => settingStore.hideSetting()} footer={null} width="70%">
         <Form<FormField>
