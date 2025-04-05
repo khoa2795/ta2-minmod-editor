@@ -1,5 +1,5 @@
 import { makeAutoObservable } from "mobx";
-type DisplayField = "geology_info" | "discover_year" | "mineral_form";
+export type DisplayField = "geology_info" | "discover_year" | "mineral_form";
 export class SettingStore {
   displayColumns: Set<DisplayField> = new Set();
   isModalVisible: boolean = false;
@@ -15,11 +15,12 @@ export class SettingStore {
   resetFields() {
     this.displayColumns.clear();
   }
-  showModal() {
+
+  showSetting() {
     this.isModalVisible = true;
   }
 
-  hideModal() {
+  hideSetting() {
     this.isModalVisible = false;
   }
 }
