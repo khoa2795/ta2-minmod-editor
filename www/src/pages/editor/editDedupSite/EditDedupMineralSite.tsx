@@ -3,10 +3,10 @@ import { observer } from "mobx-react-lite";
 import { useStores, Commodity, DedupMineralSite, MineralSite, Reference, DraftCreateMineralSite, FieldEdit, EditableField, DraftUpdateMineralSite } from "models";
 import { useEffect, useMemo, useState } from "react";
 import { CanEntComponent, ListCanEntComponent } from "./CandidateEntity";
-import { EditOutlined, InfoCircleOutlined, MoreOutlined, PlusOutlined, PlusSquareOutlined } from "@ant-design/icons";
+import { EditOutlined, InfoCircleOutlined } from "@ant-design/icons";
 import { EditSiteField } from "./EditSiteField";
 import styles from "./EditDedupMineralSite.module.css";
-import { Tooltip, Avatar } from "antd";
+import { Tooltip } from "antd";
 import { ReferenceComponent } from "pages/editor/editDedupSite/ReferenceComponent";
 import { InternalID } from "models/typing";
 import { Empty, Grade, MayEmptyString, Tonnage } from "components/Primitive";
@@ -330,114 +330,92 @@ export const EditDedupMineralSite = observer(({ dedupSite, commodity }: EditDedu
       },
     ];
     if (settingStore.displayColumns.has("geology_info")) {
-      defaultColumns.push({
-        title: "Geology Info",
-        key: "geologyInfo",
-        render: (_: any, site: MineralSite) => (
-          <Flex>
-            {site.geologyInfo === undefined ? undefined : (
-              <Descriptions
-                className={styles.customDescriptions}
-                bordered={true}
-                size={"small"}
-                column={1}
-                items={[
-                  {
-                    key: "alternation",
-                    label: "Alternation",
-                    children: site.geologyInfo.alternation,
-                  },
-                  {
-                    key: "concentration-process",
-                    label: "Concentration Process",
-                    children: site.geologyInfo.concentrationProcess,
-                  },
-                  {
-                    key: "ore-control",
-                    label: "Ore Control",
-                    children: site.geologyInfo.oreControl,
-                  },
-                  {
-                    key: "host-rock-unit",
-                    label: "Host Rock Unit",
-                    children: site.geologyInfo.hostRock && site.geologyInfo.hostRock.unit,
-                  },
-                  {
-                    key: "host-rock-type",
-                    label: "Host Rock Type",
-                    children: site.geologyInfo.hostRock && site.geologyInfo.hostRock.type,
-                  },
-                  {
-                    key: "structure",
-                    label: "Structure",
-                    children: site.geologyInfo.structure,
-                  },
-                  {
-                    key: "associated-rock-unit",
-                    label: "Associated Rock Unit",
-                    children: site.geologyInfo.associatedRock && site.geologyInfo.associatedRock.unit,
-                  },
-                  {
-                    key: "associated-rock-type",
-                    label: "Associated Rock Type",
-                    children: site.geologyInfo.associatedRock && site.geologyInfo.associatedRock.type,
-                  },
-                  {
-                    key: "tectonic",
-                    label: "Tectonic",
-                    children: site.geologyInfo.tectonic,
-                  },
-                ].filter((item) => item.children)}
-              />
-            )}
-          </Flex>
-        ),
-      });
+      if (siteGroups.sites.some((site) => site.geologyInfo?.alternation)) {
+        defaultColumns.push({
+          title: "Alternation",
+          key: "alternation",
+          render: (_: any, site: MineralSite) => site.geologyInfo?.alternation ?? "-",
+        });
+      }
+
+      if (siteGroups.sites.some((site) => site.geologyInfo?.concentrationProcess)) {
+        defaultColumns.push({
+          title: "Concentration Process",
+          key: "concentration-process",
+          render: (_: any, site: MineralSite) => site.geologyInfo?.concentrationProcess ?? "-",
+        });
+      }
+
+      if (siteGroups.sites.some((site) => site.geologyInfo?.oreControl)) {
+        defaultColumns.push({
+          title: "Ore Control",
+          key: "ore-control",
+          render: (_: any, site: MineralSite) => site.geologyInfo?.oreControl ?? "-",
+        });
+      }
+
+      if (siteGroups.sites.some((site) => site.geologyInfo?.hostRock?.unit)) {
+        defaultColumns.push({
+          title: "Host Rock Unit",
+          key: "host-rock-unit",
+          render: (_: any, site: MineralSite) => site.geologyInfo?.hostRock?.unit ?? "-",
+        });
+      }
+
+      if (siteGroups.sites.some((site) => site.geologyInfo?.hostRock?.type)) {
+        defaultColumns.push({
+          title: "Host Rock Type",
+          key: "host-rock-type",
+          render: (_: any, site: MineralSite) => site.geologyInfo?.hostRock?.type ?? "-",
+        });
+      }
+
+      if (siteGroups.sites.some((site) => site.geologyInfo?.structure)) {
+        defaultColumns.push({
+          title: "Structure",
+          key: "structure",
+          render: (_: any, site: MineralSite) => site.geologyInfo?.structure ?? "-",
+        });
+      }
+
+      if (siteGroups.sites.some((site) => site.geologyInfo?.associatedRock?.unit)) {
+        defaultColumns.push({
+          title: "Associated Rock Unit",
+          key: "associated-rock-unit",
+          render: (_: any, site: MineralSite) => site.geologyInfo?.associatedRock?.unit ?? "-",
+        });
+      }
+
+      if (siteGroups.sites.some((site) => site.geologyInfo?.associatedRock?.type)) {
+        defaultColumns.push({
+          title: "Associated Rock Type",
+          key: "associated-rock-type",
+          render: (_: any, site: MineralSite) => site.geologyInfo?.associatedRock?.type ?? "-",
+        });
+      }
+
+      if (siteGroups.sites.some((site) => site.geologyInfo?.tectonic)) {
+        defaultColumns.push({
+          title: "Tectonic",
+          key: "tectonic",
+          render: (_: any, site: MineralSite) => site.geologyInfo?.tectonic ?? "-",
+        });
+      }
     }
     if (settingStore.displayColumns.has("mineral_form")) {
       defaultColumns.push({
         title: "Mineral form",
         key: "mineralForm",
-        render: (_: any, site: MineralSite) => (
-          <Flex>
-            <Descriptions
-              bordered={true}
-              size={"small"}
-              column={1}
-              items={[
-                {
-                  key: "mineral-form",
-                  label: "Mineral Forms",
-                  children: site.mineralForm.join(", "),
-                  span: 3,
-                },
-              ].filter((item) => item.children)}
-            />
-          </Flex>
-        ),
+        render: (_: any, site: MineralSite) => site.mineralForm.join(", "),
       });
     }
     if (settingStore.displayColumns.has("discover_year")) {
       defaultColumns.push({
         title: "Discover year",
         key: "discoverYear",
-        render: (_: any, site: MineralSite) => (
-          <Flex>
-            <Descriptions
-              className={styles.customDescriptions}
-              bordered={true}
-              size={"small"}
-              column={1}
-              items={[
-                {
-                  key: "discovered-year",
-                  label: "Discovered Year",
-                  children: site.discoveredYear,
-                },
-              ].filter((item) => item.children)}
-            />
-          </Flex>
-        ),
+        render: (_: any, site: MineralSite) => {
+          return <MayEmptyString value={site.discoveredYear?.toString()} />;
+        },
       });
     }
     return defaultColumns;
