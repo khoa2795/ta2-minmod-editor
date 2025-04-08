@@ -16,9 +16,9 @@ export const DownloadButton: React.FC<DownloadButtonProp> = observer(({ normSear
     queryParams.append("format", "csv");
 
     if (normSearchArgs.commodity !== undefined) queryParams.append("commodity", normSearchArgs.commodity.id);
-    if (normSearchArgs.depositType !== undefined) queryParams.append("depositType", normSearchArgs.depositType.id);
+    if (normSearchArgs.depositType !== undefined) queryParams.append("deposit_type", normSearchArgs.depositType.id);
     if (normSearchArgs.country !== undefined) queryParams.append("country", normSearchArgs.country.id);
-    if (normSearchArgs.stateOrProvince !== undefined) queryParams.append("stateOrProvince", normSearchArgs.stateOrProvince.id);
+    if (normSearchArgs.stateOrProvince !== undefined) queryParams.append("state_or_province", normSearchArgs.stateOrProvince.id);
 
     url = `${SERVER}/api/v1/dedup-mineral-sites?${queryParams.toString()}`;
     downloadURI(url);
