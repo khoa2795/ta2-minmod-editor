@@ -308,26 +308,6 @@ export const EditDedupMineralSite = observer(({ dedupSite, commodity }: EditDedu
           return <Grade grade={site.gradeTonnage[commodity.id]?.totalGrade} />;
         },
       },
-      {
-        title: "Source",
-        key: "reference",
-        render: (_: any, site: MineralSite) => {
-          return (
-            <div style={{ maxWidth: 200, display: "inline-block" }}>
-              <ReferenceComponent site={site} />
-              <Tooltip
-                trigger="click"
-                title="This key identifies same deposits from the same record of a data source. When select/unselect a deposit, all deposits with the same key will be selected/unselected together."
-              >
-                <Typography.Text type="secondary" strong={true} className="font-small" style={{ cursor: "pointer" }}>
-                  &nbsp;(
-                  {siteGroups.groups[siteGroups.site2groupKey[site.id]].label})
-                </Typography.Text>
-              </Tooltip>
-            </div>
-          );
-        },
-      },
     ];
     if (settingStore.displayColumns.has("geology_info")) {
       defaultColumns.push({
@@ -420,6 +400,26 @@ export const EditDedupMineralSite = observer(({ dedupSite, commodity }: EditDedu
         },
       });
     }
+    defaultColumns.push({
+      title: "Source",
+      key: "reference",
+      render: (_: any, site: MineralSite) => {
+        return (
+          <div style={{ maxWidth: 200, display: "inline-block" }}>
+            <ReferenceComponent site={site} />
+            <Tooltip
+              trigger="click"
+              title="This key identifies same deposits from the same record of a data source. When select/unselect a deposit, all deposits with the same key will be selected/unselected together."
+            >
+              <Typography.Text type="secondary" strong={true} className="font-small" style={{ cursor: "pointer" }}>
+                &nbsp;(
+                {siteGroups.groups[siteGroups.site2groupKey[site.id]].label})
+              </Typography.Text>
+            </Tooltip>
+          </div>
+        );
+      },
+    });
     return defaultColumns;
   }, [commodity.id, siteGroups, selectedRows, ungroupTogether]);
 
