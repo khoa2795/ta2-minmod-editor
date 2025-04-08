@@ -16,7 +16,7 @@ export const EditorPage = observer(() => {
 
   return (
     <Flex vertical={true} gap="small">
-      <SearchBar searchArgs={searchArgs} setSearchArgs={setSearchArgs} onOpenNewMineralSiteForm={handleOpenNewMineralSiteForm} />
+      <SearchBar searchArgs={searchArgs} setSearchArgs={setSearchArgs} onOpenNewMineralSiteForm={handleOpenNewMineralSiteForm} normSearchArgs={normSearchArgs} />
       <DedupMineralSiteTable commodity={normSearchArgs.commodity} depositType={normSearchArgs.depositType} country={normSearchArgs.country} stateOrProvince={normSearchArgs.stateOrProvince} />
       <NewMineralSiteModal ref={newMineralSiteFormRef} commodity={normSearchArgs.commodity} />
     </Flex>

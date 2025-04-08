@@ -1,4 +1,4 @@
-import { Button, Flex, Input, Select, Space, Typography } from "antd";
+import { Button, Flex, Input, Modal, Select, Space, Typography, Checkbox, Form } from "antd";
 import _ from "lodash";
 import { useStores, Commodity, IStore, Country, StateOrProvince, DepositType } from "models";
 import { useEffect, useMemo, useState } from "react";
@@ -7,11 +7,15 @@ import { routes } from "routes";
 import { useQueryParams } from "gena-app";
 import { observer } from "mobx-react-lite";
 import styles from "./SearchBar.module.css";
+import { AddFieldModal } from "./EditSetting";
+import { SettingOutlined } from "@ant-design/icons";
+import { DownloadButton } from "./EditDownload";
 
 interface SearchBarProps {
   searchArgs: SearchArgs;
   setSearchArgs: (args: SearchArgs) => void;
   onOpenNewMineralSiteForm: () => void;
+  normSearchArgs: NormSearchArgs;
 }
 
 interface SearchArgs {
@@ -21,7 +25,7 @@ interface SearchArgs {
   stateOrProvince?: string;
 }
 
-interface NormSearchArgs {
+export interface NormSearchArgs {
   commodity?: Commodity;
   depositType?: DepositType;
   country?: Country;
@@ -42,7 +46,16 @@ export function useSearchArgs(): [SearchArgs, NormSearchArgs, (newArgs: SearchAr
 
   const updateSearchArgs = (newArgs: SearchArgs) => {
     setArgs(newArgs);
-    routes.editor.path({ queryArgs: { commodity: newArgs.commodity, depositType: newArgs.depositType, stateOrProvince: newArgs.stateOrProvince, country: newArgs.country } }).open(navigate);
+    routes.editor
+      .path({
+        queryArgs: {
+          commodity: newArgs.commodity,
+          depositType: newArgs.depositType,
+          stateOrProvince: newArgs.stateOrProvince,
+          country: newArgs.country,
+        },
+      })
+      .open(navigate);
   };
 
   // sync with queries in the URL
@@ -147,8 +160,8 @@ export function useSearchArgs(): [SearchArgs, NormSearchArgs, (newArgs: SearchAr
   return [args, normArgs, updateSearchArgs];
 }
 
-export const SearchBar: React.FC<SearchBarProps> = observer(({ searchArgs, setSearchArgs, onOpenNewMineralSiteForm }) => {
-  const { commodityStore, countryStore, stateOrProvinceStore, depositTypeStore } = useStores();
+export const SearchBar: React.FC<SearchBarProps> = observer(({ searchArgs, setSearchArgs, onOpenNewMineralSiteForm, normSearchArgs }) => {
+  const { commodityStore, countryStore, stateOrProvinceStore, depositTypeStore, settingStore } = useStores();
 
   const commodityOptions = useMemo(() => {
     return commodityStore.getCriticalCommodities().map((comm) => {
@@ -198,7 +211,12 @@ export const SearchBar: React.FC<SearchBarProps> = observer(({ searchArgs, setSe
           placeholder="Select a commodity"
           showSearch={true}
           optionFilterProp="label"
-          onChange={(id: string) => setSearchArgs({ ...searchArgs, commodity: commodityStore.get(id)!.name })}
+          onChange={(id: string) =>
+            setSearchArgs({
+              ...searchArgs,
+              commodity: commodityStore.get(id)!.name,
+            })
+          }
           options={commodityOptions}
         />
         <Typography.Text className={styles.label}>Deposit Type:</Typography.Text>
@@ -209,7 +227,12 @@ export const SearchBar: React.FC<SearchBarProps> = observer(({ searchArgs, setSe
           placeholder="Select a deposit type"
           showSearch={true}
           optionFilterProp="label"
-          onChange={(id?: string) => setSearchArgs({ ...searchArgs, depositType: id === undefined ? undefined : depositTypeStore.get(id)!.name })}
+          onChange={(id?: string) =>
+            setSearchArgs({
+              ...searchArgs,
+              depositType: id === undefined ? undefined : depositTypeStore.get(id)!.name,
+            })
+          }
           options={depositTypeOptions}
         />
         <Typography.Text className={styles.label}>Country:</Typography.Text>
@@ -220,7 +243,12 @@ export const SearchBar: React.FC<SearchBarProps> = observer(({ searchArgs, setSe
           placeholder="Select a country"
           showSearch={true}
           optionFilterProp="label"
-          onChange={(id?: string) => setSearchArgs({ ...searchArgs, country: id === undefined ? undefined : countryStore.get(id)!.name })}
+          onChange={(id?: string) =>
+            setSearchArgs({
+              ...searchArgs,
+              country: id === undefined ? undefined : countryStore.get(id)!.name,
+            })
+          }
           options={countryOptions}
         />
         <Typography.Text className={styles.label}>State/Province:</Typography.Text>
@@ -231,13 +259,23 @@ export const SearchBar: React.FC<SearchBarProps> = observer(({ searchArgs, setSe
           placeholder="Select a state/province"
           showSearch={true}
           optionFilterProp="label"
-          onChange={(id?: string) => setSearchArgs({ ...searchArgs, stateOrProvince: id === undefined ? undefined : stateOrProvinceStore.get(id)!.name })}
+          onChange={(id?: string) =>
+            setSearchArgs({
+              ...searchArgs,
+              stateOrProvince: id === undefined ? undefined : stateOrProvinceStore.get(id)!.name,
+            })
+          }
           options={stateOrProvinceOptions}
         />
       </Space>
-      <Button type="primary" onClick={onOpenNewMineralSiteForm}>
-        Add Mineral Site
-      </Button>
+      <Space>
+        <Button type="primary" onClick={onOpenNewMineralSiteForm}>
+          Add Mineral Site
+        </Button>
+        <Button type="primary" icon={<SettingOutlined />} onClick={() => settingStore.showSetting()}></Button>
+        <AddFieldModal />
+        <DownloadButton normSearchArgs={normSearchArgs} />
+      </Space>
     </Flex>
   );
 });

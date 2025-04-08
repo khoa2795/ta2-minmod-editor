@@ -3,10 +3,10 @@ import { observer } from "mobx-react-lite";
 import { useStores, Commodity, DedupMineralSite, MineralSite, Reference, DraftCreateMineralSite, FieldEdit, EditableField, DraftUpdateMineralSite } from "models";
 import { useEffect, useMemo, useState } from "react";
 import { CanEntComponent, ListCanEntComponent } from "./CandidateEntity";
-import { EditOutlined, InfoCircleOutlined, MoreOutlined, PlusOutlined, PlusSquareOutlined } from "@ant-design/icons";
+import { EditOutlined, InfoCircleOutlined } from "@ant-design/icons";
 import { EditSiteField } from "./EditSiteField";
 import styles from "./EditDedupMineralSite.module.css";
-import { Tooltip, Avatar } from "antd";
+import { Tooltip } from "antd";
 import { ReferenceComponent } from "pages/editor/editDedupSite/ReferenceComponent";
 import { InternalID } from "models/typing";
 import { Empty, Grade, MayEmptyString, Tonnage } from "components/Primitive";
@@ -82,7 +82,7 @@ class SelectedSites {
 
 export const EditDedupMineralSite = observer(({ dedupSite, commodity }: EditDedupMineralSiteProps) => {
   const stores = useStores();
-  const { mineralSiteStore, userStore, dedupMineralSiteStore } = stores;
+  const { mineralSiteStore, userStore, dedupMineralSiteStore, settingStore } = stores;
   const user = userStore.getCurrentUser()!;
 
   const [editField, setEditField] = useState<EditableField | undefined>(undefined);
@@ -125,7 +125,9 @@ export const EditDedupMineralSite = observer(({ dedupSite, commodity }: EditDedu
 
   const ungroupSeparately = async () => {
     const ungroupPayload = Array.from(selectedRows.groups).map((grpKey) => {
-      return { sites: siteGroups.groups[grpKey].sites.map((site) => site.id) };
+      return {
+        sites: siteGroups.groups[grpKey].sites.map((site) => site.id),
+      };
     });
 
     const remainGroup = Object.keys(siteGroups.groups)
@@ -143,9 +145,8 @@ export const EditDedupMineralSite = observer(({ dedupSite, commodity }: EditDedu
       message.success("Ungrouping was successful!");
     }
   };
-
   const columns = useMemo(() => {
-    return [
+    const defaultColumns = [
       {
         title: "",
         key: "select",
@@ -307,26 +308,119 @@ export const EditDedupMineralSite = observer(({ dedupSite, commodity }: EditDedu
           return <Grade grade={site.gradeTonnage[commodity.id]?.totalGrade} />;
         },
       },
-      {
-        title: "Source",
-        key: "reference",
-        render: (_: any, site: MineralSite) => {
-          return (
-            <div style={{ maxWidth: 200, display: "inline-block" }}>
-              <ReferenceComponent site={site} />
-              <Tooltip
-                trigger="click"
-                title="This key identifies same deposits from the same record of a data source. When select/unselect a deposit, all deposits with the same key will be selected/unselected together."
-              >
-                <Typography.Text type="secondary" strong={true} className="font-small" style={{ cursor: "pointer" }}>
-                  &nbsp;({siteGroups.groups[siteGroups.site2groupKey[site.id]].label})
-                </Typography.Text>
-              </Tooltip>
-            </div>
-          );
-        },
-      },
     ];
+    if (settingStore.displayColumns.has("geology_info")) {
+      defaultColumns.push({
+        title: "Alternation",
+        key: "alternation",
+        render: (_: any, site: MineralSite) => {
+          return <MayEmptyString value={site.geologyInfo?.alternation} />;
+        },
+      });
+
+      defaultColumns.push({
+        title: "Concentration Process",
+        key: "concentration-process",
+        render: (_: any, site: MineralSite) => {
+          return <MayEmptyString value={site.geologyInfo?.concentrationProcess} />;
+        },
+      });
+
+      defaultColumns.push({
+        title: "Ore Control",
+        key: "ore-control",
+        render: (_: any, site: MineralSite) => {
+          return <MayEmptyString value={site.geologyInfo?.oreControl} />;
+        },
+      });
+
+      defaultColumns.push({
+        title: "Host Rock Unit",
+        key: "host-rock-unit",
+        render: (_: any, site: MineralSite) => {
+          return <MayEmptyString value={site.geologyInfo?.hostRock?.unit} />;
+        },
+      });
+
+      defaultColumns.push({
+        title: "Host Rock Type",
+        key: "host-rock-type",
+        render: (_: any, site: MineralSite) => {
+          return <MayEmptyString value={site.geologyInfo?.hostRock?.type} />;
+        },
+      });
+
+      defaultColumns.push({
+        title: "Structure",
+        key: "structure",
+        render: (_: any, site: MineralSite) => {
+          return <MayEmptyString value={site.geologyInfo?.structure} />;
+        },
+      });
+
+      defaultColumns.push({
+        title: "Associated Rock Unit",
+        key: "associated-rock-unit",
+        render: (_: any, site: MineralSite) => {
+          return <MayEmptyString value={site.geologyInfo?.associatedRock?.unit} />;
+        },
+      });
+
+      defaultColumns.push({
+        title: "Associated Rock Type",
+        key: "associated-rock-type",
+        render: (_: any, site: MineralSite) => {
+          return <MayEmptyString value={site.geologyInfo?.associatedRock?.type} />;
+        },
+      });
+
+      defaultColumns.push({
+        title: "Tectonic",
+        key: "tectonic",
+        render: (_: any, site: MineralSite) => {
+          return <MayEmptyString value={site.geologyInfo?.tectonic} />;
+        },
+      });
+    }
+    if (settingStore.displayColumns.has("mineral_form")) {
+      defaultColumns.push({
+        title: "Mineral form",
+        key: "mineralForm",
+        render: (_: any, site: MineralSite) => {
+          return <MayEmptyString value={site.mineralForm.join(", ")} />;
+        },
+      });
+    }
+    if (settingStore.displayColumns.has("discover_year")) {
+      defaultColumns.push({
+        title: "Discover year",
+        key: "discoverYear",
+        render: (_: any, site: MineralSite) => {
+          return <MayEmptyString value={site.discoveredYear?.toString()} />;
+        },
+      });
+    }
+    defaultColumns.push({
+      title: "Source",
+      key: "reference",
+      render: (_: any, site: MineralSite) => {
+        return (
+          <div style={{ maxWidth: 200, display: "inline-block" }}>
+            <ReferenceComponent site={site} />
+            <Tooltip
+              trigger="click"
+              title="This key identifies same deposits from the same record of a data source. When select/unselect a deposit, all deposits with the same key will be selected/unselected together."
+            >
+              <Typography.Text type="secondary" strong={true} className="font-small" style={{ cursor: "pointer" }}>
+                &nbsp;(
+                {siteGroups.groups[siteGroups.site2groupKey[site.id]].label})
+              </Typography.Text>
+            </Tooltip>
+          </div>
+        );
+      },
+    });
+    return defaultColumns;
   }, [commodity.id, siteGroups, selectedRows, ungroupTogether]);
 
   useEffect(() => {
@@ -500,14 +594,7 @@ export const EditDedupMineralSite = observer(({ dedupSite, commodity }: EditDedu
           expandedRowKeys: Array.from(expandedRowKeys),
         }}
       />
-      <EditSiteField
-        key={`${editField}:${editField !== undefined && currentSite?.getFieldValue(editField, commodity.id)}`}
-        sites={siteGroups.sites}
-        currentSite={currentSite}
-        editField={editField}
-        onFinish={onEditFinish}
-        commodity={commodity.id}
-      />
+      <EditSiteField key={editField} sites={siteGroups.sites} currentSite={currentSite} editField={editField} onFinish={onEditFinish} commodity={commodity.id} />
     </Flex>
   );
 }) as React.FC<EditDedupMineralSiteProps>;
