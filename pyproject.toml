@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "ta2-minmod-editor"
-version = "1.0.0"
+version = "1.0.1"
 description = ""
 authors = ["Binh Vu <bvu687@gmail.com>"]
 license = "MIT"
@@ -12,7 +12,7 @@ python = "^3.11"
 fastapi = { extras = ["standard"], version = "^0.115.4" }
 requests = "^2.32.3"
 python-jose = "^3.3.0"
-httpx = "^0.27.2"
+httpx = "^0.28.1"
 tornado = "^6.4.1"
 flask = "^3.1.0"
 loguru = "^0.7.2"
