@@ -12,7 +12,6 @@ export function join<T>(arr: T[], separator: (index: number) => T): T[] {
 }
 
 // Validate the input reference whether an URl or not
-
 export function isValidUrl(inputURL: string): boolean {
   try {
     new URL(inputURL);
@@ -22,8 +21,7 @@ export function isValidUrl(inputURL: string): boolean {
   }
 }
 
-//Download function
-
+// Download function
 export function downloadURI(uri: string) {
   var link = document.createElement("a");
   link.target = "blank";
