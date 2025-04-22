@@ -9,9 +9,10 @@ import { Entity } from "components/Entity";
 import { Empty, Grade, Tonnage } from "components/Primitive";
 import { filter } from "lodash";
 import { FilterDropdownProps } from "antd/es/table/interface";
-
 import Highlighter from "react-highlight-words";
 import Fuse from "fuse.js";
+import styles from "./DedupMineralSiteTable.module.css";
+import { FormattedDedupMineralSite, useFormattedDedupMineralSite } from "./hooks/formattedDedupmineralsite";
 
 interface DedupMineralSiteTableProps {
   commodity?: Commodity;
@@ -74,6 +75,7 @@ export const DedupMineralSiteTable: React.FC<DedupMineralSiteTableProps> = obser
     return { records: lstdms, total: dedupMineralSites.total };
   }, [dedupMineralSites, nameFilterFn, typeFilterFn, rankFilterFn]);
 
+  const allFormattedList = useFormattedDedupMineralSite(filteredDedupMineralSites.records);
   let columns = useMemo(() => {
     return [
       {
@@ -81,123 +83,144 @@ export const DedupMineralSiteTable: React.FC<DedupMineralSiteTableProps> = obser
         dataIndex: "name",
         key: "name",
         ...nameFilterProps,
-        render: (_: any, site: DedupMineralSite) => {
+        render: (_: any, site: FormattedDedupMineralSite) => {
+          const isEdited = site.isEdited;
           return (
-            <>
-              <Typography.Link href={`/derived/${site.id}`} target="_blank">
-                <Highlight text={site.name || "␣"} searchText={nameSearchText} />
+            <div className={isEdited ? styles.cellHighlight : ""}>
+              <Typography.Link href={`/derived/${site.origin.id}`} target="_blank">
+                <Highlight text={site.origin.name || "␣"} searchText={nameSearchText} />
               </Typography.Link>
               &nbsp;
               <Typography.Text type="secondary" className="font-small" title="Number of duplicated mineral sites">
-                #{site.sites.length}
+                #{site.origin.sites.length}
               </Typography.Text>
-            </>
+            </div>
           );
         },
-        sorter: (a: DedupMineralSite, b: DedupMineralSite) => a.name.localeCompare(b.name),
+        sorter: (a: FormattedDedupMineralSite, b: FormattedDedupMineralSite) => a.origin.name.localeCompare(b.origin.name),
       },
       {
         title: "Type",
         key: "type",
         ...typeFilterProps,
-        render: (_: any, site: DedupMineralSite) => {
+        render: (_: any, site: FormattedDedupMineralSite) => {
+          const isEdited = site.isEdited;
           return (
-            <span className="font-small">
-              <Highlight text={site.type} searchText={typeSearchText} />
-            </span>
+            <div className={isEdited ? styles.cellHighlight : ""}>
+              <span className="font-small">
+                <Highlight text={site.origin.type} searchText={typeSearchText} />
+              </span>
+            </div>
           );
         },
-        sorter: (a: DedupMineralSite, b: DedupMineralSite) => a.type.localeCompare(b.type),
+        sorter: (a: FormattedDedupMineralSite, b: FormattedDedupMineralSite) => a.origin.type.localeCompare(b.origin.type),
       },
       {
         title: "Rank",
         key: "rank",
         ...rankFilterProps,
-        render: (_: any, site: DedupMineralSite) => {
+        render: (_: any, site: FormattedDedupMineralSite) => {
+          const isEdited = site.isEdited;
           return (
-            <span className="font-small">
-              <Highlight text={site.rank} searchText={rankSearchText} />
-            </span>
+            <div className={isEdited ? styles.cellHighlight : ""}>
+              <span className="font-small">
+                <Highlight text={site.origin.rank} searchText={rankSearchText} />
+              </span>
+            </div>
           );
         },
-        sorter: (a: DedupMineralSite, b: DedupMineralSite) => a.rank.localeCompare(b.rank),
+        sorter: (a: FormattedDedupMineralSite, b: FormattedDedupMineralSite) => a.origin.rank.localeCompare(b.origin.rank),
       },
       {
         title: "Location",
         key: "location",
-        render: (value: any, dedupSite: DedupMineralSite) => {
-          if (dedupSite.location !== undefined && dedupSite.location.lat !== undefined && dedupSite.location.lon !== undefined) {
+        render: (value: any, dedupSite: FormattedDedupMineralSite) => {
+          const isEdited = dedupSite.isEdited;
+          if (dedupSite.origin.location !== undefined && dedupSite.origin.location.lat !== undefined && dedupSite.origin.location.lon !== undefined) {
             return (
-              <Typography.Link href={`http://maps.google.com/maps?z=12&t=m&q=loc:${dedupSite.location.lat}+${dedupSite.location.lon}`} target="_blank">
-                {`${dedupSite.location.lat.toFixed(5)}, ${dedupSite.location.lon.toFixed(5)}`}
-              </Typography.Link>
+              <div className={isEdited ? styles.cellHighlight : ""}>
+                <Typography.Link href={`http://maps.google.com/maps?z=12&t=m&q=loc:${dedupSite.origin.location.lat}+${dedupSite.origin.location.lon}`} target="_blank">
+                  {`${dedupSite.origin.location.lat.toFixed(5)}, ${dedupSite.origin.location.lon.toFixed(5)}`}
+                </Typography.Link>
+              </div>
             );
           }
           return <Empty />;
         },
-        sorter: (a: DedupMineralSite, b: DedupMineralSite) => {
-          const locA = a.location ? `${a.location.lat?.toFixed(3)},${a.location.lon?.toFixed(3)}` : "";
-          const locB = b.location ? `${b.location.lat?.toFixed(3)},${b.location.lon?.toFixed(3)}` : "";
+        sorter: (a: FormattedDedupMineralSite, b: FormattedDedupMineralSite) => {
+          const locA = a.origin.location ? `${a.origin.location.lat?.toFixed(3)},${a.origin.location.lon?.toFixed(3)}` : "";
+          const locB = b.origin.location ? `${b.origin.location.lat?.toFixed(3)},${b.origin.location.lon?.toFixed(3)}` : "";
           return locA.localeCompare(locB);
         },
       },
       {
         title: "Country",
         key: "country",
-        render: (_: any, site: DedupMineralSite) => {
-          if (site.location === undefined || site.location.country.length === 0) {
+        render: (_: any, site: FormattedDedupMineralSite) => {
+          const isEdited = site.isEdited;
+          if (site.origin.location === undefined || site.origin.location.country.length === 0) {
             return <Empty />;
           }
 
           return (
-            <Space split={<Divider type="vertical" />}>
-              {site.location.country.map((country) => (
-                <Entity key={country} uri={country} store="countryStore" />
-              ))}
-            </Space>
+            <div className={isEdited ? styles.cellHighlight : ""}>
+              <Space split={<Divider type="vertical" />}>
+                {site.origin.location.country.map((country) => (
+                  <Entity key={country} uri={country} store="countryStore" />
+                ))}
+              </Space>
+            </div>
           );
         },
-        sorter: (a: DedupMineralSite, b: DedupMineralSite) => {
-          const countryA = a.location?.country.map((iri) => countryStore.getByURI(iri)!.name).join(",") || "";
-          const countryB = b.location?.country.map((iri) => countryStore.getByURI(iri)!.name).join(",") || "";
+        sorter: (a: FormattedDedupMineralSite, b: FormattedDedupMineralSite) => {
+          const countryA = a.origin.location?.country.map((iri) => countryStore.getByURI(iri)!.name).join(",") || "";
+          const countryB = b.origin.location?.country.map((iri) => countryStore.getByURI(iri)!.name).join(",") || "";
           return countryA.localeCompare(countryB);
         },
       },
       {
         title: "State/Province",
         key: "state",
-        render: (_: any, site: DedupMineralSite) => {
-          if (site.location === undefined || site.location.stateOrProvince.length === 0) {
+        render: (_: any, site: FormattedDedupMineralSite) => {
+          const isEdited = site.isEdited;
+          if (site.origin.location === undefined || site.origin.location.stateOrProvince.length === 0) {
             return <Empty />;
           }
 
           return (
-            <Space split={<Divider type="vertical" />}>
-              {site.location.stateOrProvince.map((province) => (
-                <Entity key={province} uri={province} store="stateOrProvinceStore" />
-              ))}
-            </Space>
+            <div className={isEdited ? styles.cellHighlight : ""}>
+              <Space split={<Divider type="vertical" />}>
+                {site.origin.location.stateOrProvince.map((province) => (
+                  <Entity key={province} uri={province} store="stateOrProvinceStore" />
+                ))}
+              </Space>
+            </div>
           );
         },
-        sorter: (a: DedupMineralSite, b: DedupMineralSite) => {
-          const stateA = a.location?.stateOrProvince.map((iri) => stateOrProvinceStore.getByURI(iri)!.name).join(",") || "";
-          const stateB = b.location?.stateOrProvince.map((iri) => stateOrProvinceStore.getByURI(iri)!.name).join(",") || "";
+        sorter: (a: FormattedDedupMineralSite, b: FormattedDedupMineralSite) => {
+          const stateA = a.origin.location?.stateOrProvince.map((iri) => stateOrProvinceStore.getByURI(iri)!.name).join(",") || "";
+          const stateB = b.origin.location?.stateOrProvince.map((iri) => stateOrProvinceStore.getByURI(iri)!.name).join(",") || "";
           return stateA.localeCompare(stateB);
         },
       },
       {
         title: "Deposit Type",
         key: "depositType",
-        render: (_: any, site: DedupMineralSite) => {
-          const dt = site.getTop1DepositType();
+        render: (_: any, site: FormattedDedupMineralSite) => {
+          const isEdited = site.isEdited;
+          const dt = site.origin.getTop1DepositType();
           if (dt === undefined) {
             return <Empty />;
           }
-          return <Entity uri={dt.uri} store="depositTypeStore" />;
+          return (
+            <div className={isEdited ? styles.cellHighlight : ""}>
+              <Entity uri={dt.uri} store="depositTypeStore" />
+            </div>
+          );
         },
-        sorter: (a: DedupMineralSite, b: DedupMineralSite) => {
-          const dtA = a.getTop1DepositType()?.uri;
-          const dtB = b.getTop1DepositType()?.uri;
+        sorter: (a: FormattedDedupMineralSite, b: FormattedDedupMineralSite) => {
+          const dtA = a.origin.getTop1DepositType()?.uri;
+          const dtB = b.origin.getTop1DepositType()?.uri;
           const dtAName = dtA !== undefined ? depositTypeStore.getByURI(dtA)!.name : "";
           const dtBName = dtB !== undefined ? depositTypeStore.getByURI(dtB)!.name : "";
           return dtAName.localeCompare(dtBName);
@@ -206,42 +229,53 @@ export const DedupMineralSiteTable: React.FC<DedupMineralSiteTableProps> = obser
       {
         title: "Dep. Score",
         key: "depositConfidence",
-        render: (_: any, site: DedupMineralSite) => {
-          const dt = site.getTop1DepositType();
+        render: (_: any, site: FormattedDedupMineralSite) => {
+          const isEdited = site.isEdited;
+          const dt = site.origin.getTop1DepositType();
           if (dt === undefined) {
             return <Empty />;
           }
-          return dt.confidence.toFixed(4);
+          return <div className={isEdited ? styles.cellHighlight : ""}>{dt.confidence.toFixed(4)}</div>;
         },
       },
       {
         title: "Tonnage (Mt)",
         dataIndex: "totalTonnage",
-        render: (_: any, site: DedupMineralSite) => {
-          return <Tonnage tonnage={site.gradeTonnage?.totalTonnage} />;
+        render: (_: any, site: FormattedDedupMineralSite) => {
+          const isEdited = site.isEdited;
+          return (
+            <div className={isEdited ? styles.cellHighlight : ""}>
+              <Tonnage tonnage={site.origin.gradeTonnage?.totalTonnage} />{" "}
+            </div>
+          );
         },
-        sorter: (a: DedupMineralSite, b: DedupMineralSite) => {
-          const tonnageA = a.gradeTonnage?.totalTonnage || 0;
-          const tonnageB = b.gradeTonnage?.totalTonnage || 0;
+        sorter: (a: FormattedDedupMineralSite, b: FormattedDedupMineralSite) => {
+          const tonnageA = a.origin.gradeTonnage?.totalTonnage || 0;
+          const tonnageB = b.origin.gradeTonnage?.totalTonnage || 0;
           return tonnageA - tonnageB;
         },
       },
       {
         title: "Grade (%)",
         dataIndex: "totalGrade",
-        render: (_: any, site: DedupMineralSite) => {
-          return <Grade grade={site.gradeTonnage?.totalGrade} />;
+        render: (_: any, site: FormattedDedupMineralSite) => {
+          const isEdited = site.isEdited;
+          return (
+            <div className={isEdited ? styles.cellHighlight : ""}>
+              <Grade grade={site.origin.gradeTonnage?.totalGrade} />{" "}
+            </div>
+          );
         },
-        sorter: (a: DedupMineralSite, b: DedupMineralSite) => {
-          const gradeA = a.gradeTonnage?.totalGrade || 0;
-          const gradeB = b.gradeTonnage?.totalGrade || 0;
+        sorter: (a: FormattedDedupMineralSite, b: FormattedDedupMineralSite) => {
+          const gradeA = a.origin.gradeTonnage?.totalGrade || 0;
+          const gradeB = b.origin.gradeTonnage?.totalGrade || 0;
           return gradeA - gradeB;
         },
       },
       {
         title: "Action",
         key: "action",
-        render: (_: any, site: DedupMineralSite) => {
+        render: (_: any, site: FormattedDedupMineralSite) => {
           return (
             <Space>
               <Button
@@ -250,10 +284,10 @@ export const DedupMineralSiteTable: React.FC<DedupMineralSiteTableProps> = obser
                 icon={<EditOutlined />}
                 variant="filled"
                 onClick={() => {
-                  if (site.id === editingDedupSite) {
+                  if (site.origin.id === editingDedupSite) {
                     setEditingDedupSite(undefined);
                   } else {
-                    setEditingDedupSite(site.id);
+                    setEditingDedupSite(site.origin.id);
                   }
                 }}
               >
@@ -266,12 +300,12 @@ export const DedupMineralSiteTable: React.FC<DedupMineralSiteTableProps> = obser
     ];
   }, [depositTypeStore, countryStore, stateOrProvinceStore, editingDedupSite, nameSearchText, typeSearchText, rankSearchText]);
 
-  const toggleSelectSite = (site: DedupMineralSite) => {
+  const toggleSelectSite = (site: FormattedDedupMineralSite) => {
     const newSelectedDedupSiteIds = new Set(selectedDedupSiteIds);
-    if (selectedDedupSiteIds.has(site.id)) {
-      newSelectedDedupSiteIds.delete(site.id);
+    if (selectedDedupSiteIds.has(site.origin.id)) {
+      newSelectedDedupSiteIds.delete(site.origin.id);
     } else {
-      newSelectedDedupSiteIds.add(site.id);
+      newSelectedDedupSiteIds.add(site.origin.id);
     }
     setSelectedDedupSiteIds(newSelectedDedupSiteIds);
   };
@@ -280,7 +314,7 @@ export const DedupMineralSiteTable: React.FC<DedupMineralSiteTableProps> = obser
     {
       title: "",
       key: "group",
-      render: (_: any, site: DedupMineralSite) => <Checkbox type="primary" checked={selectedDedupSiteIds.has(site.id)} onClick={() => toggleSelectSite(site)} />,
+      render: (_: any, site: FormattedDedupMineralSite) => <Checkbox type="primary" checked={selectedDedupSiteIds.has(site.origin.id)} onClick={() => toggleSelectSite(site)} />,
     },
     ...columns,
   ];
@@ -305,9 +339,9 @@ export const DedupMineralSiteTable: React.FC<DedupMineralSiteTableProps> = obser
 
   const selectedDedupSites = useMemo(() => {
     return Array.from(selectedDedupSiteIds)
-      .map((id) => dedupMineralSiteStore.get(id))
-      .filter((site) => site !== undefined) as DedupMineralSite[];
-  }, [selectedDedupSiteIds]);
+      .map((id) => allFormattedList.find((f) => f.origin.id === id))
+      .filter((site): site is FormattedDedupMineralSite => site !== undefined);
+  }, [selectedDedupSiteIds, allFormattedList]);
 
   return (
     <>
@@ -318,11 +352,11 @@ export const DedupMineralSiteTable: React.FC<DedupMineralSiteTableProps> = obser
               Group selected sites
             </Button>
           </div>
-          <Table<DedupMineralSite>
+          <Table<FormattedDedupMineralSite>
             loading={isLoading ? { size: "large" } : false}
             bordered={true}
             size="small"
-            rowKey="id"
+            rowKey={(site) => site.origin.id}
             pagination={false}
             columns={columns}
             showSorterTooltip={false}
@@ -332,18 +366,18 @@ export const DedupMineralSiteTable: React.FC<DedupMineralSiteTableProps> = obser
       ) : (
         <></>
       )}
-      <Table<DedupMineralSite>
+      <Table<FormattedDedupMineralSite>
         bordered={true}
         size="small"
-        rowKey="id"
+        rowKey={(site) => site.origin.id}
         columns={columns}
-        dataSource={filteredDedupMineralSites.records}
+        dataSource={allFormattedList}
         loading={isLoading ? { size: "large" } : false}
         showSorterTooltip={false}
         expandable={{
           expandedRowRender: (site) => {
-            if (editingDedupSite === site.id) {
-              return <EditDedupMineralSite commodity={commodity!} dedupSite={site} />;
+            if (editingDedupSite === site.origin.id) {
+              return <EditDedupMineralSite commodity={commodity!} dedupSite={site.origin} />;
             }
             return null;
           },
@@ -362,7 +396,7 @@ const Highlight = ({ text, searchText }: { text: string; searchText: string }) =
   return <>{text}</>;
 };
 
-const useTextSearch = (property: "name" | "type" | "rank"): [string, ((dms: DedupMineralSite[]) => DedupMineralSite[]) | undefined, TableColumnType<DedupMineralSite>] => {
+const useTextSearch = (property: "name" | "type" | "rank"): [string, ((dms: DedupMineralSite[]) => DedupMineralSite[]) | undefined, TableColumnType<FormattedDedupMineralSite>] => {
   const [searchText, setSearchText] = useState("");
   const searchInput = useRef<InputRef>(null);
 
