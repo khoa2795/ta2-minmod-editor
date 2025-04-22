@@ -32,13 +32,19 @@ export function useFormattedDedupMineralSite(sites: DedupMineralSite[]): Formatt
 
   useEffect(() => {
     if (sites.length > 0) {
-      const allUsernames = Array.from(new Set(sites.flatMap(extractUsernamesFromDedupSite)));
-      userStore.fetchSiteCreatedUser(allUsernames);
+      const usernames = Array.from(new Set(sites.flatMap(extractUsernamesFromDedupSite)));
+      userStore.fetchByIds(usernames).catch((error) => {
+        console.error("Not find any other users except current user.", error);
+      });
     }
-  }, [sites.length]);
+  }, [sites]);
 
   const allFormattedList = useMemo(() => {
-    return sites.map((site) => getFormattedDedupmineralsite(site, userStore.getUsernames()));
+    const usernames = Array.from(new Set(sites.flatMap(extractUsernamesFromDedupSite))).filter((username) => {
+      const user = userStore.get(username);
+      return user !== undefined && user !== null && user.role === "user";
+    });
+    return sites.map((site) => getFormattedDedupmineralsite(site, usernames));
   }, [sites, userStore.records.size]);
   return allFormattedList;
 }
