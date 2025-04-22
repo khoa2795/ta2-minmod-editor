@@ -3,19 +3,20 @@ import { SERVER } from "env";
 import { action, makeObservable, runInAction } from "mobx";
 import axios from "axios";
 
+type Role = "admin" | "user" | "system";
+
 export interface User {
   id: string;
   url: string;
   email: string;
   name: string;
+  role: Role;
 }
 
 export class UserStore extends RStore<string, User> {
   constructor() {
-    super(`${SERVER}/api/v1`, { id: "username" }, false);
-    makeObservable(this, {
-      fetchSiteCreatedUser: action,
-    });
+    super(`${SERVER}/api/v1/users`, { id: "username" }, false);
+    makeObservable(this);
   }
 
   async login(username: string, password: string) {
@@ -51,6 +52,7 @@ export class UserStore extends RStore<string, User> {
       email: obj.email,
       name: obj.name,
       url: obj.uri,
+      role: obj.role,
     };
   }
 
@@ -65,28 +67,5 @@ export class UserStore extends RStore<string, User> {
     runInAction(() => {
       this.records.clear();
     });
-  }
-  
-  async fetchSiteCreatedUser(siteIds: string[]): Promise<void> {
-    try {
-      const response = await axios.post(`${SERVER}/api/v1/users/find_by_ids`, { user_uris: siteIds });
-      const allUsers: Record<string, any> = response.data;
-
-      runInAction(() => {
-        for (const user of Object.values(allUsers)) {
-          if (user.role === "user") {
-            this.set(this.deserialize(user));
-          }
-        }
-      });
-    } catch (err) {
-      console.error("Fail to get user");
-    }
-  }
-
-  public getUsernames(): string[] {
-    return Array.from(this.records.values())
-      .filter((user): user is User => user !== null && user !== undefined)
-      .map((user) => user.id);
   }
 }
